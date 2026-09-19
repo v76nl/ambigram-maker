@@ -1,0 +1,18 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "fonttools>=4.65.0",
+    "google-genai>=2.24.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.3",
+    "opencv-python-headless>=5.0.0.93",
+    "pillow>=12.3.0",
+    "shapely>=2.1.2",
+    "tqdm>=4.70.1",
+    "uvicorn>=0.53.0",
+]
