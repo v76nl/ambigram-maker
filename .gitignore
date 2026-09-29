@@ -70,3 +70,8 @@ Thumbs.db
 
 
 reference
+
+# Research & Academic Papers (Avoid committing copyrighted papers to Git)
+*.pdf
+research/**/*.pdf
+research/**/paper_transcript.md
