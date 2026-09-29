@@ -1,0 +1,58 @@
+{
+  "id": 12,
+  "title": "指向性ボリュームディスプレイへのプロジェクションマッピングのシミュレーション",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "池田 正隆",
+    "白木 厚司",
+    "中山 弘敬",
+    "平山 竜士",
+    "角江 崇",
+    "下馬場 朋禄",
+    "伊藤 智義"
+  ],
+  "year": "2017",
+  "journal": "3次元画像コンファレンス 25巻 pp.39-42",
+  "doi": "10.14920/sanjigen.25.0_39",
+  "url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 1208466,
+  "notes": "指向性立体ディスプレイに対するプロジェクションマッピングによるアンビグラム視覚化シミュレーション。オープンアクセスPDF取得。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_publisher": "3次元画像コンファレンス実行委員会",
+    "citation_author": [
+      "池田 正隆",
+      "白木 厚司",
+      "中山 弘敬",
+      "平山 竜士",
+      "角江 崇",
+      "下馬場 朋禄",
+      "伊藤 智義"
+    ],
+    "citation_author_institution": [
+      "千葉大学",
+      "千葉大学",
+      "国立天文台",
+      "千葉大学",
+      "千葉大学",
+      "千葉大学",
+      "千葉大学"
+    ],
+    "citation_title": "指向性ボリュームディスプレイへのプロジェクションマッピングのシミュレーション",
+    "citation_publication_date": "2017/07/06",
+    "citation_online_date": "2024/05/14",
+    "citation_firstpage": "39",
+    "citation_lastpage": "42",
+    "citation_doi": "10.60374/sanjigen.25.0_39",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_pdf",
+    "citation_issn": "2759-2197",
+    "citation_language": "ja",
+    "citation_conference_title": "三次元画像コンファレンス講演論文集 3次元画像コンファレンス2017"
+  },
+  "references": []
+}

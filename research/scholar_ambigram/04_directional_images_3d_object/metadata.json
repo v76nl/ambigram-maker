@@ -1,0 +1,69 @@
+{
+  "id": 4,
+  "title": "複数の指向性画像を同時表示可能な 3 次元オブジェクト (画像生成・システム (ポスター), 映像表現・芸術科学フォーラム 2015)",
+  "queries": [
+    "ambigram アンビグラム",
+    "アンビグラム"
+  ],
+  "authors": [
+    "平山 竜士",
+    "中山 弘敬",
+    "白木 厚司",
+    "角江 崇",
+    "下馬場 朋禄",
+    "伊藤 智義"
+  ],
+  "year": "2015",
+  "journal": "映像情報メディア学会技術報告 39巻 14号 pp.67-70",
+  "doi": "10.11485/itetr.39.14_67",
+  "url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 11044517,
+  "notes": "3次元立体として視点によって異なる文字・画像（アンビグラム）に見える構造の生成アルゴリズム。オープンアクセスPDF取得。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_publisher": "一般社団法人 映像情報メディア学会",
+    "citation_author": [
+      "平山 竜士",
+      "中山 弘敬",
+      "白木 厚司",
+      "角江 崇",
+      "下馬場 朋禄",
+      "伊藤 智義"
+    ],
+    "citation_author_institution": [
+      "千葉大学工学研究科",
+      "千葉大学工学研究科",
+      "木更津工業高等専門学校情報工学科",
+      "千葉大学工学研究科",
+      "千葉大学工学研究科",
+      "千葉大学工学研究科"
+    ],
+    "citation_title": "複数の指向性画像を同時表示可能な3次元オブジェクト(画像生成・システム(ポスター),映像表現・芸術科学フォーラム2015)",
+    "citation_publication_date": "2015/03/07",
+    "citation_online_date": "2017/09/22",
+    "citation_firstpage": "67",
+    "citation_lastpage": "70",
+    "citation_doi": "10.11485/itetr.39.14.0_67",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_pdf",
+    "citation_issn": [
+      "1342-6893",
+      "2424-1970"
+    ],
+    "citation_language": "ja",
+    "citation_keywords": [
+      "ボリュームディスプレイ",
+      "指向性画像",
+      "情報伝達システム",
+      "アンビグラム",
+      "Volumetric Display",
+      "Directional Images",
+      "Information and Communication System",
+      "Ambigram"
+    ],
+    "citation_conference_title": "映像情報メディア学会技術報告 39.14"
+  },
+  "references": []
+}

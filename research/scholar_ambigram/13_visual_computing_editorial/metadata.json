@@ -1,0 +1,41 @@
+{
+  "id": 13,
+  "title": "ビジュアルコンピューティング論文特集号に寄せて",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "森島 繁生"
+  ],
+  "year": "2020",
+  "journal": "画像電子学会誌 49巻 4号 pp.283-284",
+  "doi": "10.11371/iieej.49.283",
+  "url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 798256,
+  "notes": "画像電子学会誌の特集号巻頭言。ひらがなアンビグラム論文（井上・高橋）が掲載された特集号のエディトリアル。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_journal_title": "画像電子学会誌",
+    "citation_publisher": "一般社団法人 画像電子学会",
+    "citation_author": "森島 繁生",
+    "citation_author_institution": "Visual Computing研究会委員長",
+    "citation_title": "ビジュアルコンピューティング論文特集号に寄せて",
+    "citation_publication_date": "2020",
+    "citation_online_date": "2023/07/31",
+    "citation_volume": "49",
+    "citation_issue": "4",
+    "citation_firstpage": "283",
+    "citation_lastpage": "283",
+    "citation_doi": "10.11371/iieej.49.283",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_pdf",
+    "citation_issn": [
+      "0285-9831",
+      "1348-0316"
+    ],
+    "citation_language": "ja"
+  },
+  "references": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": 16,
+  "title": "2023 年度 (第 76 回) 電気・情報関係学会九州支部連合大会プログラム",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "電気・情報関係学会九州支部連合大会委員会"
+  ],
+  "year": "2023",
+  "journal": "電気関係学会九州支部連合大会講演論文集 2023年度 pp.450-480",
+  "doi": "10.11527/jceeek.2023.0_450",
+  "url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 3306942,
+  "notes": "「多目的最適化GANによるアンビグラム生成」が発表されたセッション（07-1A: 画像処理・メディア）の公式プログラム。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_publisher": "電気・情報関係学会九州支部連合大会",
+    "citation_author": "電気・情報関係学会九州支部連合大会委員会",
+    "citation_author_institution": "電気・情報関係学会九州支部連合大会委員会",
+    "citation_title": "2023年度(第76回)電気・情報関係学会九州支部連合大会プログラム",
+    "citation_publication_date": "2023",
+    "citation_online_date": "2024/06/08",
+    "citation_firstpage": "450",
+    "citation_lastpage": "493",
+    "citation_doi": "10.11527/jceeek.2023.0_450",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_pdf",
+    "citation_language": "ja",
+    "citation_keywords": [
+      "連合大会",
+      "大会プログラム"
+    ],
+    "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
+  },
+  "references": []
+}

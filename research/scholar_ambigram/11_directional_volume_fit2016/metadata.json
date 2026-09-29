@@ -1,0 +1,27 @@
+{
+  "id": 11,
+  "title": "指向性ボリュームディスプレイの高解像度化手法の提案",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "池田 正隆",
+    "白木 厚司",
+    "中山 弘敬",
+    "平山 竜士",
+    "角江 崇",
+    "下馬場 朋禄",
+    "伊藤 智義"
+  ],
+  "year": "2016",
+  "journal": "第15回情報科学技術フォーラム (FIT2016) 講演論文集 pp.247-248",
+  "doi": null,
+  "url": "https://www.ieice.org/publications/conference-FIT-DVDs/FIT2016/data/pdf/K-021.pdf",
+  "pdf_url": "https://www.ieice.org/publications/conference-FIT-DVDs/FIT2016/data/pdf/K-021.pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 1521262,
+  "notes": "視点に応じた指向性画像表示（3Dアンビグラム）の解像度向上に関する論文。オープンアクセスPDF取得。",
+  "abstract": null,
+  "meta_tags": {},
+  "references": []
+}

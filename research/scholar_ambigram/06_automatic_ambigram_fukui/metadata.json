@@ -1,0 +1,37 @@
+{
+  "id": 6,
+  "title": "アンビグラムの自動生成手法の提案と評価",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "近藤 圭",
+    "小林 慧",
+    "水野 真",
+    "長谷川 達人"
+  ],
+  "year": "2020",
+  "journal": "2020年度電気・情報関係学会北陸支部連合大会",
+  "doi": null,
+  "url": "https://pure.flib.u-fukui.ac.jp/en/publications/%E3%82%A2%E3%83%B3%E3%83%93%E3%82%B0%E3%83%A9%E3%83%A0%E3%81%AE%E8%87%AA%E5%8B%95%E7%94%9F%E6%88%90%E6%89%8B%E6%B3%95%E3%81%AE%E6%8F%90%E6%A1%88%E3%81%A8%E8%A9%95%E4%BE%A1/",
+  "pdf_url": null,
+  "pdf_downloaded": false,
+  "pdf_size_bytes": 0,
+  "notes": "福井大学研究チームによるアンビグラム自動生成システムの設計と評価に関する学会発表。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_title": "アンビグラムの自動生成手法の提案と評価",
+    "citation_author": [
+      "圭 近藤",
+      "慧 小林",
+      "真 水野",
+      "達人 長谷川"
+    ],
+    "citation_author_institution": "Information Science",
+    "citation_author_email": "t-hase@u-fukui.ac.jp",
+    "citation_publication_date": "2020/09/13",
+    "citation_language": "Japanese",
+    "citation_conference_title": "2020年度電気・情報関係学会北陸支部連合大会"
+  },
+  "references": []
+}

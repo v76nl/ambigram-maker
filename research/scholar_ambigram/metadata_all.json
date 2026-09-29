@@ -1,0 +1,665 @@
+[
+  {
+    "id": 1,
+    "title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
+    "queries": [
+      "ambigram アンビグラム",
+      "アンビグラム"
+    ],
+    "authors": [
+      "大津 沙耶香",
+      "伊藤 智也",
+      "竹島 由里子",
+      "菊池 司"
+    ],
+    "year": "2022",
+    "journal": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿",
+    "doi": "10.11371/wiieej.21.04.0_87",
+    "url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。抄録・メタデータを保存。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_publisher": "一般社団法人 画像電子学会",
+      "citation_author": [
+        "大津 沙耶香",
+        "伊藤 智也",
+        "竹島 由里子",
+        "菊池 司"
+      ],
+      "citation_author_institution": [
+        "東京工科大学大学院メディアサイエンス専攻",
+        "八戸工業大学",
+        "東京工科大学",
+        "東京工科大学"
+      ],
+      "citation_title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
+      "citation_publication_date": "2022",
+      "citation_online_date": "2023/03/31",
+      "citation_firstpage": "87",
+      "citation_lastpage": "90",
+      "citation_doi": "10.11371/wiieej.21.04.0_87",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
+      "citation_issn": [
+        "0285-3957",
+        "2758-9218"
+      ],
+      "citation_language": "ja",
+      "citation_keywords": [
+        "Ambigram",
+        "アンビグラム",
+        "Volume",
+        "ボリューム",
+        "Particle",
+        "パーティクル",
+        "Computer Graphics",
+        "コンピュータグラフィックス"
+      ],
+      "citation_conference_title": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿"
+    },
+    "references": []
+  },
+  {
+    "id": 2,
+    "title": "文字構造特徴を用いたひらがなアンビグラムの生成",
+    "queries": [
+      "ambigram アンビグラム",
+      "アンビグラム"
+    ],
+    "authors": [
+      "井上 和輝",
+      "高橋 裕樹"
+    ],
+    "year": "2020",
+    "journal": "画像電子学会誌 49巻 4号 pp.301-314",
+    "doi": "10.11371/iieej.49.301",
+    "url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_301/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_301/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 2841138,
+    "notes": "ひらがなアンビグラムの自動生成に関する最重要論文。文字骨格グラフ、アフィン変換、部分グラフ同型判定を利用。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_journal_title": "画像電子学会誌",
+      "citation_publisher": "一般社団法人 画像電子学会",
+      "citation_author": [
+        "井上 和輝",
+        "高橋 裕樹"
+      ],
+      "citation_author_institution": [
+        "電気通信大学 情報理工学域",
+        "電気通信大学 大学院 情報理工学研究科",
+        "電気通信大学 人工知能先端研究センター"
+      ],
+      "citation_title": "文字構造特徴を用いたひらがなアンビグラムの生成",
+      "citation_publication_date": "2020",
+      "citation_online_date": "2023/07/31",
+      "citation_volume": "49",
+      "citation_issue": "4",
+      "citation_firstpage": "301",
+      "citation_lastpage": "314",
+      "citation_doi": "10.11371/iieej.49.301",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_301/_pdf",
+      "citation_issn": [
+        "0285-9831",
+        "1348-0316"
+      ],
+      "citation_language": "ja",
+      "citation_keywords": [
+        "アンビグラム",
+        "文字構造特徴",
+        "アフィン変換",
+        "部分グラフ",
+        "グラフ同型",
+        "ambigram",
+        "character structure characteristics",
+        "affine transformation",
+        "subgraph",
+        "graph isomorphism"
+      ],
+      "citation_reference": [
+        "1) 野村一晟，つくろうよ！アンビグラム，飛鳥新社 (2018).",
+        "2) 日刊スポーツ，日本代表ユニ「日本晴れ」文字反対にすると「侍魂」，https://www.nikkansports.com/soccer/japan/news/201911060000642.html (2020).",
+        "3) FlipScript, Inc., FlipScript, https://flipscript.com/en/flip (2019).",
+        "4) マイナビ，文字には、人の心を動かす“チカラ”がある-アンビグラム作家・野村一晟，https://news.mynavi.jp/article/20191128-929543/ (2020).",
+        "5) 細谷律子，是枝浩行，井上喜勇，山内司，松田泰昌: “非線形変換を組み合わせた変形文字の生成”，情報処理学会全国大会講演論文集，Vol.48，No.3，pp.301–302 (1994).",
+        "6) T. Igarashi, T. Moscovich, J. F. Hughes: “As-Rigid-as-Possible Shape Manipulation”, ACM Trans. on Computer Graphics, Vol.24, No.3, pp.1134–1141 (2005).",
+        "7) S. Schaefer, T. McPhail, J. Warren: “Image Deformation Using Moving Least Squares”, ACM Trans. Graph, Vol.25, No.3, pp.533–540 (2006).",
+        "8) N. D. F. Campbell, J. Kautz: “Learning a Manifold of Fonts”, ACM Trans. on Graphics, Vol.33, No.4, pp.91:1–91:11 (2014).",
+        "9) Y. Fujita, H. Xie, K. Miyata: “Perceptual Font Manifold from Generative Model”, Nicograph International (NicoInt), pp. 41–48 (2019).",
+        "10) 成沢淳史，柳井啓司：“Neural Style TransferとCycle GANを利用したフォント変換”，画像の認識・理解シンポジウム(MIRU), pp. PS2–26 (2017).",
+        "11) L. A. Gatys, A. S. Ecker, M. Bethge: “Image Style Transfer Using Convolutional Neural Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).",
+        "12) J.-Y. Zhu, T. Park, P. Isola, A. A. Efros: “Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).",
+        "13) 島崎早智，多田信洋，藤岡寛之，日高章理：“ニューラル画像対画像変換による毛筆体文字の生成”，第81回全国大会講演論文集，Vol.2019，No.1，pp.189–190 (2019).",
+        "14) S. Tang, Z. Xia, Z. Lian, Y. Tang, J. Xiao, “FontRNN: Generating Large-scale Chinese Fonts via Recurrent Neural Network”, Computer Graphics Forum, Vol.38, No.7, pp.567–577 (2019).",
+        "15) T. -Y. Zhang, C. -Y. Suen: “A Fast Parallel Algorithms For Thinning Digital Patterns”, Communication of the ACM”, Vol.27, No.3, pp.236–239 (1984).",
+        "16) U. Ramer, “An Iterative Procedure for The Polygonal Approximation of Plane Curves”, Communication of the ACM, Vol.1, No.3, pp.244–256, (1972).",
+        "17) 石亀昌明，三浦望，保坂暁子，福島隆行: “毛筆のモデル化による毛筆文字の生成”，情報処理学会研究報告. HI，ヒューマンインタフェース研究会報告，Vol.97，No.71，pp.45–51 (1997).",
+        "18) 独立行政法人産業技術総合研究所，手書教育漢字データベースETL8，http://etlcdb.db.aist.go.jp/specification-of-etl-8?lang=ja (2020).",
+        "19) 日本語教育語彙表ver1.0: http://jhlee.sakura.ne.jp/JEV.html (2020).",
+        "20) A. Zanfir, C. Sminchisescu: “Deep Learning of Graph Matching”, Proc. of IEEE/CVF Conference on Computer Vision and Pattern Recognition(CVPR), pp.2684–2693 (2018).",
+        "21) P. Morrison, J.J. Zou: “Inexact Graph Matching Using a Hierarchy of Matching Processes”, Computational Visual Media, pp.291–307 (2015).",
+        "22) X. Bai, L. J. Latecki: “Path Similarity Skeleton Graph Matching”, IEEE Trans. on Pattern Analysis and Machine Intelligence, Vol.30, No.7, pp.1282–1292 (2008).",
+        "23) M. Cho, J. Lee, K. M. Lee: “Reweighted Random Walks for Graph Matching”, Proc. of European Conference on Computer Vision (ECCV), Vol.6315, pp.492–505 (2010).",
+        "24) K. Riesen, H. Bunke: “Approximate Graph Edit Distance Computation by Means of Bipartite Graph Matching”, Image and Vision Computing, Vol.27, pp.950–959 (2009)."
+      ]
+    },
+    "references": [
+      "1) 野村一晟，つくろうよ！アンビグラム，飛鳥新社 (2018).",
+      "2) 日刊スポーツ，日本代表ユニ「日本晴れ」文字反対にすると「侍魂」，https://www.nikkansports.com/soccer/japan/news/201911060000642.html (2020).",
+      "3) FlipScript, Inc., FlipScript, https://flipscript.com/en/flip (2019).",
+      "4) マイナビ，文字には、人の心を動かす“チカラ”がある-アンビグラム作家・野村一晟，https://news.mynavi.jp/article/20191128-929543/ (2020).",
+      "5) 細谷律子，是枝浩行，井上喜勇，山内司，松田泰昌: “非線形変換を組み合わせた変形文字の生成”，情報処理学会全国大会講演論文集，Vol.48，No.3，pp.301–302 (1994).",
+      "6) T. Igarashi, T. Moscovich, J. F. Hughes: “As-Rigid-as-Possible Shape Manipulation”, ACM Trans. on Computer Graphics, Vol.24, No.3, pp.1134–1141 (2005).",
+      "7) S. Schaefer, T. McPhail, J. Warren: “Image Deformation Using Moving Least Squares”, ACM Trans. Graph, Vol.25, No.3, pp.533–540 (2006).",
+      "8) N. D. F. Campbell, J. Kautz: “Learning a Manifold of Fonts”, ACM Trans. on Graphics, Vol.33, No.4, pp.91:1–91:11 (2014).",
+      "9) Y. Fujita, H. Xie, K. Miyata: “Perceptual Font Manifold from Generative Model”, Nicograph International (NicoInt), pp. 41–48 (2019).",
+      "10) 成沢淳史，柳井啓司：“Neural Style TransferとCycle GANを利用したフォント変換”，画像の認識・理解シンポジウム(MIRU), pp. PS2–26 (2017).",
+      "11) L. A. Gatys, A. S. Ecker, M. Bethge: “Image Style Transfer Using Convolutional Neural Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).",
+      "12) J.-Y. Zhu, T. Park, P. Isola, A. A. Efros: “Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).",
+      "13) 島崎早智，多田信洋，藤岡寛之，日高章理：“ニューラル画像対画像変換による毛筆体文字の生成”，第81回全国大会講演論文集，Vol.2019，No.1，pp.189–190 (2019).",
+      "14) S. Tang, Z. Xia, Z. Lian, Y. Tang, J. Xiao, “FontRNN: Generating Large-scale Chinese Fonts via Recurrent Neural Network”, Computer Graphics Forum, Vol.38, No.7, pp.567–577 (2019).",
+      "15) T. -Y. Zhang, C. -Y. Suen: “A Fast Parallel Algorithms For Thinning Digital Patterns”, Communication of the ACM”, Vol.27, No.3, pp.236–239 (1984).",
+      "16) U. Ramer, “An Iterative Procedure for The Polygonal Approximation of Plane Curves”, Communication of the ACM, Vol.1, No.3, pp.244–256, (1972).",
+      "17) 石亀昌明，三浦望，保坂暁子，福島隆行: “毛筆のモデル化による毛筆文字の生成”，情報処理学会研究報告. HI，ヒューマンインタフェース研究会報告，Vol.97，No.71，pp.45–51 (1997).",
+      "18) 独立行政法人産業技術総合研究所，手書教育漢字データベースETL8，http://etlcdb.db.aist.go.jp/specification-of-etl-8?lang=ja (2020).",
+      "19) 日本語教育語彙表ver1.0: http://jhlee.sakura.ne.jp/JEV.html (2020).",
+      "20) A. Zanfir, C. Sminchisescu: “Deep Learning of Graph Matching”, Proc. of IEEE/CVF Conference on Computer Vision and Pattern Recognition(CVPR), pp.2684–2693 (2018).",
+      "21) P. Morrison, J.J. Zou: “Inexact Graph Matching Using a Hierarchy of Matching Processes”, Computational Visual Media, pp.291–307 (2015).",
+      "22) X. Bai, L. J. Latecki: “Path Similarity Skeleton Graph Matching”, IEEE Trans. on Pattern Analysis and Machine Intelligence, Vol.30, No.7, pp.1282–1292 (2008).",
+      "23) M. Cho, J. Lee, K. M. Lee: “Reweighted Random Walks for Graph Matching”, Proc. of European Conference on Computer Vision (ECCV), Vol.6315, pp.492–505 (2010).",
+      "24) K. Riesen, H. Bunke: “Approximate Graph Edit Distance Computation by Means of Bipartite Graph Matching”, Image and Vision Computing, Vol.27, pp.950–959 (2009)."
+    ]
+  },
+  {
+    "id": 3,
+    "title": "つくろうよ! アンビグラム= Let's try ambigram",
+    "queries": [
+      "ambigram アンビグラム",
+      "アンビグラム"
+    ],
+    "authors": [
+      "野村 一晟"
+    ],
+    "year": "2018",
+    "journal": "単行本（飛鳥新社, ISBN: 9784864106566）",
+    "doi": null,
+    "url": "https://cir.nii.ac.jp/crid/1970023484891451328",
+    "pdf_url": null,
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "著名なアンビグラム作家・野村一晟氏によるアンビグラム制作技法解説書籍。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 4,
+    "title": "複数の指向性画像を同時表示可能な 3 次元オブジェクト (画像生成・システム (ポスター), 映像表現・芸術科学フォーラム 2015)",
+    "queries": [
+      "ambigram アンビグラム",
+      "アンビグラム"
+    ],
+    "authors": [
+      "平山 竜士",
+      "中山 弘敬",
+      "白木 厚司",
+      "角江 崇",
+      "下馬場 朋禄",
+      "伊藤 智義"
+    ],
+    "year": "2015",
+    "journal": "映像情報メディア学会技術報告 39巻 14号 pp.67-70",
+    "doi": "10.11485/itetr.39.14_67",
+    "url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 11044517,
+    "notes": "3次元立体として視点によって異なる文字・画像（アンビグラム）に見える構造の生成アルゴリズム。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_publisher": "一般社団法人 映像情報メディア学会",
+      "citation_author": [
+        "平山 竜士",
+        "中山 弘敬",
+        "白木 厚司",
+        "角江 崇",
+        "下馬場 朋禄",
+        "伊藤 智義"
+      ],
+      "citation_author_institution": [
+        "千葉大学工学研究科",
+        "千葉大学工学研究科",
+        "木更津工業高等専門学校情報工学科",
+        "千葉大学工学研究科",
+        "千葉大学工学研究科",
+        "千葉大学工学研究科"
+      ],
+      "citation_title": "複数の指向性画像を同時表示可能な3次元オブジェクト(画像生成・システム(ポスター),映像表現・芸術科学フォーラム2015)",
+      "citation_publication_date": "2015/03/07",
+      "citation_online_date": "2017/09/22",
+      "citation_firstpage": "67",
+      "citation_lastpage": "70",
+      "citation_doi": "10.11485/itetr.39.14.0_67",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/itetr/39.14/0/39.14_67/_pdf",
+      "citation_issn": [
+        "1342-6893",
+        "2424-1970"
+      ],
+      "citation_language": "ja",
+      "citation_keywords": [
+        "ボリュームディスプレイ",
+        "指向性画像",
+        "情報伝達システム",
+        "アンビグラム",
+        "Volumetric Display",
+        "Directional Images",
+        "Information and Communication System",
+        "Ambigram"
+      ],
+      "citation_conference_title": "映像情報メディア学会技術報告 39.14"
+    },
+    "references": []
+  },
+  {
+    "id": 5,
+    "title": "多目的最適化 GAN によるアンビグラム生成",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "魏 延輝",
+      "山口 裕"
+    ],
+    "year": "2023",
+    "journal": "電気関係学会九州支部連合大会講演論文集 2023年度 p.39",
+    "doi": "10.11527/jceeek.2023.0_39",
+    "url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 465473,
+    "notes": "GAN（敵対的生成ネットワーク）と多目的最適化による深層学習ベースのアンビグラム生成手法。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_publisher": "電気・情報関係学会九州支部連合大会",
+      "citation_author": [
+        "魏 延輝",
+        "山口 裕"
+      ],
+      "citation_author_institution": [
+        "福岡工大",
+        "福岡工大"
+      ],
+      "citation_title": "多目的最適化GANによるアンビグラム生成",
+      "citation_publication_date": "2023/08/31",
+      "citation_online_date": "2024/03/08",
+      "citation_firstpage": "39",
+      "citation_lastpage": "39",
+      "citation_doi": "10.11527/jceeek.2023.0_39",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_pdf",
+      "citation_language": "ja",
+      "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
+    },
+    "references": []
+  },
+  {
+    "id": 6,
+    "title": "アンビグラムの自動生成手法の提案と評価",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "近藤 圭",
+      "小林 慧",
+      "水野 真",
+      "長谷川 達人"
+    ],
+    "year": "2020",
+    "journal": "2020年度電気・情報関係学会北陸支部連合大会",
+    "doi": null,
+    "url": "https://pure.flib.u-fukui.ac.jp/en/publications/%E3%82%A2%E3%83%B3%E3%83%93%E3%82%B0%E3%83%A9%E3%83%A0%E3%81%AE%E8%87%AA%E5%8B%95%E7%94%9F%E6%88%90%E6%89%8B%E6%B3%95%E3%81%AE%E6%8F%90%E6%A1%88%E3%81%A8%E8%A9%95%E4%BE%A1/",
+    "pdf_url": null,
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "福井大学研究チームによるアンビグラム自動生成システムの設計と評価に関する学会発表。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_title": "アンビグラムの自動生成手法の提案と評価",
+      "citation_author": [
+        "圭 近藤",
+        "慧 小林",
+        "真 水野",
+        "達人 長谷川"
+      ],
+      "citation_author_institution": "Information Science",
+      "citation_author_email": "t-hase@u-fukui.ac.jp",
+      "citation_publication_date": "2020/09/13",
+      "citation_language": "Japanese",
+      "citation_conference_title": "2020年度電気・情報関係学会北陸支部連合大会"
+    },
+    "references": []
+  },
+  {
+    "id": 7,
+    "title": "逆立ちしても読める本: アンビグラム作品集",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "五十嵐 晃"
+    ],
+    "year": "2009",
+    "journal": "単行本（バナナブックス, ISBN: 9784902930214）",
+    "doi": null,
+    "url": "https://cir.nii.ac.jp/crid/1970023484893453384",
+    "pdf_url": null,
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "日本におけるアンビグラムの先駆的作品集。逆さ読文字の豊富な実例を収録。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 8,
+    "title": "2023 年度 FIC オープンセミナー:「アンビグラムの世界―文字を見る視点を変える」",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "深谷 公宣"
+    ],
+    "year": "2024",
+    "journal": "異文化 : 論文編 25号 pp.200-205",
+    "doi": null,
+    "url": "https://cir.nii.ac.jp/crid/2120589364766501632",
+    "pdf_url": null,
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "法政大学国際文化学部オープンセミナーの記録論文。文化・認知・デザインの観点からのアンビグラムの分析。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 9,
+    "title": "「MOjiULE」「G-FITs」「ひらがな~ る」-文字形状に着目した日本語作品の報告",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "石崎 航琉",
+      "荒俣 蓮",
+      "小川 こひな",
+      "吉岡 里紗",
+      "伊藤 実月",
+      "的場 やすし"
+    ],
+    "year": "2024",
+    "journal": "静岡文化芸術大学研究紀要 24巻 pp.9-16",
+    "doi": null,
+    "url": "https://scu.repo.nii.ac.jp/records/2000079",
+    "pdf_url": "https://scu.repo.nii.ac.jp/record/2000079/files/SCU18_02.pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 1527667,
+    "notes": "ひらがなの形状特徴に着目したデザイン作品「ひらがな〜る」等の開発・展示報告。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 10,
+    "title": "Visual Computing ワークショップ 2019 (VCWS 2019) 報告",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "五十嵐 悠紀",
+      "石川 知一",
+      "井尻 敬",
+      "ほか"
+    ],
+    "year": "2020",
+    "journal": "画像電子学会誌 49巻 1号 pp.54-61",
+    "doi": "10.11371/iieej.49.54",
+    "url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 2089329,
+    "notes": "VCWS 2019 のワークショップ報告。アンビグラム関連研究の発表を含む。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_journal_title": "画像電子学会誌",
+      "citation_publisher": "一般社団法人 画像電子学会",
+      "citation_author": "画像電子学会Visual Computing研究会",
+      "citation_title": "Visual Computingワークショップ2019（VCWS 2019）報告",
+      "citation_publication_date": "2020",
+      "citation_online_date": "2023/07/31",
+      "citation_volume": "49",
+      "citation_issue": "1",
+      "citation_firstpage": "54",
+      "citation_lastpage": "61",
+      "citation_doi": "10.11371/iieej.49.54",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_pdf",
+      "citation_issn": [
+        "0285-9831",
+        "1348-0316"
+      ],
+      "citation_language": "ja"
+    },
+    "references": []
+  },
+  {
+    "id": 11,
+    "title": "指向性ボリュームディスプレイの高解像度化手法の提案",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "池田 正隆",
+      "白木 厚司",
+      "中山 弘敬",
+      "平山 竜士",
+      "角江 崇",
+      "下馬場 朋禄",
+      "伊藤 智義"
+    ],
+    "year": "2016",
+    "journal": "第15回情報科学技術フォーラム (FIT2016) 講演論文集 pp.247-248",
+    "doi": null,
+    "url": "https://www.ieice.org/publications/conference-FIT-DVDs/FIT2016/data/pdf/K-021.pdf",
+    "pdf_url": "https://www.ieice.org/publications/conference-FIT-DVDs/FIT2016/data/pdf/K-021.pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 1521262,
+    "notes": "視点に応じた指向性画像表示（3Dアンビグラム）の解像度向上に関する論文。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 12,
+    "title": "指向性ボリュームディスプレイへのプロジェクションマッピングのシミュレーション",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "池田 正隆",
+      "白木 厚司",
+      "中山 弘敬",
+      "平山 竜士",
+      "角江 崇",
+      "下馬場 朋禄",
+      "伊藤 智義"
+    ],
+    "year": "2017",
+    "journal": "3次元画像コンファレンス 25巻 pp.39-42",
+    "doi": "10.14920/sanjigen.25.0_39",
+    "url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 1208466,
+    "notes": "指向性立体ディスプレイに対するプロジェクションマッピングによるアンビグラム視覚化シミュレーション。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_publisher": "3次元画像コンファレンス実行委員会",
+      "citation_author": [
+        "池田 正隆",
+        "白木 厚司",
+        "中山 弘敬",
+        "平山 竜士",
+        "角江 崇",
+        "下馬場 朋禄",
+        "伊藤 智義"
+      ],
+      "citation_author_institution": [
+        "千葉大学",
+        "千葉大学",
+        "国立天文台",
+        "千葉大学",
+        "千葉大学",
+        "千葉大学",
+        "千葉大学"
+      ],
+      "citation_title": "指向性ボリュームディスプレイへのプロジェクションマッピングのシミュレーション",
+      "citation_publication_date": "2017/07/06",
+      "citation_online_date": "2024/05/14",
+      "citation_firstpage": "39",
+      "citation_lastpage": "42",
+      "citation_doi": "10.60374/sanjigen.25.0_39",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/sanjigen/25/0/25_39/_pdf",
+      "citation_issn": "2759-2197",
+      "citation_language": "ja",
+      "citation_conference_title": "三次元画像コンファレンス講演論文集 3次元画像コンファレンス2017"
+    },
+    "references": []
+  },
+  {
+    "id": 13,
+    "title": "ビジュアルコンピューティング論文特集号に寄せて",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "森島 繁生"
+    ],
+    "year": "2020",
+    "journal": "画像電子学会誌 49巻 4号 pp.283-284",
+    "doi": "10.11371/iieej.49.283",
+    "url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 798256,
+    "notes": "画像電子学会誌の特集号巻頭言。ひらがなアンビグラム論文（井上・高橋）が掲載された特集号のエディトリアル。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_journal_title": "画像電子学会誌",
+      "citation_publisher": "一般社団法人 画像電子学会",
+      "citation_author": "森島 繁生",
+      "citation_author_institution": "Visual Computing研究会委員長",
+      "citation_title": "ビジュアルコンピューティング論文特集号に寄せて",
+      "citation_publication_date": "2020",
+      "citation_online_date": "2023/07/31",
+      "citation_volume": "49",
+      "citation_issue": "4",
+      "citation_firstpage": "283",
+      "citation_lastpage": "283",
+      "citation_doi": "10.11371/iieej.49.283",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/4/49_283/_pdf",
+      "citation_issn": [
+        "0285-9831",
+        "1348-0316"
+      ],
+      "citation_language": "ja"
+    },
+    "references": []
+  },
+  {
+    "id": 14,
+    "title": "教員養成教育における美術教育指導の授業のあり方をめぐって",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "高木 厚子"
+    ],
+    "year": "2017",
+    "journal": "兵庫教育大学研究紀要 51巻 pp.69-78",
+    "doi": null,
+    "url": "https://hyogo-u.repo.nii.ac.jp/records/1373",
+    "pdf_url": "https://hyogo-u.repo.nii.ac.jp/record/1373/files/AA1198478905100006.pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 8990656,
+    "notes": "大学の美術教育においてアンビグラム制作を取り入れた授業実践と学生の造形認識の考察。オープンアクセスPDF取得。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 15,
+    "title": "1 は赤い. そして世界は緑と青でできている",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "望月 菜南子"
+    ],
+    "year": "2020",
+    "journal": "書籍（光文社, 共感覚・デザイン）",
+    "doi": null,
+    "url": "https://books.google.com/books?id=ThnyDwAAQBAJ",
+    "pdf_url": null,
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "共感覚や文字の認知、視覚認知におけるアンビグラムの言及を含む書籍。",
+    "abstract": null,
+    "meta_tags": {},
+    "references": []
+  },
+  {
+    "id": 16,
+    "title": "2023 年度 (第 76 回) 電気・情報関係学会九州支部連合大会プログラム",
+    "queries": [
+      "アンビグラム"
+    ],
+    "authors": [
+      "電気・情報関係学会九州支部連合大会委員会"
+    ],
+    "year": "2023",
+    "journal": "電気関係学会九州支部連合大会講演論文集 2023年度 pp.450-480",
+    "doi": "10.11527/jceeek.2023.0_450",
+    "url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_article/-char/ja/",
+    "pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_pdf",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 3306942,
+    "notes": "「多目的最適化GANによるアンビグラム生成」が発表されたセッション（07-1A: 画像処理・メディア）の公式プログラム。",
+    "abstract": null,
+    "meta_tags": {
+      "citation_publisher": "電気・情報関係学会九州支部連合大会",
+      "citation_author": "電気・情報関係学会九州支部連合大会委員会",
+      "citation_author_institution": "電気・情報関係学会九州支部連合大会委員会",
+      "citation_title": "2023年度(第76回)電気・情報関係学会九州支部連合大会プログラム",
+      "citation_publication_date": "2023",
+      "citation_online_date": "2024/06/08",
+      "citation_firstpage": "450",
+      "citation_lastpage": "493",
+      "citation_doi": "10.11527/jceeek.2023.0_450",
+      "citation_fulltext_world_readable": "",
+      "citation_pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_450/_pdf",
+      "citation_language": "ja",
+      "citation_keywords": [
+        "連合大会",
+        "大会プログラム"
+      ],
+      "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
+    },
+    "references": []
+  }
+]

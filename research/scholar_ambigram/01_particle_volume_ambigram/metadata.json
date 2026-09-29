@@ -1,0 +1,62 @@
+{
+  "id": 1,
+  "title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
+  "queries": [
+    "ambigram アンビグラム",
+    "アンビグラム"
+  ],
+  "authors": [
+    "大津 沙耶香",
+    "伊藤 智也",
+    "竹島 由里子",
+    "菊池 司"
+  ],
+  "year": "2022",
+  "journal": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿",
+  "doi": "10.11371/wiieej.21.04.0_87",
+  "url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
+  "pdf_downloaded": false,
+  "pdf_size_bytes": 0,
+  "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。抄録・メタデータを保存。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_publisher": "一般社団法人 画像電子学会",
+    "citation_author": [
+      "大津 沙耶香",
+      "伊藤 智也",
+      "竹島 由里子",
+      "菊池 司"
+    ],
+    "citation_author_institution": [
+      "東京工科大学大学院メディアサイエンス専攻",
+      "八戸工業大学",
+      "東京工科大学",
+      "東京工科大学"
+    ],
+    "citation_title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
+    "citation_publication_date": "2022",
+    "citation_online_date": "2023/03/31",
+    "citation_firstpage": "87",
+    "citation_lastpage": "90",
+    "citation_doi": "10.11371/wiieej.21.04.0_87",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
+    "citation_issn": [
+      "0285-3957",
+      "2758-9218"
+    ],
+    "citation_language": "ja",
+    "citation_keywords": [
+      "Ambigram",
+      "アンビグラム",
+      "Volume",
+      "ボリューム",
+      "Particle",
+      "パーティクル",
+      "Computer Graphics",
+      "コンピュータグラフィックス"
+    ],
+    "citation_conference_title": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿"
+  },
+  "references": []
+}

@@ -1,0 +1,42 @@
+{
+  "id": 5,
+  "title": "多目的最適化 GAN によるアンビグラム生成",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "魏 延輝",
+    "山口 裕"
+  ],
+  "year": "2023",
+  "journal": "電気関係学会九州支部連合大会講演論文集 2023年度 p.39",
+  "doi": "10.11527/jceeek.2023.0_39",
+  "url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 465473,
+  "notes": "GAN（敵対的生成ネットワーク）と多目的最適化による深層学習ベースのアンビグラム生成手法。オープンアクセスPDF取得。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_publisher": "電気・情報関係学会九州支部連合大会",
+    "citation_author": [
+      "魏 延輝",
+      "山口 裕"
+    ],
+    "citation_author_institution": [
+      "福岡工大",
+      "福岡工大"
+    ],
+    "citation_title": "多目的最適化GANによるアンビグラム生成",
+    "citation_publication_date": "2023/08/31",
+    "citation_online_date": "2024/03/08",
+    "citation_firstpage": "39",
+    "citation_lastpage": "39",
+    "citation_doi": "10.11527/jceeek.2023.0_39",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/jceeek/2023/0/2023_39/_pdf",
+    "citation_language": "ja",
+    "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
+  },
+  "references": []
+}

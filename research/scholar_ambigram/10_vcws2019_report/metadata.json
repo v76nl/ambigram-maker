@@ -1,0 +1,43 @@
+{
+  "id": 10,
+  "title": "Visual Computing ワークショップ 2019 (VCWS 2019) 報告",
+  "queries": [
+    "アンビグラム"
+  ],
+  "authors": [
+    "五十嵐 悠紀",
+    "石川 知一",
+    "井尻 敬",
+    "ほか"
+  ],
+  "year": "2020",
+  "journal": "画像電子学会誌 49巻 1号 pp.54-61",
+  "doi": "10.11371/iieej.49.54",
+  "url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_article/-char/ja/",
+  "pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 2089329,
+  "notes": "VCWS 2019 のワークショップ報告。アンビグラム関連研究の発表を含む。オープンアクセスPDF取得。",
+  "abstract": null,
+  "meta_tags": {
+    "citation_journal_title": "画像電子学会誌",
+    "citation_publisher": "一般社団法人 画像電子学会",
+    "citation_author": "画像電子学会Visual Computing研究会",
+    "citation_title": "Visual Computingワークショップ2019（VCWS 2019）報告",
+    "citation_publication_date": "2020",
+    "citation_online_date": "2023/07/31",
+    "citation_volume": "49",
+    "citation_issue": "1",
+    "citation_firstpage": "54",
+    "citation_lastpage": "61",
+    "citation_doi": "10.11371/iieej.49.54",
+    "citation_fulltext_world_readable": "",
+    "citation_pdf_url": "https://www.jstage.jst.go.jp/article/iieej/49/1/49_54/_pdf",
+    "citation_issn": [
+      "0285-9831",
+      "1348-0316"
+    ],
+    "citation_language": "ja"
+  },
+  "references": []
+}
