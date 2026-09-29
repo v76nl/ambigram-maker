@@ -31,6 +31,7 @@ export const App: React.FC = () => {
 
   // パラメータ
   const [blendRatio, setBlendRatio] = useState<number>(0.5);
+  const [highlightMode, setHighlightMode] = useState<boolean>(false);
   const [blendWeight, setBlendWeight] = useState<number>(0.65);
   const [smoothness, setSmoothness] = useState<number>(7);
   const [thresholdVal, setThresholdVal] = useState<number>(110);
@@ -67,7 +68,7 @@ export const App: React.FC = () => {
 
   // アンビグラム生成
   const triggerGenerate = useCallback(
-    async (wordToGen: WordItem | null, engineToGen?: string) => {
+    async (wordToGen: WordItem | null, engineToGen?: string, overrideHighlight?: boolean) => {
       if (!wordToGen) return;
       setIsGenerating(true);
       try {
@@ -75,6 +76,8 @@ export const App: React.FC = () => {
           word: wordToGen.reading,
           engine: (engineToGen || activeEngine) as any,
           blendRatio,
+          strokeWidth: 0.0,
+          highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
           blendWeight,
           smoothness,
           thresholdVal,
@@ -92,7 +95,7 @@ export const App: React.FC = () => {
         setIsGenerating(false);
       }
     },
-    [activeEngine, blendRatio, blendWeight, smoothness, thresholdVal, apiKey, stylePrompt]
+    [activeEngine, blendRatio, highlightMode, blendWeight, smoothness, thresholdVal, apiKey, stylePrompt]
   );
 
   // 単語変更時に生成
@@ -101,6 +104,14 @@ export const App: React.FC = () => {
       triggerGenerate(selectedWord);
     }
   }, [selectedWord, activeEngine]);
+
+  const handleToggleHighlightMode = () => {
+    const nextVal = !highlightMode;
+    setHighlightMode(nextVal);
+    if (selectedWord && activeEngine === "vector") {
+      triggerGenerate(selectedWord, "vector", nextVal);
+    }
+  };
 
   // 単語選択ハンドラ
   const handleSelectWord = (w: WordItem) => {
@@ -161,6 +172,8 @@ export const App: React.FC = () => {
             wordItem={selectedWord}
             activeResult={currentResult}
             activeEngine={activeEngine}
+            highlightMode={highlightMode}
+            onToggleHighlightMode={handleToggleHighlightMode}
           />
 
           {/* 3手法比較・パラメータ調整 */}

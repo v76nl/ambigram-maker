@@ -41,11 +41,13 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
         blend_ratio: float = 0.5,
         stroke_width: float = 0.0,
         view_box_size: int = 1000,
+        highlight_mode: bool = False,
         **params
     ) -> dict[str, Any]:
         """
         単語を受け取り、180度回転自己対称アンビグラムのSVGを生成する
-        各文字スロットにおいて、元の文字と180度回転させたペア文字をブレンドして配置する
+        各文字スロットにおいて、元の文字と180度回転させたペア文字を幾何学的に配置する
+        石崎ほか (2024)「ひらがな~る」に基づき、共通・固有ストロークの色分けハイライトに対応。
         """
         n = len(word)
         if n == 0:
@@ -59,13 +61,15 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
         svg_parts = []
         svg_parts.append(
             f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {total_width} {height}" '
-            f'width="100%" height="100%" class="ambigram-vector">'
+            f'width="100%" height="100%" class="ambigram-vector{" highlight-active" if highlight_mode else ""}">'
         )
         svg_parts.append('<defs>')
         svg_parts.append(
             '<style>'
-            '.ambigram-stroke { fill: currentColor; }'
-            '.ambigram-blend { mix-blend-mode: multiply; }'
+            '.ambigram-vector { overflow: visible; }'
+            '.char-slot { transition: all 0.3s ease; }'
+            '.stroke-c1 { mix-blend-mode: multiply; }'
+            '.stroke-c2 { mix-blend-mode: multiply; }'
             '</style>'
         )
         svg_parts.append('</defs>')
@@ -81,31 +85,37 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             slot_center_x = i * char_spacing + char_spacing / 2
             slot_center_y = height / 2
 
-            # 文字1（正位置）のグループ
-            # Y軸反転（フォント座標系は下向きYが負、SVGは下向きYが正）
             scale_factor = 0.8
             offset1_x = slot_center_x - (width1 * scale_factor) / 2
             offset1_y = baseline
 
-            # 文字2（180度回転位置）のグループ
-            # 180度回転して文字1の位置に重ねる
-            svg_parts.append(f'<g id="char-slot-{i}" class="char-slot">')
+            # ハイライトモード時のカラー設定 (石崎ほか 2024)
+            # 正位置: 青 (#2563eb), 反転位置: 橙 (#ea580c), 重なり部分は自然な混色 (濃紺/緑系)
+            if highlight_mode:
+                color1 = "#2563eb"
+                color2 = "#ea580c"
+                opacity1 = 0.72
+                opacity2 = 0.72
+            else:
+                color1 = "currentColor"
+                color2 = "currentColor"
+                opacity1 = round(1.0 - blend_ratio * 0.25, 2)
+                opacity2 = round(1.0 - blend_ratio * 0.25, 2)
 
-            # 融合表現：
+            svg_parts.append(f'<g id="char-slot-{i}" class="char-slot" data-c1="{c1}" data-c2="{c2}">')
+
             # 1. 文字1（正位置）
-            # 2. 文字2（中心を基準に180度回転した状態）
-            # 3. 両方の重なり（共通部分）を強調、差分部分を滑らかに融合
             svg_parts.append(
-                f'<g transform="translate({offset1_x}, {offset1_y}) scale({scale_factor}, -{scale_factor})">'
-                f'<path d="{path1}" fill="currentColor" fill-opacity="{1.0 - blend_ratio * 0.3}" />'
+                f'<g class="stroke-c1" transform="translate({offset1_x}, {offset1_y}) scale({scale_factor}, -{scale_factor})">'
+                f'<path d="{path1}" fill="{color1}" fill-opacity="{opacity1}" />'
                 f'</g>'
             )
 
-            # 180度回転させた文字2を同じ文字スロットの中心に配置
+            # 2. 文字2（180度回転位置）
             svg_parts.append(
-                f'<g transform="translate({slot_center_x}, {slot_center_y}) rotate(180) '
+                f'<g class="stroke-c2" transform="translate({slot_center_x}, {slot_center_y}) rotate(180) '
                 f'translate({-(width2 * scale_factor)/2}, {baseline - slot_center_y}) scale({scale_factor}, -{scale_factor})">'
-                f'<path d="{path2}" fill="currentColor" fill-opacity="{1.0 - blend_ratio * 0.3}" />'
+                f'<path d="{path2}" fill="{color2}" fill-opacity="{opacity2}" />'
                 f'</g>'
             )
 
@@ -123,5 +133,6 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
                 "length": n,
                 "blend_ratio": blend_ratio,
                 "stroke_width": stroke_width,
+                "highlight_mode": highlight_mode,
             }
         }

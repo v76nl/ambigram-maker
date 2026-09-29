@@ -246,6 +246,51 @@ body {
   background: var(--md-sys-color-surface-container-high);
 }
 
+/* 白背景のキャンバスカード内でのボタンスタイル補正 */
+.canvas-card .m3-btn-outlined {
+  background: #ffffff;
+  border: 1.5px solid #6b7280;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.canvas-card .m3-btn-outlined:hover {
+  background: #f3f4f6;
+  border-color: #374151;
+}
+
+/* ストローク色分けハイライトボタン専用スタイル */
+.color-highlight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--md-sys-shape-corner-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.color-highlight-btn.inactive {
+  background: #f0fdf4;
+  border: 1.5px solid #10b981;
+  color: #065f46;
+}
+
+.color-highlight-btn.inactive:hover {
+  background: #dcfce7;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.color-highlight-btn.active {
+  background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+  border: 1.5px solid transparent;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
+}
+
 /* Sliders */
 .slider-group {
   display: flex;

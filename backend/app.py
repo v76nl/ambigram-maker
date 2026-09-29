@@ -39,6 +39,7 @@ class GenerateRequest(BaseModel):
     # ベクター用パラメータ
     blend_ratio: Optional[float] = 0.5
     stroke_width: Optional[float] = 0.0
+    highlight_mode: Optional[bool] = False
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -92,6 +93,7 @@ def generate_ambigram(req: GenerateRequest):
             req.word,
             blend_ratio=req.blend_ratio or 0.5,
             stroke_width=req.stroke_width or 0.0,
+            highlight_mode=req.highlight_mode or False,
         )
 
     if req.engine in ("bitmap", "all"):

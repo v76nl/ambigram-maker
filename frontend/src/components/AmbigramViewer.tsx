@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { RotateCw, Split, Layers } from "lucide-react";
+import { RotateCw, Split, Layers, Palette, Award } from "lucide-react";
 import type { WordItem, EngineResult } from "../services/api";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
   activeResult: EngineResult | null;
   activeEngine: string;
+  highlightMode?: boolean;
+  onToggleHighlightMode?: () => void;
 }
 
 export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   wordItem,
   activeResult,
+  activeEngine,
+  highlightMode = false,
+  onToggleHighlightMode,
 }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [showSplitView, setShowSplitView] = useState<boolean>(true);
@@ -76,6 +81,37 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     <section className="viewer-container">
       {/* メインプレビューキャンバス */}
       <div className="canvas-card">
+        {/* ハイライトモード時の凡例表示 (石崎ほか 2024「ひらがな~る」着想) */}
+        {highlightMode && activeEngine === "vector" && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "1rem",
+              padding: "0.5rem 1rem",
+              background: "var(--md-sys-color-surface-container-high)",
+              borderRadius: "var(--md-sys-shape-corner-m)",
+              marginBottom: "1rem",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#2563eb" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#2563eb" }} />
+              正位置固有ストローク
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#ea580c" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ea580c" }} />
+              180°反転固有ストローク
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#065f46" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#065f46" }} />
+              共通・融合ストローク
+            </span>
+          </div>
+        )}
+
         {/* 回転アニメーションラッパー */}
         <div
           className="canvas-rotating-wrapper"
@@ -86,7 +122,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
         {/* 下部コントロール */}
         <div className="viewer-controls" style={{ marginTop: "2rem" }}>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
             <button
               className="m3-btn m3-btn-primary"
               onClick={toggleRotation}
@@ -104,6 +140,24 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
               <Split size={18} />
               正反スプリット表示
             </button>
+
+            {/* 先行研究着想: パーツ対応ハイライトトグル */}
+            {activeEngine === "vector" && onToggleHighlightMode && (
+              <button
+                className={`color-highlight-btn ${highlightMode ? "active" : "inactive"}`}
+                onClick={onToggleHighlightMode}
+                title="共通・固有ストロークの色分け表示 (青:正位置 / 橙:反転 / 緑:共通融合) [石崎ほか 2024]"
+                id="stroke-color-toggle-btn"
+              >
+                <Palette size={18} />
+                <span>{highlightMode ? "ストローク色分け [ON]" : "ストローク色分け"}</span>
+                <span style={{ display: "inline-flex", gap: "4px", alignItems: "center", marginLeft: "2px" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", display: "inline-block" }} title="正位置固有" />
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ea580c", display: "inline-block" }} title="反転固有" />
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} title="共通・融合" />
+                </span>
+              </button>
+            )}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -175,6 +229,27 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
               >
                 {(p.score * 100).toFixed(0)}%
               </span>
+              {/* 井上・高橋 (2020) 査読実証ペアのバッジ */}
+              {p.empirical_verified && (
+                <span
+                  title="井上・高橋 (2020) 被験者実験で可読率100%が実証されたペア"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.2rem",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    color: "#059669",
+                    background: "#ecfdf5",
+                    padding: "0.15rem 0.4rem",
+                    borderRadius: "var(--md-sys-shape-corner-xs)",
+                    border: "1px solid #a7f3d0",
+                  }}
+                >
+                  <Award size={12} />
+                  実証ペア
+                </span>
+              )}
             </div>
           ))}
         </div>

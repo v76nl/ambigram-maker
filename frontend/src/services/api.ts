@@ -7,6 +7,7 @@ export interface CharPair {
   char2: string;
   is_center: boolean;
   score: number;
+  empirical_verified?: boolean;
 }
 
 export interface WordItem {
@@ -34,6 +35,7 @@ export interface GenerateParams {
   engine?: "vector" | "bitmap" | "gemini" | "all";
   blendRatio?: number;
   strokeWidth?: number;
+  highlightMode?: boolean;
   blendWeight?: number;
   smoothness?: number;
   thresholdVal?: number;
@@ -97,6 +99,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       engine: params.engine || "all",
       blend_ratio: params.blendRatio,
       stroke_width: params.strokeWidth,
+      highlight_mode: params.highlightMode,
       blend_weight: params.blendWeight,
       smoothness: params.smoothness,
       threshold_val: params.thresholdVal,

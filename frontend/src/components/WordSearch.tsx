@@ -109,6 +109,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
           {words.map((w) => {
             const isSelected = selectedWord?.reading === w.reading;
             const kanjiText = w.kanji && w.kanji.length > 0 ? `(${w.kanji[0]})` : "";
+            const hasVerified = w.pairs.some((p) => p.empirical_verified);
             return (
               <div
                 key={w.reading}
@@ -116,8 +117,25 @@ export const WordSearch: React.FC<WordSearchProps> = ({
                 onClick={() => onSelectWord(w)}
               >
                 <div>
-                  <div className="word-reading">
-                    {w.reading} <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{kanjiText}</span>
+                  <div className="word-reading" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                    <span>{w.reading}</span>
+                    <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{kanjiText}</span>
+                    {hasVerified && (
+                      <span
+                        title="先行研究（井上・高橋 2020）で可読率100%が実証された文字ペアを含む単語"
+                        style={{
+                          fontSize: "0.7rem",
+                          fontWeight: 700,
+                          color: "#059669",
+                          background: "#ecfdf5",
+                          padding: "0.08rem 0.35rem",
+                          borderRadius: "4px",
+                          border: "1px solid #a7f3d0",
+                        }}
+                      >
+                        実証
+                      </span>
+                    )}
                   </div>
                   <div className="word-meta">
                     {w.length}文字 {w.common ? "• 常用" : ""}
