@@ -16,34 +16,64 @@ CHOUON = ["ー"]
 
 ALL_HIRAGANA = sorted(list(set(SEION + DAKUON + HANDAKUON + KOMOJI + CHOUON)))
 
-# ドメイン知識に基づく高相性ペア定義 (手動ボーナス/ベースライン)
-# 180度回転アンビグラムで成立しやすい代表的ペア（双方向）
-KNOWN_SYMMETRY_PAIRS = {
-    # ほぼそのまま・わずかな調整で成立するペア
-    ("し", "つ"): 0.95,
-    ("い", "い"): 0.88,
+# ドメイン知識および先行研究の実証実験に基づく高相性・不可読ペア定義
+# 1. 井上・高橋 (2020) §6.1 表1・表2: 被験者可読率 1.0 (完璧に読めた実証ペア)
+# 2. 野村一晟 (2018): アンビグラム作家の実践的デザインペア
+EMPIRICAL_READABLE_PAIRS = {
+    # 井上・高橋 (2020) 可読率 1.0 実証ペア
+    ("あ", "ま"): 0.95,
+    ("い", "け"): 0.95,
+    ("え", "る"): 0.96,
+    ("き", "わ"): 0.94,
+    ("さ", "や"): 0.93,
+    ("を", "を"): 0.95,
+    ("せ", "み"): 0.93,
+    ("た", "む"): 0.93,
+    ("は", "れ"): 0.94,
+    ("も", "よ"): 0.94,
+    # 手動困難とされていたが自動生成で可読率 1.0 を達成したペア
+    ("せ", "ぬ"): 0.95,
+    ("さ", "を"): 0.91,
+    ("つ", "む"): 0.92,
+    ("う", "ぬ"): 0.93,
+    ("あ", "そ"): 0.91,
+    
+    # 伝統的・幾何学的にほぼ自明な回転対称ペア
+    ("し", "つ"): 0.96,
+    ("い", "い"): 0.90,
     ("の", "の"): 0.98,
-    ("こ", "こ"): 0.90,
-    ("く", "く"): 0.88,
-    ("へ", "へ"): 0.92,
-    ("り", "り"): 0.88,
+    ("こ", "こ"): 0.92,
+    ("く", "く"): 0.90,
+    ("へ", "へ"): 0.94,
+    ("り", "り"): 0.90,
     ("ー", "ー"): 1.00,
     
-    # タイポグラフィデザインでよく成立するペア
-    ("う", "ん"): 0.82,
-    ("た", "に"): 0.80,
-    ("ち", "さ"): 0.78,
-    ("て", "と"): 0.75,
-    ("る", "ろ"): 0.85,
-    ("あ", "お"): 0.75,
-    ("ま", "ほ"): 0.72,
-    ("す", "む"): 0.70,
-    ("め", "ぬ"): 0.80,
-    ("そ", "そ"): 0.75,
-    ("わ", "れ"): 0.72,
-    ("ね", "わ"): 0.70,
-    ("ゆ", "ゆ"): 0.70,
-    ("み", "み"): 0.68,
+    # タイポグラフィデザイン定番ペア (野村 2018)
+    ("う", "ん"): 0.85,
+    ("た", "に"): 0.82,
+    ("ち", "さ"): 0.80,
+    ("て", "と"): 0.78,
+    ("る", "ろ"): 0.86,
+    ("あ", "お"): 0.78,
+    ("ま", "ほ"): 0.75,
+    ("す", "む"): 0.73,
+    ("め", "ぬ"): 0.82,
+    ("そ", "そ"): 0.78,
+    ("わ", "れ"): 0.75,
+    ("ね", "わ"): 0.72,
+    ("ゆ", "ゆ"): 0.72,
+    ("み", "み"): 0.70,
+}
+
+# 井上・高橋 (2020) §6.1: 幾何学的に重なりがあっても被験者可読率 0.0 (判読不能) だったペア
+EMPIRICAL_UNREADABLE_PAIRS = {
+    ("い", "ね"): 0.15,
+    ("う", "お"): 0.15,
+    ("く", "と"): 0.15,
+    ("し", "や"): 0.15,
+    ("せ", "ち"): 0.15,
+    ("ね", "へ"): 0.15,
+    ("と", "の"): 0.15,
 }
 
 def render_char_image(char: str, font_path: Path, size: int = 128) -> np.ndarray:
@@ -67,27 +97,33 @@ def render_char_image(char: str, font_path: Path, size: int = 128) -> np.ndarray
     return (arr > 0.3).astype(np.float32)
 
 def calculate_geometric_similarity(img_a: np.ndarray, img_b: np.ndarray) -> float:
-    """文字Aと180度回転した文字Bの幾何学的類似度（IoU＋重なり比率）を計算"""
-    # img_b を 180度回転
+    """
+    文字Aと180度回転した文字Bの幾何学的類似度を計算
+    魏・山口 (2023) §2.2 に従い、正位置と180度反転位置の調和平均 (Harmonic Mean) を採用。
+    片方しか成立しない非対称ペアを数学的に排除する。
+    """
     img_b_rot = np.rot90(img_b, 2)
     
     intersection = np.sum(img_a * img_b_rot)
-    union = np.sum(np.clip(img_a + img_b_rot, 0, 1))
-    
-    if union == 0:
-        return 0.0
-    
-    iou = intersection / union
-    # 包含度（それぞれの文字の面積に対する重なり率）
     area_a = np.sum(img_a)
     area_b = np.sum(img_b_rot)
-    if area_a == 0 or area_b == 0:
-        return 0.0
-        
-    coverage = (intersection / area_a + intersection / area_b) / 2.0
     
-    # 幾何スコア（IoUとCoverageの線形結合）
-    return float(0.4 * iou + 0.6 * coverage)
+    if area_a == 0 or area_b == 0 or intersection == 0:
+        return 0.0
+    
+    # それぞれの文字に対するカバー率
+    cov_a = intersection / area_a
+    cov_b = intersection / area_b
+    
+    # 調和平均 (どちらか一方が低いと急激にペナルティがかかる)
+    harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
+    
+    # IoU
+    union = np.sum(np.clip(img_a + img_b_rot, 0, 1))
+    iou = intersection / union if union > 0 else 0.0
+    
+    # 幾何スコア（IoU 30% + 調和カバー率 70%）
+    return float(0.3 * iou + 0.7 * harmonic_cov)
 
 def build_compatibility_matrix(output_path: Path = OUTPUT_MATRIX_PATH) -> dict[str, dict[str, float]]:
     """全ひらがなペアのハイブリッド適性マトリクスを構築してJSONに保存"""
@@ -96,7 +132,7 @@ def build_compatibility_matrix(output_path: Path = OUTPUT_MATRIX_PATH) -> dict[s
     for c in ALL_HIRAGANA:
         char_images[c] = render_char_image(c, FONT_PATH)
     
-    print("幾何学的類似度 & ハイブリッド補正計算中...")
+    print("幾何学的類似度 (調和平均) & 先行研究エビデンス補正計算中...")
     matrix: dict[str, dict[str, float]] = {}
     
     for c1 in ALL_HIRAGANA:
@@ -104,37 +140,36 @@ def build_compatibility_matrix(output_path: Path = OUTPUT_MATRIX_PATH) -> dict[s
         for c2 in ALL_HIRAGANA:
             geom_score = calculate_geometric_similarity(char_images[c1], char_images[c2])
             
-            # ドメイン知識ルールの適用
             pair_key = (c1, c2)
             rev_pair_key = (c2, c1)
             
-            rule_score = None
-            if pair_key in KNOWN_SYMMETRY_PAIRS:
-                rule_score = KNOWN_SYMMETRY_PAIRS[pair_key]
-            elif rev_pair_key in KNOWN_SYMMETRY_PAIRS:
-                rule_score = KNOWN_SYMMETRY_PAIRS[rev_pair_key]
-                
-            if rule_score is not None:
-                # ルールスコアを強めにブレンド (70% ルール, 30% 幾何)
-                final_score = 0.7 * rule_score + 0.3 * geom_score
+            # 1. 井上・高橋 (2020) 実証不可読ペアのペナルティ判定
+            if pair_key in EMPIRICAL_UNREADABLE_PAIRS or rev_pair_key in EMPIRICAL_UNREADABLE_PAIRS:
+                penalty_val = EMPIRICAL_UNREADABLE_PAIRS.get(pair_key, EMPIRICAL_UNREADABLE_PAIRS.get(rev_pair_key))
+                final_score = min(penalty_val, geom_score * 0.5)
+            # 2. 実証可読ペア / デザイン定義ペアの適用
+            elif pair_key in EMPIRICAL_READABLE_PAIRS or rev_pair_key in EMPIRICAL_READABLE_PAIRS:
+                rule_score = EMPIRICAL_READABLE_PAIRS.get(pair_key, EMPIRICAL_READABLE_PAIRS.get(rev_pair_key))
+                # 実証ルールを強く反映 (75% ルール, 25% 幾何)
+                final_score = 0.75 * rule_score + 0.25 * geom_score
             else:
-                # 純粋幾何スコアをスケーリング (アンビグラムとしての許容度に合わせて調整)
-                final_score = min(1.0, geom_score * 1.5)
+                # 純粋幾何スコア (調和平均ベース)
+                final_score = min(1.0, geom_score * 1.4)
                 
             # 濁点・半濁点の整合性チェック
-            # どちらか一方のみ濁点・半濁点がある場合はペナルティ
             has_dakuon_1 = c1 in DAKUON or c1 in HANDAKUON
             has_dakuon_2 = c2 in DAKUON or c2 in HANDAKUON
             if has_dakuon_1 != has_dakuon_2:
-                final_score *= 0.75
+                final_score *= 0.70
                 
             # 小文字の整合性
             has_komoji_1 = c1 in KOMOJI
             has_komoji_2 = c2 in KOMOJI
             if has_komoji_1 != has_komoji_2:
-                final_score *= 0.70
+                final_score *= 0.65
                 
             matrix[c1][c2] = round(float(final_score), 4)
+
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
