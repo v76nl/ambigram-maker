@@ -21,9 +21,11 @@ export const App: React.FC = () => {
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
 
   // グラフィック生成ステート
-  const [activeEngine, setActiveEngine] = useState<string>("vector");
+  const [activeEngine, setActiveEngine] = useState<string>("morphology"); // 手法Aをデフォルトにして二重線を解消
   const [results, setResults] = useState<{
     vector?: EngineResult;
+    morphology?: EngineResult;
+    skeleton?: EngineResult;
     bitmap?: EngineResult;
     gemini?: EngineResult;
   }>({});
@@ -32,6 +34,13 @@ export const App: React.FC = () => {
   // パラメータ
   const [blendRatio, setBlendRatio] = useState<number>(0.5);
   const [highlightMode, setHighlightMode] = useState<boolean>(false);
+  // 手法A (論理積モルフォロジー) パラメータ
+  const [dilationSize, setDilationSize] = useState<number>(11);
+  // 手法B (スケルトン平均化) パラメータ
+  const [strokeThickness, setStrokeThickness] = useState<number>(15);
+  // 手法A/B 共通 (異文字固有パーツ保持)
+  const [diffBlend, setDiffBlend] = useState<number>(0.35);
+  // ビットマップパラメータ
   const [blendWeight, setBlendWeight] = useState<number>(0.65);
   const [smoothness, setSmoothness] = useState<number>(7);
   const [thresholdVal, setThresholdVal] = useState<number>(110);
@@ -78,6 +87,9 @@ export const App: React.FC = () => {
           blendRatio,
           strokeWidth: 0.0,
           highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
+          dilationSize,
+          strokeThickness,
+          diffBlend,
           blendWeight,
           smoothness,
           thresholdVal,
@@ -95,10 +107,22 @@ export const App: React.FC = () => {
         setIsGenerating(false);
       }
     },
-    [activeEngine, blendRatio, highlightMode, blendWeight, smoothness, thresholdVal, apiKey, stylePrompt]
+    [
+      activeEngine,
+      blendRatio,
+      highlightMode,
+      dilationSize,
+      strokeThickness,
+      diffBlend,
+      blendWeight,
+      smoothness,
+      thresholdVal,
+      apiKey,
+      stylePrompt,
+    ]
   );
 
-  // 単語変更時に生成
+  // 単語変更またはエンジン変更時に生成 (未生成の場合)
   useEffect(() => {
     if (selectedWord) {
       triggerGenerate(selectedWord);
@@ -172,17 +196,24 @@ export const App: React.FC = () => {
             wordItem={selectedWord}
             activeResult={currentResult}
             activeEngine={activeEngine}
+            onEngineChange={(engine) => setActiveEngine(engine)}
             highlightMode={highlightMode}
             onToggleHighlightMode={handleToggleHighlightMode}
           />
 
-          {/* 3手法比較・パラメータ調整 */}
+          {/* 生成手法比較・パラメータ調整 */}
           <EngineCompare
             activeEngine={activeEngine}
             onEngineChange={(engine) => setActiveEngine(engine)}
             results={results}
             blendRatio={blendRatio}
             onBlendRatioChange={setBlendRatio}
+            dilationSize={dilationSize}
+            onDilationSizeChange={setDilationSize}
+            strokeThickness={strokeThickness}
+            onStrokeThicknessChange={setStrokeThickness}
+            diffBlend={diffBlend}
+            onDiffBlendChange={setDiffBlend}
             blendWeight={blendWeight}
             onBlendWeightChange={setBlendWeight}
             smoothness={smoothness}

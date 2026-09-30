@@ -32,10 +32,13 @@ export interface SearchWordsParams {
 
 export interface GenerateParams {
   word: string;
-  engine?: "vector" | "bitmap" | "gemini" | "all";
+  engine?: "vector" | "morphology" | "skeleton" | "bitmap" | "gemini" | "all";
   blendRatio?: number;
   strokeWidth?: number;
   highlightMode?: boolean;
+  dilationSize?: number;
+  strokeThickness?: number;
+  diffBlend?: number;
   blendWeight?: number;
   smoothness?: number;
   thresholdVal?: number;
@@ -56,6 +59,8 @@ export interface GenerateResponse {
   word: string;
   results: {
     vector?: EngineResult;
+    morphology?: EngineResult;
+    skeleton?: EngineResult;
     bitmap?: EngineResult;
     gemini?: EngineResult;
   };
@@ -100,6 +105,9 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       blend_ratio: params.blendRatio,
       stroke_width: params.strokeWidth,
       highlight_mode: params.highlightMode,
+      dilation_size: params.dilationSize,
+      stroke_thickness: params.strokeThickness,
+      diff_blend: params.diffBlend,
       blend_weight: params.blendWeight,
       smoothness: params.smoothness,
       threshold_val: params.thresholdVal,

@@ -6,6 +6,7 @@ interface AmbigramViewerProps {
   wordItem: WordItem | null;
   activeResult: EngineResult | null;
   activeEngine: string;
+  onEngineChange?: (engine: string) => void;
   highlightMode?: boolean;
   onToggleHighlightMode?: () => void;
 }
@@ -14,6 +15,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   wordItem,
   activeResult,
   activeEngine,
+  onEngineChange,
   highlightMode = false,
   onToggleHighlightMode,
 }) => {
@@ -81,6 +83,58 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     <section className="viewer-container">
       {/* メインプレビューキャンバス */}
       <div className="canvas-card">
+        {/* 手法クイック切り替えセレクター */}
+        {onEngineChange && (
+          <div className="engine-quick-bar">
+            <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#666", marginRight: "0.25rem" }}>
+              生成手法:
+            </span>
+            <button
+              className={`engine-pill-btn ${activeEngine === "morphology" ? "active" : ""}`}
+              onClick={() => onEngineChange("morphology")}
+              title="論理積 (AND) で重なりを抽出し、モルフォロジー膨張で二重線を解消した滑らかな単一ストローク"
+            >
+              <span className="pill-badge pill-badge-primary">手法A</span>
+              <span>論理積＋膨張 (二重線解消)</span>
+            </button>
+
+            <button
+              className={`engine-pill-btn ${activeEngine === "skeleton" ? "active" : ""}`}
+              onClick={() => onEngineChange("skeleton")}
+              title="魏・山口 (2023) に着想を得た、距離場による中心線抽出と均一単一ストローク再描画"
+            >
+              <span className="pill-badge pill-badge-secondary">手法B</span>
+              <span>骨格平均化 (単一ストローク)</span>
+            </button>
+
+            <button
+              className={`engine-pill-btn ${activeEngine === "vector" ? "active" : ""}`}
+              onClick={() => onEngineChange("vector")}
+              title="フォントパスの正位置と180度反転を幾何学的にオーバーレイ配置 (原案)"
+            >
+              <span className="pill-badge">原案</span>
+              <span>ベクター重ね合わせ</span>
+            </button>
+
+            <button
+              className={`engine-pill-btn ${activeEngine === "bitmap" ? "active" : ""}`}
+              onClick={() => onEngineChange("bitmap")}
+              title="ビットマップ距離変換とエネルギー合成による輪郭最適化"
+            >
+              <span className="pill-badge">手法2</span>
+              <span>ビットマップ最適化</span>
+            </button>
+          </div>
+        )}
+
+        {/* 手法の動作概要ヒント */}
+        <div style={{ fontSize: "0.78rem", color: "#666", marginBottom: "1rem", textAlign: "center" }}>
+          {activeEngine === "morphology" && "★ 手法A: 正反のピクセル論理積 (AND) を『共通対称核』とし、モルフォロジー膨張で二重線を解消"}
+          {activeEngine === "skeleton" && "★ 手法B: 魏・山口 (2023) 準拠。調和平均距離場から中心骨格を抽出し、均一ブラシで一本化"}
+          {activeEngine === "vector" && "ベクター重ね合わせ: 2文字のアウトラインを直接重ね合わせる原案 (二重線・ゴーストが発生)"}
+          {activeEngine === "bitmap" && "ビットマップ最適化: 距離場と重み付きエネルギー合成による滑らかな輪郭融合"}
+        </div>
+
         {/* ハイライトモード時の凡例表示 (石崎ほか 2024「ひらがな~る」着想) */}
         {highlightMode && activeEngine === "vector" && (
           <div
