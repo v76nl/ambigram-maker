@@ -8,6 +8,8 @@ from search.finder import AmbigramFinder
 from generators.vector_engine import VectorAmbigramEngine
 from generators.bitmap_engine import BitmapAmbigramEngine
 from generators.gemini_engine import GeminiAmbigramEngine
+from generators.morphology_engine import MorphologyAmbigramEngine
+from generators.skeleton_engine import SkeletonAmbigramEngine
 
 app = FastAPI(
     title="Ambigram Maker API",
@@ -29,17 +31,25 @@ finder = AmbigramFinder()
 vector_engine = VectorAmbigramEngine()
 bitmap_engine = BitmapAmbigramEngine()
 gemini_engine = GeminiAmbigramEngine()
+morphology_engine = MorphologyAmbigramEngine()
+skeleton_engine = SkeletonAmbigramEngine()
 
 class EvaluateRequest(BaseModel):
     word: str
 
 class GenerateRequest(BaseModel):
     word: str
-    engine: str = "all"  # "vector", "bitmap", "gemini", "all"
+    engine: str = "all"  # "vector", "morphology", "skeleton", "bitmap", "gemini", "all"
     # ベクター用パラメータ
     blend_ratio: Optional[float] = 0.5
     stroke_width: Optional[float] = 0.0
     highlight_mode: Optional[bool] = False
+    # 手法A (論理積モルフォロジー) 用パラメータ
+    dilation_size: Optional[int] = 11
+    # 手法B (スケルトン平均化) 用パラメータ
+    stroke_thickness: Optional[int] = 15
+    # 手法A/B 共通パラメータ
+    diff_blend: Optional[float] = 0.35
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -94,6 +104,21 @@ def generate_ambigram(req: GenerateRequest):
             blend_ratio=req.blend_ratio or 0.5,
             stroke_width=req.stroke_width or 0.0,
             highlight_mode=req.highlight_mode or False,
+        )
+
+    if req.engine in ("morphology", "all"):
+        results["morphology"] = morphology_engine.generate(
+            req.word,
+            dilation_size=req.dilation_size or 11,
+            smoothness=req.smoothness or 7,
+            diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
+        )
+
+    if req.engine in ("skeleton", "all"):
+        results["skeleton"] = skeleton_engine.generate(
+            req.word,
+            stroke_thickness=req.stroke_thickness or 15,
+            diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
         )
 
     if req.engine in ("bitmap", "all"):
