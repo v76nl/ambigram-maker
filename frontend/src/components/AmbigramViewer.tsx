@@ -252,7 +252,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
       <div className="m3-card" style={{ gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--md-sys-color-on-surface-variant)" }}>
           <Layers size={16} />
-          <span>文字ペア対称性・スコア詳細 ({wordItem.reading})</span>
+          <span>文字ペア対称性・スコア詳細 ({wordItem.reading}{wordItem.katakana && wordItem.katakana.length > 0 ? ` [${wordItem.katakana[0]}]` : (wordItem.kanji && wordItem.kanji.length > 0 && !["此処", "其処"].includes(wordItem.kanji[0]) ? ` [${wordItem.kanji[0]}]` : "")})</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "0.25rem" }}>
           {wordItem.pairs.map((p, idx) => (

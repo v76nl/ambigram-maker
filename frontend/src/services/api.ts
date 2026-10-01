@@ -15,6 +15,9 @@ export interface WordItem {
   length: number;
   common: boolean;
   kanji: string[];
+  katakana?: string[];
+  display?: string;
+  input?: string;
   score: number;
   geometric_mean: number;
   min_pair_score: number;

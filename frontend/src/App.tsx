@@ -15,10 +15,12 @@ export const App: React.FC = () => {
   // 単語探索・選択ステート
   const [words, setWords] = useState<WordItem[]>([]);
   const [selectedWord, setSelectedWord] = useState<WordItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [minLength, setMinLength] = useState<number>(2);
   const [maxLength, setMaxLength] = useState<number>(5);
   const [commonOnly, setCommonOnly] = useState<boolean>(true);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // グラフィック生成ステート
   const [activeEngine, setActiveEngine] = useState<string>("morphology"); // 手法Aをデフォルトにして二重線を解消
@@ -52,27 +54,34 @@ export const App: React.FC = () => {
   // 単語一覧の読み込み
   const loadWords = useCallback(async () => {
     setIsLoadingWords(true);
+    setLoadError(null);
     try {
       const fetched = await searchWords({
         minLength,
         maxLength,
-        commonOnly,
-        minScore: 0.6,
+        commonOnly: searchQuery.trim() ? false : commonOnly, // 検索時は全単語から絞り込み
+        minScore: searchQuery.trim() ? 0.1 : 0.6, // 検索時は見つかりやすいよう閾値緩和
+        query: searchQuery.trim() || undefined,
         limit: 50,
       });
       setWords(fetched);
-      if (fetched.length > 0 && !selectedWord) {
-        setSelectedWord(fetched[0]);
+      if (fetched.length > 0) {
+        setSelectedWord((prev) => prev || fetched[0]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("単語読み込みエラー:", err);
+      setLoadError("バックエンドAPI (http://127.0.0.1:8000) への接続に失敗しました。サーバーが起動しているか確認してください。");
     } finally {
       setIsLoadingWords(false);
     }
-  }, [minLength, maxLength, commonOnly]);
+  }, [minLength, maxLength, commonOnly, searchQuery]);
 
   useEffect(() => {
-    loadWords();
+    // 検索クエリ入力時のデバウンス
+    const timer = setTimeout(() => {
+      loadWords();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [loadWords]);
 
   // アンビグラム生成
@@ -178,6 +187,8 @@ export const App: React.FC = () => {
           selectedWord={selectedWord}
           onSelectWord={handleSelectWord}
           onCustomWordSubmit={handleCustomWord}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
           minLength={minLength}
           maxLength={maxLength}
           onLengthChange={(min, max) => {
@@ -187,6 +198,8 @@ export const App: React.FC = () => {
           commonOnly={commonOnly}
           onCommonOnlyChange={(val) => setCommonOnly(val)}
           isLoading={isLoadingWords}
+          loadError={loadError}
+          onRetry={loadWords}
         />
 
         {/* 右側: ビューワー ＋ 手法比較・設定 ＋ エクスポート */}
