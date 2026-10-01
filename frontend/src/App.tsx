@@ -45,8 +45,9 @@ export const App: React.FC = () => {
   const [dilationSize, setDilationSize] = useState<number>(11);
   // 手法B (スケルトン平均化) パラメータ
   const [strokeThickness, setStrokeThickness] = useState<number>(15);
-  // 手法A/B 共通 (異文字固有パーツ保持)
+  // 手法A/B 共通 (異文字固有パーツ保持・事前太らせ)
   const [diffBlend, setDiffBlend] = useState<number>(0.35);
+  const [preBold, setPreBold] = useState<number>(4); // 近接縦棒の結合力強化 (Pre-Bold)
   // ビットマップパラメータ
   const [blendWeight, setBlendWeight] = useState<number>(0.65);
   const [smoothness, setSmoothness] = useState<number>(7);
@@ -117,6 +118,7 @@ export const App: React.FC = () => {
           dilationSize,
           strokeThickness,
           diffBlend,
+          preBold,
           blendWeight,
           smoothness,
           thresholdVal,
@@ -142,6 +144,7 @@ export const App: React.FC = () => {
       dilationSize,
       strokeThickness,
       diffBlend,
+      preBold,
       blendWeight,
       smoothness,
       thresholdVal,
@@ -252,6 +255,8 @@ export const App: React.FC = () => {
             onStrokeThicknessChange={setStrokeThickness}
             diffBlend={diffBlend}
             onDiffBlendChange={setDiffBlend}
+            preBold={preBold}
+            onPreBoldChange={setPreBold}
             blendWeight={blendWeight}
             onBlendWeightChange={setBlendWeight}
             smoothness={smoothness}

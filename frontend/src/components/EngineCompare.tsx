@@ -25,6 +25,9 @@ interface EngineCompareProps {
   // 手法A/B 共通 (異文字パーツ保持)
   diffBlend: number;
   onDiffBlendChange: (val: number) => void;
+  // 近接ストローク事前太らせ
+  preBold?: number;
+  onPreBoldChange?: (val: number) => void;
   // ベクター用パラメータ
   blendRatio: number;
   onBlendRatioChange: (val: number) => void;
@@ -58,6 +61,8 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onStrokeThicknessChange,
   diffBlend,
   onDiffBlendChange,
+  preBold = 4,
+  onPreBoldChange,
   blendRatio,
   onBlendRatioChange,
   blendWeight,
@@ -200,6 +205,25 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
 
             <div className="slider-group">
               <div className="slider-header">
+                <span>事前太らせ (Pre-Bold: 近接縦棒の結合力強化)</span>
+                <span>{preBold} px</span>
+              </div>
+              <input
+                type="range"
+                className="m3-slider"
+                min="0"
+                max="10"
+                step="1"
+                value={preBold}
+                onChange={(e) => onPreBoldChange?.(parseInt(e.target.value, 10))}
+              />
+              <span style={{ fontSize: "0.72rem", color: "var(--md-sys-color-outline)" }}>
+                ※「の」の中央縦棒など、回転で左右に離れやすい近接ストロークを接触・融合させる事前膨張量
+              </span>
+            </div>
+
+            <div className="slider-group">
+              <div className="slider-header">
                 <span>異文字パーツ保持率 (差分ブレンド: diff_blend)</span>
                 <span>{(diffBlend * 100).toFixed(0)}%</span>
               </div>
@@ -236,6 +260,25 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={strokeThickness}
                 onChange={(e) => onStrokeThicknessChange(parseInt(e.target.value, 10))}
               />
+            </div>
+
+            <div className="slider-group">
+              <div className="slider-header">
+                <span>事前太らせ (Pre-Bold: 距離場吸引力強化)</span>
+                <span>{preBold} px</span>
+              </div>
+              <input
+                type="range"
+                className="m3-slider"
+                min="0"
+                max="10"
+                step="1"
+                value={preBold}
+                onChange={(e) => onPreBoldChange?.(parseInt(e.target.value, 10))}
+              />
+              <span style={{ fontSize: "0.72rem", color: "var(--md-sys-color-outline)" }}>
+                ※離れた縦棒（「の」など）を中間の1本骨格線に吸着・スナップさせる事前太らせ量
+              </span>
             </div>
 
             <div className="slider-group">

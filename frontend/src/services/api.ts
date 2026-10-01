@@ -47,6 +47,7 @@ export interface FontScoreItem {
   description: string;
   score: number;
   pair_scores: number[];
+  offsets?: [number, number][];
 }
 
 export interface WordFontsEval {
@@ -67,6 +68,7 @@ export interface GenerateParams {
   dilationSize?: number;
   strokeThickness?: number;
   diffBlend?: number;
+  preBold?: number;
   blendWeight?: number;
   smoothness?: number;
   thresholdVal?: number;
@@ -137,6 +139,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       dilation_size: params.dilationSize,
       stroke_thickness: params.strokeThickness,
       diff_blend: params.diffBlend,
+      pre_bold: params.preBold,
       blend_weight: params.blendWeight,
       smoothness: params.smoothness,
       threshold_val: params.thresholdVal,

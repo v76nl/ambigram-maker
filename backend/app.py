@@ -52,6 +52,7 @@ class GenerateRequest(BaseModel):
     stroke_thickness: Optional[int] = 15
     # 手法A/B 共通パラメータ
     diff_blend: Optional[float] = 0.35
+    pre_bold: Optional[int] = 4  # 事前太らせ量 (近接縦棒の結合力強化)
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -141,6 +142,7 @@ def generate_ambigram(req: GenerateRequest):
             dilation_size=req.dilation_size or 11,
             smoothness=req.smoothness or 7,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
+            pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
         )
 
@@ -149,6 +151,7 @@ def generate_ambigram(req: GenerateRequest):
             target_word,
             stroke_thickness=req.stroke_thickness or 15,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
+            pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
         )
 

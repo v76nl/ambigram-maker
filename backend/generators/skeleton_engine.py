@@ -63,6 +63,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         size: int = 512,
         stroke_thickness: int = 15,
         diff_blend: float = 0.35,
+        pre_bold: int = 4,
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
     ) -> np.ndarray:
@@ -72,6 +73,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - c2: 180度反転位置の文字
         - stroke_thickness: 再描画するストロークの線幅 (px)
         - diff_blend: 異文字ペア時に固有ストローク骨格を残す重み
+        - pre_bold: 事前太らせ量 (近接ストローク距離場の吸引力を強化)
         - shift: 重心微小シフト (dx, dy)
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
@@ -87,9 +89,20 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
             img2_rot = cv2.warpAffine(img2_rot, M, (size, size))
 
+        # ② 事前太らせ (Pre-Bold) で距離場の交差領域・吸引力を強化
+        if pre_bold > 0:
+            kw = pre_bold * 2 + 1
+            kh = max(3, (pre_bold * 2 + 1) // 2 * 2 + 1)
+            pre_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kw, kh))
+            p_img1 = cv2.dilate(img1, pre_kernel)
+            p_img2_rot = cv2.dilate(img2_rot, pre_kernel)
+        else:
+            p_img1 = img1
+            p_img2_rot = img2_rot
+
         # 1. 各文字のL2ユークリッド距離変換
-        d1 = cv2.distanceTransform((img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
-        d2 = cv2.distanceTransform((img2_rot > 0).astype(np.uint8), cv2.DIST_L2, 5)
+        d1 = cv2.distanceTransform((p_img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
+        d2 = cv2.distanceTransform((p_img2_rot > 0).astype(np.uint8), cv2.DIST_L2, 5)
 
         # 2. 調和平均距離場による中心線エネルギー場の算出
         harmonic_field = (2.0 * d1 * d2) / (d1 + d2 + 1e-5)
@@ -131,6 +144,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         word: str,
         stroke_thickness: int = 15,
         diff_blend: float = 0.35,
+        pre_bold: int = 4,
         slot_size: int = 512,
         font_id: str = "auto",
         **params,
@@ -152,8 +166,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         else:
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
-            best_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
-            selected_offsets = best_meta["offsets"] if best_meta else [(0, 0)] * n
+            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
+            selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
 
         selected_font_path = font_manager.get_font_path(selected_fid)
 
@@ -173,6 +187,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 size=slot_size,
                 stroke_thickness=stroke_thickness,
                 diff_blend=diff_blend,
+                pre_bold=pre_bold,
                 font_path=selected_font_path,
                 shift=shift,
             )
@@ -217,8 +232,11 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "length": n,
                 "stroke_thickness": stroke_thickness,
                 "diff_blend": diff_blend,
+                "pre_bold": pre_bold,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
+                "selected_style": selected_meta.get("style", "") if selected_meta else "",
+                "selected_offsets": selected_offsets,
                 "best_font_id": font_eval["best_font_id"],
                 "best_font_name": font_eval["best_font_name"],
                 "font_scores": font_eval["font_scores"],

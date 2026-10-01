@@ -43,6 +43,9 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
   const details = activeResult?.details;
   const selectedFontName = details?.selected_font_name;
+  const selectedStyle = details?.selected_style;
+  const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
+  const preBold = details?.pre_bold as number | undefined;
   const bestFontId = details?.best_font_id;
   const bestFontName = details?.best_font_name;
   const fontScores = details?.font_scores as FontScoreItem[] | undefined;
@@ -198,14 +201,40 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
               )}
             </div>
 
-            {/* 自動最適化ステータス案内 */}
-            {selectedFont === "auto" && selectedFontName && (
+            {/* フォント最適化・座標補正ステータス案内 */}
+            {selectedFontName && (
               <div className="font-auto-summary">
-                <Sparkles size={14} className="sparkle-anim" />
-                <span>
-                  全フォントを自動探索し、最も重ね合わせ適性が高い<strong>『{selectedFontName}』</strong>
-                  {bestScorePercent !== null && ` (${bestScorePercent}% 一致)`} を自動適用しています。
-                </span>
+                <Sparkles size={15} className="sparkle-anim" />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", width: "100%" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <span>
+                      {selectedFont === "auto" ? "🏆 自動最適化適用中: " : "手動指定フォント: "}
+                      <strong>『{selectedFontName}』</strong>
+                      {bestScorePercent !== null && ` (${bestScorePercent}% 一致)`}
+                    </span>
+                    <span className="font-status-tag">
+                      スタイル: <strong>{selectedStyle || "標準"}</strong>
+                    </span>
+                  </div>
+
+                  {/* 座標揺らし＆フォント太らせ（ウェイト）結果の表示 */}
+                  <div style={{ display: "flex", gap: "1.2rem", fontSize: "0.75rem", opacity: 0.9, flexWrap: "wrap", marginTop: "0.15rem" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                      <span>📐 座標揺らし補正:</span>
+                      <strong style={{ color: "var(--md-sys-color-primary)" }}>
+                        {selectedOffsets && selectedOffsets.length > 0
+                          ? selectedOffsets.map((off, idx) => `文字ペア${idx + 1}(ΔX:${off[0] > 0 ? "+" : ""}${off[0]}px, ΔY:${off[1] > 0 ? "+" : ""}${off[1]}px)`).join(" | ")
+                          : "補正なし (0px, 0px)"}
+                      </strong>
+                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                      <span>⚖️ 事前太らせ (Pre-Bold):</span>
+                      <strong style={{ color: "var(--md-sys-color-primary)" }}>
+                        {preBold !== undefined ? `+${preBold}px 結合膨張` : "標準"}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -213,7 +242,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
             {showFontDetails && fontScores && (
               <div className="font-comparison-panel">
                 <div className="font-comp-title">
-                  <span>フォント別 重なり幾何スコア (調和平均IoU)</span>
+                  <span>フォント別 重なり幾何スコア・座標補正 (調和平均IoU)</span>
                   <span style={{ fontSize: "0.75rem", color: "#666" }}>
                     ※クリックで直接そのフォントに切り替え可能
                   </span>
@@ -223,6 +252,11 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
                     const isWinner = s.id === bestFontId;
                     const isCurrent = (selectedFont === "auto" && isWinner) || selectedFont === s.id;
                     const pct = Math.round(s.score * 100);
+                    const offsets = (s as any).offsets as [number, number][] | undefined;
+                    const offsetLabel = offsets && offsets.length > 0
+                      ? offsets.map((off, i) => `ペア${i + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
+                      : "(0, 0)";
+
                     return (
                       <div
                         key={s.id}
@@ -237,10 +271,15 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
                             {s.name}
                             <span className="font-comp-style">({s.style})</span>
                           </span>
-                          <span className="font-comp-pct">
-                            {pct}%
-                            {isWinner && <span className="winner-badge">最高</span>}
-                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span className="font-comp-offset-tag" title="座標揺らし探索で算出された最適オフセット">
+                              📐 {offsetLabel}
+                            </span>
+                            <span className="font-comp-pct">
+                              {pct}%
+                              {isWinner && <span className="winner-badge">最高</span>}
+                            </span>
+                          </div>
                         </div>
                         <div className="font-comp-bar-bg">
                           <div

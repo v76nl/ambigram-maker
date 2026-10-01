@@ -3,6 +3,8 @@ from typing import Any, Optional
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+import cv2
+
 FONTS_DIR = Path(__file__).parent.parent / "fonts"
 
 FONT_PRESETS = {
@@ -57,8 +59,8 @@ class FontManager:
                 fallback = fonts_dir / "ZenMaruGothic-Medium.ttf"
                 self.font_paths[fid] = fallback if fallback.exists() else path
 
-        # レンダリングキャッシュ: (char, font_id, size) -> np.ndarray
-        self._char_cache: dict[tuple[str, str, int], np.ndarray] = {}
+        # レンダリングキャッシュ: (char, font_id, size, bold) -> np.ndarray
+        self._char_cache: dict[tuple[str, str, int, bool], np.ndarray] = {}
 
     def get_font_path(self, font_id: Optional[str] = None) -> Path:
         """指定されたフォントIDのファイルパスを取得（デフォルト: zen_maru）"""
@@ -70,9 +72,19 @@ class FontManager:
         """利用可能なフォントプリセットの一覧を取得"""
         return list(FONT_PRESETS.values())
 
-    def render_char_matrix(self, char: str, font_id: str, size: int = 128) -> np.ndarray:
-        """指定文字・指定フォントの2値配列（0 or 1）を取得（キャッシュ付き）"""
-        cache_key = (char, font_id, size)
+    def render_char_matrix(
+        self,
+        char: str,
+        font_id: str,
+        size: int = 128,
+        bold: bool = True,
+    ) -> np.ndarray:
+        """
+        指定文字・指定フォントの2値配列（0 or 1）を取得（キャッシュ付き）。
+        bold=True の場合、フォントを適度に太らせて（水平方向優先膨張）判定を強化し、
+        「の」の中央縦棒のような近接ストロークの重なり判定精度を高める。
+        """
+        cache_key = (char, font_id, size, bold)
         if cache_key in self._char_cache:
             return self._char_cache[cache_key]
 
@@ -91,8 +103,14 @@ class FontManager:
         y = (size - h) // 2 - bbox[1]
 
         draw.text((x, y), char, fill=255, font=font)
-        arr = np.array(img, dtype=np.float32) / 255.0
-        binary = (arr > 0.35).astype(np.float32)
+        u8 = np.array(img, dtype=np.uint8)
+
+        if bold:
+            # 水平方向をやや優先した膨張カーネル (3x3 または 5x3) でストロークを太らせる
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 3))
+            u8 = cv2.dilate(u8, kernel, iterations=1)
+
+        binary = (u8 > 90).astype(np.float32)
         self._char_cache[cache_key] = binary
         return binary
 
@@ -100,12 +118,12 @@ class FontManager:
         self,
         img_a: np.ndarray,
         img_b: np.ndarray,
-        max_shift: int = 3,
+        max_shift: int = 5,
     ) -> tuple[float, tuple[int, int]]:
         """
         正位置Aと180度反転Bの幾何類似度（調和平均IoU）を計算。
-        微小シフト探索 (-max_shift <= dx, dy <= max_shift) を行い、
-        最も一致率が高くなるオフセットと最高スコアを返す。
+        座標揺らし探索 (-max_shift <= dx, dy <= max_shift) を行い、
+        最も一致率が高くなる座標オフセットと最高スコアを採用する。
         """
         img_b_rot = np.rot90(img_b, 2)
         h, w = img_a.shape
@@ -118,12 +136,11 @@ class FontManager:
         best_score = 0.0
         best_offset = (0, 0)
 
-        # 3ピクセル単位で微小シフト探索 (計 7x7 = 49点探索)
+        # 座標揺らし探索 (計 (2*max_shift+1)^2 点を全数探索)
         shifts = range(-max_shift, max_shift + 1, 1)
 
         for dy in shifts:
             for dx in shifts:
-                # Bの反転画像を (dx, dy) シフト
                 shifted_b = np.zeros_like(img_b_rot)
                 
                 src_y_start = max(0, -dy)

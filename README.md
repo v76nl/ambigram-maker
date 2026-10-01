@@ -13,6 +13,7 @@ JMdict辞書から抽出した20万語以上のひらがな単語から幾何学
 - [グラフィック生成エンジン仕様](#グラフィック生成エンジン仕様)
 - [適性判定アルゴリズム](#適性判定アルゴリズム)
 - [同梱フォントのライセンスとクレジット](#同梱フォントのライセンスとクレジット)
+- [今後の改善課題 (Issues)](#今後の改善課題-issues)
 
 ---
 
@@ -171,5 +172,19 @@ SIL Open Font License 1.1 の規定（第2条）において：
 | **Shippori Mincho** (Bold) | 明朝体 | Copyright 2020 The Shippori Mincho Project Authors (FONTDASU) | [fontdasu/ShipporiMincho](https://github.com/fontdasu/ShipporiMincho) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
 
 ライセンス条文全文は [`backend/fonts/OFL.txt`](backend/fonts/OFL.txt) に収録されています。
+
+---
+
+## 今後の改善課題 (Issues)
+
+「の」の中央縦棒のように、外周ループは回転対称に近いが内部ストロークがオフセットしている文字における剛体回転の限界を克服するため、以下の2つの高度なアルゴリズムを今後の改善課題（Issue）として策定しています。
+
+1. **Issue #1: 近接ストローク吸引・スナップアルゴリズム (Skeleton Attraction)**
+   - 魏・山口 (2023) に着想を得た骨格中心線スナップ。一定距離内の平行ストローク同士を中間の回転対称軸に磁石のように吸着させて完全一本化。
+2. **Issue #2: 非剛体ワープ・局所自由変形エンジン (Non-rigid Morphing / Thin Plate Spline)**
+   - 石崎ほか (2024)「ひらがな~る」に着想を得た薄板スプライン変形。外周形状を固定したまま、中央棒のみを中心対称軸へ数ピクセル曲げて完全一致させる手法。
+
+詳細な技術仕様・アルゴリズム設計案は [`docs/ISSUES.md`](docs/ISSUES.md) を参照してください。
+
 
 

@@ -47,6 +47,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         dilation_size: int = 11,
         smoothness: int = 7,
         diff_blend: float = 0.35,
+        pre_bold: int = 4,
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
     ) -> np.ndarray:
@@ -54,13 +55,14 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         1文字スロットの論理積＋モルフォロジー最適化
         - c1: 正位置の文字
         - c2: 180度反転位置の文字 (c2を180度回転して重ねる)
-        - shift: 重心微小シフト (dx, dy)
+        - pre_bold: 事前太らせ量 (水平異方性膨張により「の」の中央縦棒等の近接ストロークを確実に結合)
+        - shift: 座標揺らし探索で得られた最適オフセット (dx, dy)
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
         img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
 
-        # 最適重心シフトの適用 (128px空間の微小オフセットを高解像度にスケール)
+        # 最適重心シフトの適用 (128px空間のオフセットを高解像度にスケール)
         dx, dy = shift
         if dx != 0 or dy != 0:
             scale_factor = size / 128.0
@@ -69,14 +71,26 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
             img2_rot = cv2.warpAffine(img2_rot, M, (size, size))
 
-        # 1. 論理積 (AND): 二重線やゴーストのない『共通対称核』
-        intersection = cv2.bitwise_and(img1, img2_rot)
+        # ② フォントを太らせて（Pre-Dilation）判定・共通核を強化
+        # 水平方向を優先した異方性カーネルにより、左右に離れやすい縦棒同士を確実に接触・合体させる
+        if pre_bold > 0:
+            kw = pre_bold * 2 + 1
+            kh = max(3, (pre_bold * 2 + 1) // 2 * 2 + 1)
+            pre_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kw, kh))
+            p_img1 = cv2.dilate(img1, pre_kernel)
+            p_img2_rot = cv2.dilate(img2_rot, pre_kernel)
+        else:
+            p_img1 = img1
+            p_img2_rot = img2_rot
+
+        # 1. 論理積 (AND): 太らせた文字同士の交差領域を抽出
+        intersection = cv2.bitwise_and(p_img1, p_img2_rot)
 
         # 2. 差分抽出 (異文字ペアの固有識別ストローク)
         diff1 = cv2.subtract(img1, img2_rot)
         diff2 = cv2.subtract(img2_rot, img1)
 
-        # 同文字ペア (こ-こ 等) では純粋なANDを重視し、異文字ペアでは固有パーツを適応ブレンド
+        # 同文字ペア (こ-こ, の等) では純粋なANDを重視し、異文字ペアでは固有パーツを適応ブレンド
         if c1 == c2:
             base_img = intersection
         else:
@@ -112,6 +126,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         dilation_size: int = 11,
         smoothness: int = 7,
         diff_blend: float = 0.35,
+        pre_bold: int = 4,
         slot_size: int = 512,
         font_id: str = "auto",
         **params,
@@ -133,8 +148,8 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         else:
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
-            best_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
-            selected_offsets = best_meta["offsets"] if best_meta else [(0, 0)] * n
+            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
+            selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
 
         selected_font_path = font_manager.get_font_path(selected_fid)
 
@@ -157,6 +172,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 dilation_size=dilation_size,
                 smoothness=smoothness,
                 diff_blend=diff_blend,
+                pre_bold=pre_bold,
                 font_path=selected_font_path,
                 shift=shift,
             )
@@ -202,8 +218,11 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 "dilation_size": dilation_size,
                 "smoothness": smoothness,
                 "diff_blend": diff_blend,
+                "pre_bold": pre_bold,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
+                "selected_style": selected_meta.get("style", "") if selected_meta else "",
+                "selected_offsets": selected_offsets,
                 "best_font_id": font_eval["best_font_id"],
                 "best_font_name": font_eval["best_font_name"],
                 "font_scores": font_eval["font_scores"],
