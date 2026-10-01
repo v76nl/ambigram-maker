@@ -9,29 +9,42 @@ import shapely.ops as ops
 
 from .base import BaseAmbigramGenerator
 
-FONT_PATH = Path(__file__).parent.parent / "fonts" / "ZenMaruGothic-Medium.ttf"
+from .font_manager import font_manager
 
 class VectorAmbigramEngine(BaseAmbigramGenerator):
     """
     手法1: ベクター / 幾何学的合成 Engine
-    フォントのベクターアウトラインを抽出し、正位置の文字と180度回転した対称文字を幾何学的に融合してSVGを生成する
+    フォントのベクターアウトラインを抽出し、正位置の文字と180度回転した対称文字を幾何学的に融合してSVGを生成する。
+    マルチフォント自動最適化に対応。
     """
-    def __init__(self, font_path: Path = FONT_PATH):
-        self.font_path = font_path
-        self.ttfont = TTFont(str(font_path))
-        self.glyph_set = self.ttfont.getGlyphSet()
-        self.cmap = self.ttfont.getBestCmap()
-        self.units_per_em = self.ttfont["head"].unitsPerEm
+    def __init__(self):
+        self._font_cache: dict[str, dict[str, Any]] = {}
 
-    def get_glyph_path(self, char: str) -> tuple[str, float]:
-        """文字のSVGパス文字列とadvance widthを取得"""
-        codepoint = ord(char)
-        if codepoint not in self.cmap:
-            return "", self.units_per_em
-        glyph_name = self.cmap[codepoint]
-        glyph = self.glyph_set[glyph_name]
+    def _get_font_data(self, font_id: str) -> dict[str, Any]:
+        if font_id in self._font_cache:
+            return self._font_cache[font_id]
         
-        pen = SVGPathPen(self.glyph_set)
+        font_path = font_manager.get_font_path(font_id)
+        ttfont = TTFont(str(font_path))
+        data = {
+            "ttfont": ttfont,
+            "glyph_set": ttfont.getGlyphSet(),
+            "cmap": ttfont.getBestCmap(),
+            "units_per_em": ttfont["head"].unitsPerEm,
+        }
+        self._font_cache[font_id] = data
+        return data
+
+    def get_glyph_path(self, char: str, font_id: str = "zen_maru") -> tuple[str, float]:
+        """文字のSVGパス文字列とadvance widthを取得"""
+        fdata = self._get_font_data(font_id)
+        codepoint = ord(char)
+        if codepoint not in fdata["cmap"]:
+            return "", fdata["units_per_em"]
+        glyph_name = fdata["cmap"][codepoint]
+        glyph = fdata["glyph_set"][glyph_name]
+        
+        pen = SVGPathPen(fdata["glyph_set"])
         glyph.draw(pen)
         return pen.getCommands(), glyph.width
 
@@ -42,16 +55,28 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
         stroke_width: float = 0.0,
         view_box_size: int = 1000,
         highlight_mode: bool = False,
+        font_id: str = "auto",
         **params
     ) -> dict[str, Any]:
         """
         単語を受け取り、180度回転自己対称アンビグラムのSVGを生成する
         各文字スロットにおいて、元の文字と180度回転させたペア文字を幾何学的に配置する
         石崎ほか (2024)「ひらがな~る」に基づき、共通・固有ストロークの色分けハイライトに対応。
+        マルチフォント自動最適化に対応。
         """
         n = len(word)
         if n == 0:
             return {"engine": "vector", "type": "svg", "data": "", "details": {}}
+
+        # 全フォントの幾何スコアを評価
+        font_eval = font_manager.evaluate_word_fonts(word)
+        if font_id and font_id != "auto":
+            selected_fid = font_id
+            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
+            selected_name = selected_meta["name"] if selected_meta else font_id
+        else:
+            selected_fid = font_eval["best_font_id"]
+            selected_name = font_eval["best_font_name"]
 
         char_spacing = 900
         total_width = n * char_spacing
@@ -79,8 +104,8 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             c1 = word[i]
             c2 = word[n - 1 - i]
             
-            path1, width1 = self.get_glyph_path(c1)
-            path2, width2 = self.get_glyph_path(c2)
+            path1, width1 = self.get_glyph_path(c1, font_id=selected_fid)
+            path2, width2 = self.get_glyph_path(c2, font_id=selected_fid)
 
             slot_center_x = i * char_spacing + char_spacing / 2
             slot_center_y = height / 2
@@ -134,5 +159,12 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
                 "blend_ratio": blend_ratio,
                 "stroke_width": stroke_width,
                 "highlight_mode": highlight_mode,
+                "font_id": font_id,
+                "selected_font_id": selected_fid,
+                "selected_font_name": selected_name,
+                "best_font_id": font_eval["best_font_id"],
+                "best_font_name": font_eval["best_font_name"],
+                "font_scores": font_eval["font_scores"],
             }
         }
+

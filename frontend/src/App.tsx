@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Sparkles } from "lucide-react";
-import type { WordItem, EngineResult } from "./services/api";
+import type { WordItem, EngineResult, FontMeta } from "./services/api";
 import {
   searchWords,
   evaluateWord,
   generateAmbigram,
+  getAvailableFonts,
 } from "./services/api";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
@@ -21,6 +22,10 @@ export const App: React.FC = () => {
   const [commonOnly, setCommonOnly] = useState<boolean>(true);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // フォント最適化ステート
+  const [selectedFont, setSelectedFont] = useState<string>("auto");
+  const [availableFonts, setAvailableFonts] = useState<FontMeta[]>([]);
 
   // グラフィック生成ステート
   const [activeEngine, setActiveEngine] = useState<string>("morphology"); // 手法Aをデフォルトにして二重線を解消
@@ -50,6 +55,13 @@ export const App: React.FC = () => {
   const [stylePrompt, setStylePrompt] = useState<string>(
     "minimalist black calligraphy on pure white background, sharp vector aesthetic"
   );
+
+  // フォント一覧の取得
+  useEffect(() => {
+    getAvailableFonts()
+      .then(setAvailableFonts)
+      .catch((err) => console.error("フォント一覧取得エラー:", err));
+  }, []);
 
   // 単語一覧の読み込み
   const loadWords = useCallback(async () => {
@@ -86,13 +98,19 @@ export const App: React.FC = () => {
 
   // アンビグラム生成
   const triggerGenerate = useCallback(
-    async (wordToGen: WordItem | null, engineToGen?: string, overrideHighlight?: boolean) => {
+    async (
+      wordToGen: WordItem | null,
+      engineToGen?: string,
+      overrideHighlight?: boolean,
+      fontToGen?: string
+    ) => {
       if (!wordToGen) return;
       setIsGenerating(true);
       try {
         const response = await generateAmbigram({
           word: wordToGen.reading,
           engine: (engineToGen || activeEngine) as any,
+          font: fontToGen || selectedFont,
           blendRatio,
           strokeWidth: 0.0,
           highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
@@ -118,6 +136,7 @@ export const App: React.FC = () => {
     },
     [
       activeEngine,
+      selectedFont,
       blendRatio,
       highlightMode,
       dilationSize,
@@ -131,12 +150,12 @@ export const App: React.FC = () => {
     ]
   );
 
-  // 単語変更またはエンジン変更時に生成 (未生成の場合)
+  // 単語変更、エンジン変更、またはフォント変更時に生成
   useEffect(() => {
     if (selectedWord) {
       triggerGenerate(selectedWord);
     }
-  }, [selectedWord, activeEngine]);
+  }, [selectedWord, activeEngine, selectedFont]);
 
   const handleToggleHighlightMode = () => {
     const nextVal = !highlightMode;
@@ -212,6 +231,9 @@ export const App: React.FC = () => {
             onEngineChange={(engine) => setActiveEngine(engine)}
             highlightMode={highlightMode}
             onToggleHighlightMode={handleToggleHighlightMode}
+            selectedFont={selectedFont}
+            onFontChange={setSelectedFont}
+            availableFonts={availableFonts}
           />
 
           {/* 生成手法比較・パラメータ調整 */}
@@ -219,6 +241,9 @@ export const App: React.FC = () => {
             activeEngine={activeEngine}
             onEngineChange={(engine) => setActiveEngine(engine)}
             results={results}
+            selectedFont={selectedFont}
+            onFontChange={setSelectedFont}
+            availableFonts={availableFonts}
             blendRatio={blendRatio}
             onBlendRatioChange={setBlendRatio}
             dilationSize={dilationSize}

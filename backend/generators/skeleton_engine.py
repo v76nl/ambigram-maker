@@ -1,14 +1,14 @@
 import base64
 import io
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .base import BaseAmbigramGenerator
 
-FONT_PATH = Path(__file__).parent.parent / "fonts" / "ZenMaruGothic-Medium.ttf"
+from .font_manager import font_manager
 
 class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     """
@@ -16,16 +16,18 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     魏・山口 (2023) に着想を得た中心線アプローチ。
     正位置文字と180度反転文字の距離変換場 (Distance Transform) から平均骨格中心線を算出し、
     指定した線幅の均一な単一ストロークとして滑らかに再描画する。
+    マルチフォント自動最適化 & 重心微小シフト補正に対応。
     """
-    def __init__(self, font_path: Path = FONT_PATH):
-        self.font_path = font_path
+    def __init__(self):
+        pass
 
-    def render_glyph_bitmap(self, char: str, size: int = 512) -> np.ndarray:
+    def render_glyph_bitmap(self, char: str, size: int = 512, font_path: Optional[Path] = None) -> np.ndarray:
         """指定文字を高解像度ビットマップとしてレンダリング (0: 背景, 255: 文字)"""
+        path = font_path or font_manager.get_font_path("zen_maru")
         img = Image.new("L", (size, size), 0)
         draw = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype(str(self.font_path), int(size * 0.72))
+            font = ImageFont.truetype(str(path), int(size * 0.72))
         except Exception:
             font = ImageFont.load_default()
 
@@ -61,6 +63,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         size: int = 512,
         stroke_thickness: int = 15,
         diff_blend: float = 0.35,
+        font_path: Optional[Path] = None,
+        shift: tuple[int, int] = (0, 0),
     ) -> np.ndarray:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
@@ -68,24 +72,32 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - c2: 180度反転位置の文字
         - stroke_thickness: 再描画するストロークの線幅 (px)
         - diff_blend: 異文字ペア時に固有ストローク骨格を残す重み
+        - shift: 重心微小シフト (dx, dy)
         """
-        img1 = self.render_glyph_bitmap(c1, size=size)
-        img2 = self.render_glyph_bitmap(c2, size=size)
+        img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
+        img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
         img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
+
+        # 最適重心シフトの適用
+        dx, dy = shift
+        if dx != 0 or dy != 0:
+            scale_factor = size / 128.0
+            shift_x = int(round(dx * scale_factor))
+            shift_y = int(round(dy * scale_factor))
+            M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+            img2_rot = cv2.warpAffine(img2_rot, M, (size, size))
 
         # 1. 各文字のL2ユークリッド距離変換
         d1 = cv2.distanceTransform((img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
         d2 = cv2.distanceTransform((img2_rot > 0).astype(np.uint8), cv2.DIST_L2, 5)
 
         # 2. 調和平均距離場による中心線エネルギー場の算出
-        # 両文字のストローク中心に近いほど高い値をとる
         harmonic_field = (2.0 * d1 * d2) / (d1 + d2 + 1e-5)
 
         if c1 == c2:
             combined_field = harmonic_field
             threshold_ratio = 0.20
         else:
-            # 異文字ペアでは固有パーツの距離場をブレンドして消失を防止
             diff_field = np.maximum(d1, d2)
             combined_field = harmonic_field + float(diff_blend) * diff_field
             threshold_ratio = 0.15
@@ -120,6 +132,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         stroke_thickness: int = 15,
         diff_blend: float = 0.35,
         slot_size: int = 512,
+        font_id: str = "auto",
         **params,
     ) -> dict[str, Any]:
         """単語全体の平均骨格アンビグラム画像を生成してBase64形式で返却"""
@@ -127,16 +140,41 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         if n == 0:
             return {"engine": "skeleton", "type": "png", "data": "", "details": {}}
 
+        # 全フォントの幾何スコアと最適シフトを評価
+        font_eval = font_manager.evaluate_word_fonts(word)
+        
+        # 適用フォントの決定
+        if font_id and font_id != "auto":
+            selected_fid = font_id
+            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
+            selected_name = selected_meta["name"] if selected_meta else font_id
+            selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
+        else:
+            selected_fid = font_eval["best_font_id"]
+            selected_name = font_eval["best_font_name"]
+            best_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
+            selected_offsets = best_meta["offsets"] if best_meta else [(0, 0)] * n
+
+        selected_font_path = font_manager.get_font_path(selected_fid)
+
         slots = []
+        half_len = (n + 1) // 2
         for i in range(n):
             c1 = word[i]
             c2 = word[n - 1 - i]
+            pair_idx = i if i < half_len else (n - 1 - i)
+            shift = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
+            if i >= half_len:
+                shift = (-shift[0], -shift[1])
+
             slot_img = self.generate_slot(
                 c1,
                 c2,
                 size=slot_size,
                 stroke_thickness=stroke_thickness,
                 diff_blend=diff_blend,
+                font_path=selected_font_path,
+                shift=shift,
             )
             slots.append(slot_img)
 
@@ -179,6 +217,11 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "length": n,
                 "stroke_thickness": stroke_thickness,
                 "diff_blend": diff_blend,
-                "description": "手法B: 骨格中心線 (スケルトン) 平均化",
+                "selected_font_id": selected_fid,
+                "selected_font_name": selected_name,
+                "best_font_id": font_eval["best_font_id"],
+                "best_font_name": font_eval["best_font_name"],
+                "font_scores": font_eval["font_scores"],
+                "description": f"手法B: 骨格中心線平均化 (フォント: {selected_name})",
             },
         }

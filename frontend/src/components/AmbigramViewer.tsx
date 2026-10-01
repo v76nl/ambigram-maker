@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { RotateCw, Split, Layers, Palette, Award } from "lucide-react";
-import type { WordItem, EngineResult } from "../services/api";
+import { RotateCw, Split, Layers, Palette, Award, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import type { WordItem, EngineResult, FontMeta, FontScoreItem } from "../services/api";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
@@ -9,6 +9,9 @@ interface AmbigramViewerProps {
   onEngineChange?: (engine: string) => void;
   highlightMode?: boolean;
   onToggleHighlightMode?: () => void;
+  selectedFont?: string;
+  onFontChange?: (fontId: string) => void;
+  availableFonts?: FontMeta[];
 }
 
 export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
@@ -18,9 +21,13 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   onEngineChange,
   highlightMode = false,
   onToggleHighlightMode,
+  selectedFont = "auto",
+  onFontChange,
+  availableFonts = [],
 }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [showSplitView, setShowSplitView] = useState<boolean>(true);
+  const [showFontDetails, setShowFontDetails] = useState<boolean>(false);
 
   if (!wordItem) {
     return (
@@ -33,6 +40,14 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   const toggleRotation = () => {
     setRotation((prev) => (prev === 0 ? 180 : 0));
   };
+
+  const details = activeResult?.details;
+  const selectedFontName = details?.selected_font_name;
+  const bestFontId = details?.best_font_id;
+  const bestFontName = details?.best_font_name;
+  const fontScores = details?.font_scores as FontScoreItem[] | undefined;
+  const bestScoreObj = fontScores?.find((s) => s.id === bestFontId);
+  const bestScorePercent = bestScoreObj ? Math.round(bestScoreObj.score * 100) : null;
 
   const renderGraphicContent = (isFlipped: boolean = false) => {
     if (!activeResult) {
@@ -124,6 +139,122 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
               <span className="pill-badge">手法2</span>
               <span>ビットマップ最適化</span>
             </button>
+          </div>
+        )}
+
+        {/* フォント最適化バー (Multi-Font Auto-Optimizer) */}
+        {onFontChange && (
+          <div className="font-opt-container">
+            <div className="font-opt-header">
+              <span className="font-opt-label">
+                <Sparkles size={15} color="var(--md-sys-color-primary)" />
+                フォント選定:
+              </span>
+
+              {/* 自動最適化 (AUTO) ボタン */}
+              <button
+                className={`font-pill-btn ${selectedFont === "auto" ? "active-auto" : ""}`}
+                onClick={() => onFontChange("auto")}
+                title="全フォントから重ね合わせ面積・IoUが最も高いフォントを自動選定"
+              >
+                <Sparkles size={13} />
+                <span>自動最適化 (AUTO)</span>
+                {bestFontName && <span className="auto-winner-pill">👑 {bestFontName}</span>}
+              </button>
+
+              {/* 手動フォント切り替えボタン群 */}
+              {availableFonts.map((f) => {
+                const scoreObj = fontScores?.find((s) => s.id === f.id);
+                const isBest = f.id === bestFontId;
+                const isSelected = selectedFont === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    className={`font-pill-btn ${isSelected ? "active-manual" : ""}`}
+                    onClick={() => onFontChange(f.id)}
+                    title={`${f.name} (${f.style}): ${f.description}`}
+                  >
+                    <span>{f.name}</span>
+                    {scoreObj && (
+                      <span className={`font-score-tag ${isBest ? "best-score" : ""}`}>
+                        {Math.round(scoreObj.score * 100)}%
+                        {isBest && " 👑"}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* 詳細比較トグルボタン */}
+              {fontScores && fontScores.length > 0 && (
+                <button
+                  className="font-compare-toggle-btn"
+                  onClick={() => setShowFontDetails(!showFontDetails)}
+                  title="5フォントの幾何スコアと適合度比較一覧を表示"
+                >
+                  {showFontDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <span>{showFontDetails ? "比較を閉じる" : "スコア比較"}</span>
+                </button>
+              )}
+            </div>
+
+            {/* 自動最適化ステータス案内 */}
+            {selectedFont === "auto" && selectedFontName && (
+              <div className="font-auto-summary">
+                <Sparkles size={14} className="sparkle-anim" />
+                <span>
+                  全フォントを自動探索し、最も重ね合わせ適性が高い<strong>『{selectedFontName}』</strong>
+                  {bestScorePercent !== null && ` (${bestScorePercent}% 一致)`} を自動適用しています。
+                </span>
+              </div>
+            )}
+
+            {/* フォントスコア詳細展開パネル */}
+            {showFontDetails && fontScores && (
+              <div className="font-comparison-panel">
+                <div className="font-comp-title">
+                  <span>フォント別 重なり幾何スコア (調和平均IoU)</span>
+                  <span style={{ fontSize: "0.75rem", color: "#666" }}>
+                    ※クリックで直接そのフォントに切り替え可能
+                  </span>
+                </div>
+                <div className="font-comp-grid">
+                  {fontScores.map((s, idx) => {
+                    const isWinner = s.id === bestFontId;
+                    const isCurrent = (selectedFont === "auto" && isWinner) || selectedFont === s.id;
+                    const pct = Math.round(s.score * 100);
+                    return (
+                      <div
+                        key={s.id}
+                        className={`font-comp-item ${isCurrent ? "current-item" : ""} ${isWinner ? "winner-item" : ""}`}
+                        onClick={() => onFontChange(s.id)}
+                      >
+                        <div className="font-comp-row">
+                          <span className="font-comp-name">
+                            {idx === 0 && "🥇 "}
+                            {idx === 1 && "🥈 "}
+                            {idx === 2 && "🥉 "}
+                            {s.name}
+                            <span className="font-comp-style">({s.style})</span>
+                          </span>
+                          <span className="font-comp-pct">
+                            {pct}%
+                            {isWinner && <span className="winner-badge">最高</span>}
+                          </span>
+                        </div>
+                        <div className="font-comp-bar-bg">
+                          <div
+                            className={`font-comp-bar-fill ${isWinner ? "bar-winner" : ""}`}
+                            style={{ width: `${Math.max(10, pct)}%` }}
+                          />
+                        </div>
+                        <div className="font-comp-desc">{s.description}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

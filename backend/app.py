@@ -10,6 +10,7 @@ from generators.bitmap_engine import BitmapAmbigramEngine
 from generators.gemini_engine import GeminiAmbigramEngine
 from generators.morphology_engine import MorphologyAmbigramEngine
 from generators.skeleton_engine import SkeletonAmbigramEngine
+from generators.font_manager import font_manager
 
 app = FastAPI(
     title="Ambigram Maker API",
@@ -40,6 +41,7 @@ class EvaluateRequest(BaseModel):
 class GenerateRequest(BaseModel):
     word: str
     engine: str = "all"  # "vector", "morphology", "skeleton", "bitmap", "gemini", "all"
+    font: Optional[str] = "auto"  # "auto", "zen_maru", "dela", "mplus", "klee", "shippori"
     # ベクター用パラメータ
     blend_ratio: Optional[float] = 0.5
     stroke_width: Optional[float] = 0.0
@@ -61,6 +63,27 @@ class GenerateRequest(BaseModel):
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "Ambigram Maker API is running"}
+
+@app.get("/api/fonts")
+def get_available_fonts():
+    """利用可能なフォント一覧とメタデータを返却"""
+    return {"fonts": font_manager.get_available_fonts()}
+
+@app.get("/api/words/fonts-eval")
+def evaluate_word_fonts(word: str = Query(...)):
+    """指定単語に対する各フォントの幾何スコアと最適フォントを評価"""
+    if not word:
+        raise HTTPException(status_code=400, detail="単語を指定してください")
+    eval_res = finder.evaluate_word(word)
+    target_word = eval_res["reading"]
+    font_eval = font_manager.evaluate_word_fonts(target_word)
+    return {
+        "word": word,
+        "reading": target_word,
+        "best_font_id": font_eval["best_font_id"],
+        "best_font_name": font_eval["best_font_name"],
+        "font_scores": font_eval["font_scores"],
+    }
 
 @app.get("/api/words/search")
 def search_words(
@@ -99,6 +122,7 @@ def generate_ambigram(req: GenerateRequest):
     # 漢字やカタカナが渡された場合、自動的に読み（ひらがな）を解決
     eval_res = finder.evaluate_word(req.word)
     target_word = eval_res["reading"]
+    font_id = req.font or "auto"
 
     results: dict[str, Any] = {}
 
@@ -108,6 +132,7 @@ def generate_ambigram(req: GenerateRequest):
             blend_ratio=req.blend_ratio or 0.5,
             stroke_width=req.stroke_width or 0.0,
             highlight_mode=req.highlight_mode or False,
+            font_id=font_id,
         )
 
     if req.engine in ("morphology", "all"):
@@ -116,6 +141,7 @@ def generate_ambigram(req: GenerateRequest):
             dilation_size=req.dilation_size or 11,
             smoothness=req.smoothness or 7,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
+            font_id=font_id,
         )
 
     if req.engine in ("skeleton", "all"):
@@ -123,6 +149,7 @@ def generate_ambigram(req: GenerateRequest):
             target_word,
             stroke_thickness=req.stroke_thickness or 15,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
+            font_id=font_id,
         )
 
     if req.engine in ("bitmap", "all"):
@@ -143,6 +170,7 @@ def generate_ambigram(req: GenerateRequest):
     return {
         "word": req.word,
         "resolved_reading": target_word,
+        "selected_font": font_id,
         "results": results
     }
 

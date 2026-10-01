@@ -33,9 +33,34 @@ export interface SearchWordsParams {
   query?: string;
 }
 
+export interface FontMeta {
+  id: string;
+  name: string;
+  style: string;
+  description: string;
+}
+
+export interface FontScoreItem {
+  id: string;
+  name: string;
+  style: string;
+  description: string;
+  score: number;
+  pair_scores: number[];
+}
+
+export interface WordFontsEval {
+  word: string;
+  reading: string;
+  best_font_id: string;
+  best_font_name: string;
+  font_scores: FontScoreItem[];
+}
+
 export interface GenerateParams {
   word: string;
   engine?: "vector" | "morphology" | "skeleton" | "bitmap" | "gemini" | "all";
+  font?: string; // "auto", "zen_maru", "dela_gothic", "mplus", "klee", "shippori"
   blendRatio?: number;
   strokeWidth?: number;
   highlightMode?: boolean;
@@ -105,6 +130,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
     body: JSON.stringify({
       word: params.word,
       engine: params.engine || "all",
+      font: params.font || "auto",
       blend_ratio: params.blendRatio,
       stroke_width: params.strokeWidth,
       highlight_mode: params.highlightMode,
@@ -120,6 +146,23 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
   });
   if (!res.ok) {
     throw new Error(`アンビグラム生成に失敗しました: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export async function getAvailableFonts(): Promise<FontMeta[]> {
+  const res = await fetch(`${API_BASE_URL}/fonts`);
+  if (!res.ok) {
+    throw new Error(`フォント一覧取得に失敗しました: ${res.statusText}`);
+  }
+  const data = await res.json();
+  return data.fonts;
+}
+
+export async function evaluateWordFonts(word: string): Promise<WordFontsEval> {
+  const res = await fetch(`${API_BASE_URL}/words/fonts-eval?word=${encodeURIComponent(word)}`);
+  if (!res.ok) {
+    throw new Error(`フォント評価に失敗しました: ${res.statusText}`);
   }
   return await res.json();
 }

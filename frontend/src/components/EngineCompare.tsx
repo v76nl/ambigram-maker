@@ -1,6 +1,6 @@
 import React from "react";
 import { Wand2, Sparkles, Image as ImageIcon, Code, Disc, GitFork } from "lucide-react";
-import type { EngineResult } from "../services/api";
+import type { EngineResult, FontMeta } from "../services/api";
 
 interface EngineCompareProps {
   activeEngine: string;
@@ -12,6 +12,10 @@ interface EngineCompareProps {
     bitmap?: EngineResult;
     gemini?: EngineResult;
   };
+  // フォント最適化
+  selectedFont?: string;
+  onFontChange?: (fontId: string) => void;
+  availableFonts?: FontMeta[];
   // 手法A (論理積モルフォロジー) パラメータ
   dilationSize: number;
   onDilationSizeChange: (val: number) => void;
@@ -45,6 +49,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   activeEngine,
   onEngineChange,
   results,
+  selectedFont = "auto",
+  onFontChange,
+  availableFonts = [],
   dilationSize,
   onDilationSizeChange,
   strokeThickness,
@@ -128,6 +135,34 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
 
       {/* パラメータ設定エリア */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+        {/* 全手法共通: フォント選択 */}
+        {activeEngine !== "gemini" && onFontChange && (
+          <div className="slider-group" style={{ background: "var(--md-sys-color-surface-container-low)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
+            <div className="slider-header" style={{ marginBottom: "0.4rem" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 700 }}>
+                <Sparkles size={14} color="var(--md-sys-color-primary)" />
+                適用フォント (マルチフォント幾何最適化)
+              </span>
+              <span style={{ fontSize: "0.8rem", color: "var(--md-sys-color-primary)", fontWeight: 600 }}>
+                {selectedFont === "auto" ? "★ 自動最適化" : availableFonts.find(f => f.id === selectedFont)?.name}
+              </span>
+            </div>
+            <select
+              className="m3-input"
+              value={selectedFont}
+              onChange={(e) => onFontChange(e.target.value)}
+              style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid var(--md-sys-color-outline-variant)" }}
+            >
+              <option value="auto">✨ 自動最適化 (AUTO) - 重なり面積が最大のフォントを自動選定</option>
+              {availableFonts.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name} ({f.style}) - {f.description}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* 手法A: 論理積＋モルフォロジー膨張 */}
         {activeEngine === "morphology" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
