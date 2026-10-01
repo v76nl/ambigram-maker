@@ -96,11 +96,15 @@ def generate_ambigram(req: GenerateRequest):
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
 
+    # 漢字やカタカナが渡された場合、自動的に読み（ひらがな）を解決
+    eval_res = finder.evaluate_word(req.word)
+    target_word = eval_res["reading"]
+
     results: dict[str, Any] = {}
 
     if req.engine in ("vector", "all"):
         results["vector"] = vector_engine.generate(
-            req.word,
+            target_word,
             blend_ratio=req.blend_ratio or 0.5,
             stroke_width=req.stroke_width or 0.0,
             highlight_mode=req.highlight_mode or False,
@@ -108,7 +112,7 @@ def generate_ambigram(req: GenerateRequest):
 
     if req.engine in ("morphology", "all"):
         results["morphology"] = morphology_engine.generate(
-            req.word,
+            target_word,
             dilation_size=req.dilation_size or 11,
             smoothness=req.smoothness or 7,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
@@ -116,14 +120,14 @@ def generate_ambigram(req: GenerateRequest):
 
     if req.engine in ("skeleton", "all"):
         results["skeleton"] = skeleton_engine.generate(
-            req.word,
+            target_word,
             stroke_thickness=req.stroke_thickness or 15,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
         )
 
     if req.engine in ("bitmap", "all"):
         results["bitmap"] = bitmap_engine.generate(
-            req.word,
+            target_word,
             blend_weight=req.blend_weight or 0.65,
             smoothness=req.smoothness or 7,
             threshold_val=req.threshold_val or 110,
@@ -131,13 +135,14 @@ def generate_ambigram(req: GenerateRequest):
 
     if req.engine in ("gemini", "all"):
         results["gemini"] = gemini_engine.generate(
-            req.word,
+            target_word,
             api_key=req.api_key,
             style_prompt=req.style_prompt or "minimalist black calligraphy on pure white background, sharp vector aesthetic",
         )
 
     return {
         "word": req.word,
+        "resolved_reading": target_word,
         "results": results
     }
 

@@ -27,6 +27,16 @@ def katakana_to_hiragana(s: str) -> str:
         result.append(c)
     return "".join(result)
 
+def hiragana_to_katakana(s: str) -> str:
+    """ひらがなをカタカナに変換する"""
+    result = []
+    for c in s:
+        code = ord(c)
+        if 0x3041 <= code <= 0x3096:  # ひらがな範囲
+            c = chr(code + 0x60)
+        result.append(c)
+    return "".join(result)
+
 def is_valid_hiragana_word(word: str) -> bool:
     """ひらがな（清音・濁音・半濁音・小文字・長音符）のみで構成されているか判定"""
     if not word:
@@ -72,6 +82,13 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
                 # 漢字表記
                 kanji_list = [k.text for k in elem.findall("k_ele/keb") if k.text]
                 
+                # 漢字側の優先度タグ
+                k_pri_tags = set()
+                for k_ele in elem.findall("k_ele"):
+                    k_pri_tags.update(p.text for p in k_ele.findall("ke_pri") if p.text)
+                
+                has_common_kanji = bool(COMMON_PRIORITY_TAGS.intersection(k_pri_tags))
+
                 # 読みと優先度
                 for r_ele in elem.findall("r_ele"):
                     reb = r_ele.findtext("reb")
@@ -82,23 +99,23 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
                     if not is_valid_hiragana_word(hiragana):
                         continue
                     
-                    # 優先度タグのチェック
-                    pri_tags = [p.text for p in r_ele.findall("re_pri") if p.text]
-                    is_common = bool(COMMON_PRIORITY_TAGS.intersection(pri_tags))
+                    # カタカナ語（外来語表記など）の判定
+                    is_katakana_orig = any(0x30A1 <= ord(c) <= 0x30F6 for c in reb)
+                    katakana_form = reb if is_katakana_orig else hiragana_to_katakana(hiragana)
                     
-                    # 漢字側の優先度も考慮
-                    for k_ele in elem.findall("k_ele"):
-                        k_pri_tags = [p.text for p in k_ele.findall("ke_pri") if p.text]
-                        if COMMON_PRIORITY_TAGS.intersection(k_pri_tags):
-                            is_common = True
-                            break
+                    # 優先度タグのチェック
+                    r_pri_tags = set(p.text for p in r_ele.findall("re_pri") if p.text)
+                    is_common = bool(COMMON_PRIORITY_TAGS.intersection(r_pri_tags)) or has_common_kanji
+                    is_gai = bool({"gai1", "gai2"}.intersection(r_pri_tags))
                     
                     if hiragana not in words_map:
                         words_map[hiragana] = {
                             "reading": hiragana,
                             "length": len(hiragana),
                             "common": is_common,
-                            "kanji": kanji_list[:3],
+                            "kanji": list(kanji_list[:3]),
+                            "katakana": [reb] if is_katakana_orig else [],
+                            "display": "",
                             "score_bias": 1.2 if is_common else 1.0,
                         }
                     else:
@@ -108,8 +125,31 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
                         for k in kanji_list[:3]:
                             if k not in words_map[hiragana]["kanji"]:
                                 words_map[hiragana]["kanji"].append(k)
+                        if is_katakana_orig and reb not in words_map[hiragana]["katakana"]:
+                            words_map[hiragana]["katakana"].append(reb)
 
                 elem.clear()
+
+    # 代表表示名 (display) の決定
+    for w in words_map.values():
+        kanjis = w["kanji"]
+        katakanas = w["katakana"]
+        reading = w["reading"]
+        
+        # 1. 外来語（カタカナが主で、漢字がないか外来語扱い）
+        if katakanas and (not kanjis or w.get("common")):
+            # 外来語としてポピュラーな場合はカタカナを代表表示に優先
+            if not kanjis:
+                w["display"] = katakanas[0]
+            else:
+                # 漢字もカタカナもある場合（例: アイス / 愛す）
+                w["display"] = f"{katakanas[0]} / {kanjis[0]}"
+        elif kanjis:
+            # 2. 漢字表記がある日常語
+            w["display"] = kanjis[0]
+        else:
+            # 3. かなのみ
+            w["display"] = reading
 
     word_list = sorted(words_map.values(), key=lambda w: (not w["common"], w["length"], w["reading"]))
     print(f"抽出完了: 全 {len(word_list):,} 語 (常用語: {sum(1 for w in word_list if w['common']):,} 語)")
