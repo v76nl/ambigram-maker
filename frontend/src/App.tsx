@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Sparkles } from "lucide-react";
 import type { WordItem, EngineResult, FontMeta } from "./services/api";
 import {
   searchWords,
@@ -9,6 +8,7 @@ import {
 } from "./services/api";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
+import { SymmetryCard } from "./components/SymmetryCard";
 import { EngineCompare } from "./components/EngineCompare";
 import { ExportBar } from "./components/ExportBar";
 
@@ -187,46 +187,54 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* M3 Top App Bar */}
+      {/* Minimal Utility Bar (Subtractive: Top heading eliminated per design guidelines) */}
       <header className="app-header">
         <div className="brand-title">
-          <Sparkles size={24} color="var(--md-sys-color-primary)" />
-          <span>ひらがなアンビグラムメーカー</span>
-          <span className="brand-badge">M3 / 180° Rotational</span>
+          <span className="brand-tag">180°</span>
+          <span style={{ fontSize: "0.82rem", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-secondary)" }}>
+            ROTATIONAL AMBIGRAM
+          </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div style={{ fontSize: "0.85rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-            自己対称型・3手法ハイブリッド生成システム
-          </div>
+        <div className="header-meta">
+          {selectedWord && (
+            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
+              {selectedWord.reading} ({Math.round(selectedWord.score * 100)}%)
+            </span>
+          )}
+          <span style={{ color: "var(--border-medium)" }}>|</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
+            {words.length > 0 ? `${words.length} CANDIDATES` : "LOADING"}
+          </span>
         </div>
       </header>
 
-      {/* Main Layout (2カラム) */}
-      <main className="main-content">
-        {/* 左側: 単語探索 & フィルタ */}
-        <WordSearch
-          words={words}
-          selectedWord={selectedWord}
-          onSelectWord={handleSelectWord}
-          onCustomWordSubmit={handleCustomWord}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          minLength={minLength}
-          maxLength={maxLength}
-          onLengthChange={(min, max) => {
-            setMinLength(min);
-            setMaxLength(max);
-          }}
-          commonOnly={commonOnly}
-          onCommonOnlyChange={(val) => setCommonOnly(val)}
-          isLoading={isLoadingWords}
-          loadError={loadError}
-          onRetry={loadWords}
-        />
+      {/* Main Layout (3ペイン) */}
+      <main className="main-content-3pane">
+        {/* 左ペイン: 単語探索 & フィルタ */}
+        <aside className="pane-left">
+          <WordSearch
+            words={words}
+            selectedWord={selectedWord}
+            onSelectWord={handleSelectWord}
+            onCustomWordSubmit={handleCustomWord}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            minLength={minLength}
+            maxLength={maxLength}
+            onLengthChange={(min, max) => {
+              setMinLength(min);
+              setMaxLength(max);
+            }}
+            commonOnly={commonOnly}
+            onCommonOnlyChange={(val) => setCommonOnly(val)}
+            isLoading={isLoadingWords}
+            loadError={loadError}
+            onRetry={loadWords}
+          />
+        </aside>
 
-        {/* 右側: ビューワー ＋ 手法比較・設定 ＋ エクスポート */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {/* 180度回転インタラクティブビューワー */}
+        {/* 中央ペイン: ビューワー・反転・比較 */}
+        <section className="pane-center">
           <AmbigramViewer
             wordItem={selectedWord}
             activeResult={currentResult}
@@ -238,6 +246,12 @@ export const App: React.FC = () => {
             onFontChange={setSelectedFont}
             availableFonts={availableFonts}
           />
+        </section>
+
+        {/* 右ペイン: 対称ペア解析 ＋ パラメータ調整 ＋ エクスポート */}
+        <aside className="pane-right">
+          {/* 対称文字ペア解析 */}
+          <SymmetryCard wordItem={selectedWord} />
 
           {/* 生成手法比較・パラメータ調整 */}
           <EngineCompare
@@ -277,7 +291,7 @@ export const App: React.FC = () => {
             activeResult={currentResult}
             activeEngine={activeEngine}
           />
-        </div>
+        </aside>
       </main>
     </div>
   );

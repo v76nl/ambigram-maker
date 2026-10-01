@@ -38,7 +38,6 @@ export const ExportBar: React.FC<ExportBarProps> = ({
     }
 
     if (activeResult.type === "svg") {
-      // SVGをCanvas経由で高解像度PNGに変換してダウンロード
       const svgBlob = new Blob([activeResult.data], { type: "image/svg+xml;charset=utf-8" });
       const url = URL.createObjectURL(svgBlob);
       const img = new Image();
@@ -65,31 +64,31 @@ export const ExportBar: React.FC<ExportBarProps> = ({
 
   return (
     <div
-      className="m3-card m3-card-high"
+      className="swiss-card"
       style={{
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "1rem 1.5rem",
+        padding: "0.85rem 1.25rem",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <Download size={18} color="var(--md-sys-color-primary)" />
-        <span style={{ fontSize: "0.95rem", fontWeight: 700 }}>
-          「{wordItem.reading}」のエクスポート
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+        <Download size={15} color="var(--accent)" />
+        <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+          エクスポート ({wordItem.reading})
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: "0.75rem" }}>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
         {activeResult.type === "svg" && (
-          <button className="m3-btn m3-btn-primary" onClick={downloadSvg}>
-            <FileCode size={16} />
-            SVG を保存
+          <button className="swiss-btn swiss-btn-outline" onClick={downloadSvg}>
+            <FileCode size={14} />
+            <span>SVG 保存</span>
           </button>
         )}
-        <button className="m3-btn m3-btn-tonal" onClick={downloadPng}>
-          <FileImage size={16} />
-          PNG を保存
+        <button className="swiss-btn swiss-btn-primary" onClick={downloadPng}>
+          <FileImage size={14} />
+          <span>PNG 保存</span>
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Wand2, Sparkles, Image as ImageIcon, Code, Disc, GitFork } from "lucide-react";
+import { Disc, GitFork, Code, Image as ImageIcon, Sparkles, RefreshCw, Download } from "lucide-react";
 import type { EngineResult, FontMeta } from "../services/api";
 
 interface EngineCompareProps {
@@ -12,38 +12,29 @@ interface EngineCompareProps {
     bitmap?: EngineResult;
     gemini?: EngineResult;
   };
-  // フォント最適化
   selectedFont?: string;
   onFontChange?: (fontId: string) => void;
   availableFonts?: FontMeta[];
-  // 手法A (論理積モルフォロジー) パラメータ
   dilationSize: number;
   onDilationSizeChange: (val: number) => void;
-  // 手法B (スケルトン平均化) パラメータ
   strokeThickness: number;
   onStrokeThicknessChange: (val: number) => void;
-  // 手法A/B 共通 (異文字パーツ保持)
   diffBlend: number;
   onDiffBlendChange: (val: number) => void;
-  // 近接ストローク事前太らせ
   preBold?: number;
   onPreBoldChange?: (val: number) => void;
-  // ベクター用パラメータ
   blendRatio: number;
   onBlendRatioChange: (val: number) => void;
-  // ビットマップ用パラメータ
   blendWeight: number;
   onBlendWeightChange: (val: number) => void;
   smoothness: number;
   onSmoothnessChange: (val: number) => void;
   thresholdVal: number;
   onThresholdValChange: (val: number) => void;
-  // Gemini API用パラメータ
   apiKey: string;
   onApiKeyChange: (val: string) => void;
   stylePrompt: string;
   onStylePromptChange: (val: string) => void;
-  // 生成トリガー
   onRegenerate: () => void;
   isGenerating: boolean;
 }
@@ -52,9 +43,6 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   activeEngine,
   onEngineChange,
   results,
-  selectedFont = "auto",
-  onFontChange,
-  availableFonts = [],
   dilationSize,
   onDilationSizeChange,
   strokeThickness,
@@ -78,107 +66,90 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onRegenerate,
   isGenerating,
 }) => {
+  const currentResult = results[activeEngine as keyof typeof results];
+
+  const handleDownload = () => {
+    if (!currentResult) return;
+    const link = document.createElement("a");
+    if (currentResult.type === "svg") {
+      const blob = new Blob([currentResult.data], { type: "image/svg+xml" });
+      link.href = URL.createObjectURL(blob);
+      link.download = `ambigram_${activeEngine}.svg`;
+    } else {
+      link.href = currentResult.data;
+      link.download = `ambigram_${activeEngine}.png`;
+    }
+    link.click();
+  };
+
   return (
-    <section className="m3-card">
-      {/* タブヘッダー */}
-      <div className="m3-tabs" style={{ flexWrap: "wrap" }}>
+    <section className="swiss-card">
+      {/* 手法切り替えセグメント (3ペイン対応・コンパクト) */}
+      <div className="swiss-segmented" style={{ display: "flex", width: "100%", gap: "2px" }}>
         <button
-          className={`m3-tab ${activeEngine === "morphology" ? "active" : ""}`}
+          className={`swiss-segmented-btn ${activeEngine === "morphology" ? "active" : ""}`}
           onClick={() => onEngineChange("morphology")}
+          title="手法A: 論理積＋膨張"
+          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <Disc size={16} />
-            <span>手法A: 論理積＋膨張</span>
-            {results.morphology && <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>✓</span>}
-          </div>
+          <Disc size={12} />
+          <span>手法A</span>
         </button>
 
         <button
-          className={`m3-tab ${activeEngine === "skeleton" ? "active" : ""}`}
+          className={`swiss-segmented-btn ${activeEngine === "skeleton" ? "active" : ""}`}
           onClick={() => onEngineChange("skeleton")}
+          title="手法B: 骨格平均化"
+          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <GitFork size={16} />
-            <span>手法B: 骨格平均化</span>
-            {results.skeleton && <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>✓</span>}
-          </div>
+          <GitFork size={12} />
+          <span>手法B</span>
         </button>
 
         <button
-          className={`m3-tab ${activeEngine === "vector" ? "active" : ""}`}
+          className={`swiss-segmented-btn ${activeEngine === "vector" ? "active" : ""}`}
           onClick={() => onEngineChange("vector")}
+          title="原案: ベクター合成"
+          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <Code size={16} />
-            <span>原案: ベクター合成</span>
-            {results.vector && <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>✓</span>}
-          </div>
+          <Code size={12} />
+          <span>原案</span>
         </button>
 
         <button
-          className={`m3-tab ${activeEngine === "bitmap" ? "active" : ""}`}
+          className={`swiss-segmented-btn ${activeEngine === "bitmap" ? "active" : ""}`}
           onClick={() => onEngineChange("bitmap")}
+          title="手法2: ビットマップ"
+          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <ImageIcon size={16} />
-            <span>手法2: ビットマップ</span>
-            {results.bitmap && <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>✓</span>}
-          </div>
+          <ImageIcon size={12} />
+          <span>手法2</span>
         </button>
 
         <button
-          className={`m3-tab ${activeEngine === "gemini" ? "active" : ""}`}
+          className={`swiss-segmented-btn ${activeEngine === "gemini" ? "active" : ""}`}
           onClick={() => onEngineChange("gemini")}
+          title="手法3: Gemini AI"
+          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <Sparkles size={16} />
-            <span>手法3: Gemini AI</span>
-            {results.gemini?.type === "png" && <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>✓</span>}
-          </div>
+          <Sparkles size={12} />
+          <span>AI</span>
         </button>
       </div>
 
-      {/* パラメータ設定エリア */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
-        {/* 全手法共通: フォント選択 */}
-        {activeEngine !== "gemini" && onFontChange && (
-          <div className="slider-group" style={{ background: "var(--md-sys-color-surface-container-low)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
-            <div className="slider-header" style={{ marginBottom: "0.4rem" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 700 }}>
-                <Sparkles size={14} color="var(--md-sys-color-primary)" />
-                適用フォント (マルチフォント幾何最適化)
-              </span>
-              <span style={{ fontSize: "0.8rem", color: "var(--md-sys-color-primary)", fontWeight: 600 }}>
-                {selectedFont === "auto" ? "★ 自動最適化" : availableFonts.find(f => f.id === selectedFont)?.name}
-              </span>
-            </div>
-            <select
-              className="m3-input"
-              value={selectedFont}
-              onChange={(e) => onFontChange(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid var(--md-sys-color-outline-variant)" }}
-            >
-              <option value="auto">✨ 自動最適化 (AUTO) - 重なり面積が最大のフォントを自動選定</option>
-              {availableFonts.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name} ({f.style}) - {f.description}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* 手法A: 論理積＋モルフォロジー膨張 */}
+      {/* パラメータ調整グリッド */}
+      <div className="tuning-grid">
+        {/* 手法Aのパラメータ */}
         {activeEngine === "morphology" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>ストロークの太さ (モルフォロジー膨張径: dilation_size)</span>
-                <span>{dilationSize} px</span>
+          <>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>ストローク太さ (Dilation)</span>
+                <span className="swiss-slider-val">{dilationSize}px</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
+                className="swiss-slider"
                 min="3"
                 max="25"
                 step="2"
@@ -187,15 +158,15 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
               />
             </div>
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>輪郭の滑らかさ (ガウシアン平滑化: smoothness)</span>
-                <span>{smoothness} px</span>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>輪郭の滑らかさ (Smoothing)</span>
+                <span className="swiss-slider-val">{smoothness}px</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
-                min="1"
+                className="swiss-slider"
+                min="0"
                 max="15"
                 step="2"
                 value={smoothness}
@@ -203,172 +174,159 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
               />
             </div>
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>事前太らせ (Pre-Bold: 近接縦棒の結合力強化)</span>
-                <span>{preBold} px</span>
+            {onPreBoldChange && (
+              <div className="swiss-slider-group">
+                <div className="swiss-slider-header">
+                  <span>事前太らせ (Pre-Bold)</span>
+                  <span className="swiss-slider-val">{preBold}px</span>
+                </div>
+                <input
+                  type="range"
+                  className="swiss-slider"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value={preBold}
+                  onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
+                />
               </div>
-              <input
-                type="range"
-                className="m3-slider"
-                min="0"
-                max="10"
-                step="1"
-                value={preBold}
-                onChange={(e) => onPreBoldChange?.(parseInt(e.target.value, 10))}
-              />
-              <span style={{ fontSize: "0.72rem", color: "var(--md-sys-color-outline)" }}>
-                ※「の」の中央縦棒など、回転で左右に離れやすい近接ストロークを接触・融合させる事前膨張量
-              </span>
-            </div>
+            )}
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>異文字パーツ保持率 (差分ブレンド: diff_blend)</span>
-                <span>{(diffBlend * 100).toFixed(0)}%</span>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>異文字パーツ保持 (Diff Blend)</span>
+                <span className="swiss-slider-val">{Math.round(diffBlend * 100)}%</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
-                min="0.1"
+                className="swiss-slider"
+                min="0"
                 max="0.8"
                 step="0.05"
                 value={diffBlend}
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
             </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-              正位置と180度反転文字のピクセル論理積 (AND) を『共通対称核』として抽出。モルフォロジー膨張により二重線・ゴーストを解消し、丸みのある滑らかな一本のストロークを生成します。
-            </p>
-          </div>
+          </>
         )}
 
-        {/* 手法B: 骨格中心線平均化 */}
+        {/* 手法Bのパラメータ */}
         {activeEngine === "skeleton" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>単一ストローク線幅 (筆ペン径: stroke_thickness)</span>
-                <span>{strokeThickness} px</span>
+          <>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>骨格線幅 (Stroke Width)</span>
+                <span className="swiss-slider-val">{strokeThickness}px</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
+                className="swiss-slider"
                 min="5"
-                max="31"
+                max="35"
                 step="2"
                 value={strokeThickness}
                 onChange={(e) => onStrokeThicknessChange(parseInt(e.target.value, 10))}
               />
             </div>
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>事前太らせ (Pre-Bold: 距離場吸引力強化)</span>
-                <span>{preBold} px</span>
+            {onPreBoldChange && (
+              <div className="swiss-slider-group">
+                <div className="swiss-slider-header">
+                  <span>事前太らせ (Pre-Bold)</span>
+                  <span className="swiss-slider-val">{preBold}px</span>
+                </div>
+                <input
+                  type="range"
+                  className="swiss-slider"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value={preBold}
+                  onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
+                />
               </div>
-              <input
-                type="range"
-                className="m3-slider"
-                min="0"
-                max="10"
-                step="1"
-                value={preBold}
-                onChange={(e) => onPreBoldChange?.(parseInt(e.target.value, 10))}
-              />
-              <span style={{ fontSize: "0.72rem", color: "var(--md-sys-color-outline)" }}>
-                ※離れた縦棒（「の」など）を中間の1本骨格線に吸着・スナップさせる事前太らせ量
-              </span>
-            </div>
+            )}
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>異文字固有骨格の重み (diff_blend)</span>
-                <span>{(diffBlend * 100).toFixed(0)}%</span>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>異文字パーツ保持 (Diff Blend)</span>
+                <span className="swiss-slider-val">{Math.round(diffBlend * 100)}%</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
-                min="0.1"
+                className="swiss-slider"
+                min="0"
                 max="0.8"
                 step="0.05"
                 value={diffBlend}
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
             </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-              魏・山口 (2023) に着想を得た骨格アプローチ。ユークリッド距離変換の調和平均場から平均中心線（スケルトン）を抽出し、指定した線幅の均一な丸筆ストロークとして滑らかに再描画します。
-            </p>
-          </div>
+          </>
         )}
 
-        {/* 原案: ベクター幾何合成 */}
+        {/* ベクター合成パラメータ */}
         {activeEngine === "vector" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>幾何ブレンド率 (共通骨格 vs 差分ストローク)</span>
-                <span>{(blendRatio * 100).toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                className="m3-slider"
-                min="0"
-                max="1"
-                step="0.05"
-                value={blendRatio}
-                onChange={(e) => onBlendRatioChange(parseFloat(e.target.value))}
-              />
+          <div className="swiss-slider-group">
+            <div className="swiss-slider-header">
+              <span>合成比率 (Blend Ratio)</span>
+              <span className="swiss-slider-val">{Math.round(blendRatio * 100)}%</span>
             </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-              フォントのアウトラインを直接幾何学的にマージし、180度反転した文字スロットと重ね合わせ配置したベクターSVG。拡大縮小に強い一方、上下非対称な文字では二重線が発生します。
-            </p>
+            <input
+              type="range"
+              className="swiss-slider"
+              min="0.1"
+              max="0.9"
+              step="0.05"
+              value={blendRatio}
+              onChange={(e) => onBlendRatioChange(parseFloat(e.target.value))}
+            />
           </div>
         )}
 
-        {/* 手法2: ビットマップ最適化 */}
+        {/* ビットマップパラメータ */}
         {activeEngine === "bitmap" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>差分ストローク重み (blend_weight)</span>
-                <span>{(blendWeight * 100).toFixed(0)}%</span>
+          <>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>合成重み (Weight)</span>
+                <span className="swiss-slider-val">{Math.round(blendWeight * 100)}%</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
+                className="swiss-slider"
                 min="0.1"
-                max="1.0"
+                max="0.9"
                 step="0.05"
                 value={blendWeight}
                 onChange={(e) => onBlendWeightChange(parseFloat(e.target.value))}
               />
             </div>
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>輪郭の滑らかさ (smoothness)</span>
-                <span>{smoothness} px</span>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>平滑化 (Smoothness)</span>
+                <span className="swiss-slider-val">{smoothness}</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
+                className="swiss-slider"
                 min="1"
-                max="15"
+                max="21"
                 step="2"
                 value={smoothness}
                 onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
               />
             </div>
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>2値化閾値 (threshold)</span>
-                <span>{thresholdVal}</span>
+            <div className="swiss-slider-group">
+              <div className="swiss-slider-header">
+                <span>二値化閾値 (Threshold)</span>
+                <span className="swiss-slider-val">{thresholdVal}</span>
               </div>
               <input
                 type="range"
-                className="m3-slider"
+                className="swiss-slider"
                 min="50"
                 max="200"
                 step="5"
@@ -376,52 +334,54 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 onChange={(e) => onThresholdValChange(parseInt(e.target.value, 10))}
               />
             </div>
-          </div>
+          </>
         )}
 
-        {/* 手法3: Gemini AI */}
+        {/* Gemini パラメータ */}
         {activeEngine === "gemini" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div className="m3-textfield">
-              <label>Gemini API キー (未入力時は環境変数 GEMINI_API_KEY を参照)</label>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <input
-                  type="password"
-                  className="m3-input"
-                  style={{ flex: 1 }}
-                  placeholder="AIzaSy..."
-                  value={apiKey}
-                  onChange={(e) => onApiKeyChange(e.target.value)}
-                />
-              </div>
+          <>
+            <div className="swiss-field">
+              <label className="swiss-field-label">Gemini API Key</label>
+              <input
+                type="password"
+                className="swiss-input"
+                placeholder="AIza..."
+                value={apiKey}
+                onChange={(e) => onApiKeyChange(e.target.value)}
+              />
             </div>
 
-            <div className="m3-textfield">
-              <label>デザインスタイル プロンプト</label>
+            <div className="swiss-field">
+              <label className="swiss-field-label">スタイルプロンプト</label>
               <input
                 type="text"
-                className="m3-input"
-                placeholder="例: minimalist black calligraphy on pure white background, sharp vector aesthetic"
+                className="swiss-input"
+                placeholder="例: calligraphic black ink on white"
                 value={stylePrompt}
                 onChange={(e) => onStylePromptChange(e.target.value)}
               />
             </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-              Gemini API (Imagen 3) の画像生成モデルを用いて、180度回転自己対称アンビグラムアートを生成します。
-            </p>
-          </div>
+          </>
         )}
+      </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-          <button
-            className="m3-btn m3-btn-primary"
-            onClick={onRegenerate}
-            disabled={isGenerating}
-          >
-            <Wand2 size={16} />
-            {isGenerating ? "生成中..." : "パラメータを適用して再生成"}
+      {/* アクションフッター */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-subtle)", paddingTop: "1rem", marginTop: "0.5rem" }}>
+        <button
+          className="swiss-btn swiss-btn-primary"
+          onClick={onRegenerate}
+          disabled={isGenerating}
+        >
+          <RefreshCw size={14} className={isGenerating ? "spin" : ""} />
+          <span>{isGenerating ? "生成中..." : "パラメータを適用"}</span>
+        </button>
+
+        {currentResult && currentResult.type !== "error" && (
+          <button className="swiss-btn swiss-btn-outline" onClick={handleDownload}>
+            <Download size={14} />
+            <span>{currentResult.type.toUpperCase()} を保存</span>
           </button>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import { RotateCw, Split, Layers, Palette, Award, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import type { WordItem, EngineResult, FontMeta, FontScoreItem } from "../services/api";
+import {
+  RotateCw,
+  Columns,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Crosshair,
+  Maximize2,
+  Type,
+  Palette,
+} from "lucide-react";
+import type { WordItem, EngineResult, FontScoreItem, FontMeta } from "../services/api";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
@@ -31,8 +41,8 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
   if (!wordItem) {
     return (
-      <div className="m3-card canvas-card" style={{ color: "#888" }}>
-        左側のリストから単語を選択するか、上部の入力欄から単語を入力してください。
+      <div className="swiss-card" style={{ color: "var(--text-muted)", textAlign: "center", padding: "3rem 1rem" }}>
+        単語を選択するか、直接入力して生成してください。
       </div>
     );
   }
@@ -47,26 +57,28 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
   const preBold = details?.pre_bold as number | undefined;
   const bestFontId = details?.best_font_id;
-  const bestFontName = details?.best_font_name;
   const fontScores = details?.font_scores as FontScoreItem[] | undefined;
   const bestScoreObj = fontScores?.find((s) => s.id === bestFontId);
   const bestScorePercent = bestScoreObj ? Math.round(bestScoreObj.score * 100) : null;
 
   const renderGraphicContent = (isFlipped: boolean = false) => {
     if (!activeResult) {
-      return <div>生成中...</div>;
+      return <div style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>生成中...</div>;
     }
 
     if (activeResult.type === "svg") {
+      let svgData = activeResult.data;
+      if (isFlipped) {
+        svgData = svgData.replace("<svg", '<svg style="transform: rotate(180deg);"');
+      }
       return (
         <div
-          dangerouslySetInnerHTML={{ __html: activeResult.data }}
+          dangerouslySetInnerHTML={{ __html: svgData }}
           style={{
-            width: "100%",
+            maxWidth: "100%",
+            height: "auto",
             display: "flex",
             justifyContent: "center",
-            color: "#111111",
-            transform: isFlipped ? "rotate(180deg)" : "none",
           }}
         />
       );
@@ -76,7 +88,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
       return (
         <img
           src={activeResult.data}
-          alt={wordItem.reading}
+          alt={`アンビグラム: ${wordItem.reading}`}
           style={{
             maxWidth: "100%",
             height: "auto",
@@ -88,8 +100,8 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
     if (activeResult.type === "error") {
       return (
-        <div style={{ color: "#b00020", textAlign: "center", padding: "1rem" }}>
-          {activeResult.message || "画像の生成に失敗しました"}
+        <div style={{ color: "var(--accent)", textAlign: "center", padding: "1rem", fontSize: "0.85rem" }}>
+          {activeResult.message || "生成に失敗しました"}
         </div>
       );
     }
@@ -99,244 +111,219 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
   return (
     <section className="viewer-container">
-      {/* メインプレビューキャンバス */}
+      {/* メインビューワーカード */}
       <div className="canvas-card">
-        {/* 手法クイック切り替えセレクター */}
+        {/* 手法切り替えセグメント (Subtractive: 余計な注釈を排し、端正に配置) */}
         {onEngineChange && (
-          <div className="engine-quick-bar">
-            <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#666", marginRight: "0.25rem" }}>
-              生成手法:
+          <div className="engine-bar">
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", marginRight: "0.25rem" }}>
+              手法:
             </span>
             <button
-              className={`engine-pill-btn ${activeEngine === "morphology" ? "active" : ""}`}
+              className={`engine-tab-btn ${activeEngine === "morphology" ? "active" : ""}`}
               onClick={() => onEngineChange("morphology")}
-              title="論理積 (AND) で重なりを抽出し、モルフォロジー膨張で二重線を解消した滑らかな単一ストローク"
+              title="論理積 (AND) とモルフォロジー膨張による二重線解消"
             >
-              <span className="pill-badge pill-badge-primary">手法A</span>
-              <span>論理積＋膨張 (二重線解消)</span>
+              <span className="badge-pill">A</span>
+              <span>論理積＋膨張</span>
             </button>
 
             <button
-              className={`engine-pill-btn ${activeEngine === "skeleton" ? "active" : ""}`}
+              className={`engine-tab-btn ${activeEngine === "skeleton" ? "active" : ""}`}
               onClick={() => onEngineChange("skeleton")}
-              title="魏・山口 (2023) に着想を得た、距離場による中心線抽出と均一単一ストローク再描画"
+              title="調和平均距離場による中心骨格線の抽出と単一ストローク化"
             >
-              <span className="pill-badge pill-badge-secondary">手法B</span>
-              <span>骨格平均化 (単一ストローク)</span>
+              <span className="badge-pill">B</span>
+              <span>骨格平均化</span>
             </button>
 
             <button
-              className={`engine-pill-btn ${activeEngine === "vector" ? "active" : ""}`}
+              className={`engine-tab-btn ${activeEngine === "vector" ? "active" : ""}`}
               onClick={() => onEngineChange("vector")}
-              title="フォントパスの正位置と180度反転を幾何学的にオーバーレイ配置 (原案)"
+              title="フォントパスの直接オーバーレイ配置"
             >
-              <span className="pill-badge">原案</span>
-              <span>ベクター重ね合わせ</span>
+              <span className="badge-pill">原案</span>
+              <span>ベクター合成</span>
             </button>
 
             <button
-              className={`engine-pill-btn ${activeEngine === "bitmap" ? "active" : ""}`}
+              className={`engine-tab-btn ${activeEngine === "bitmap" ? "active" : ""}`}
               onClick={() => onEngineChange("bitmap")}
-              title="ビットマップ距離変換とエネルギー合成による輪郭最適化"
+              title="距離場エネルギー最適化"
             >
-              <span className="pill-badge">手法2</span>
-              <span>ビットマップ最適化</span>
+              <span className="badge-pill">手法2</span>
+              <span>ビットマップ</span>
             </button>
           </div>
         )}
 
-        {/* フォント最適化バー (Multi-Font Auto-Optimizer) */}
+        {/* フォント最適化コントロール */}
         {onFontChange && (
-          <div className="font-opt-container">
-            <div className="font-opt-header">
+          <div className="font-opt-box">
+            <div className="font-opt-row">
               <span className="font-opt-label">
-                <Sparkles size={15} color="var(--md-sys-color-primary)" />
-                フォント選定:
+                <Type size={13} />
+                フォント:
               </span>
 
               {/* 自動最適化 (AUTO) ボタン */}
               <button
-                className={`font-pill-btn ${selectedFont === "auto" ? "active-auto" : ""}`}
+                className={`font-btn ${selectedFont === "auto" ? "active-auto" : ""}`}
                 onClick={() => onFontChange("auto")}
-                title="全フォントから重ね合わせ面積・IoUが最も高いフォントを自動選定"
+                title="IoU幾何スコア最大のフォントを自動適用"
               >
-                <Sparkles size={13} />
-                <span>自動最適化 (AUTO)</span>
-                {bestFontName && <span className="auto-winner-pill">👑 {bestFontName}</span>}
+                <Sparkles size={12} />
+                <span>自動最適化</span>
+                {bestScorePercent !== null && (
+                  <span className="font-score-text">({bestScorePercent}%)</span>
+                )}
               </button>
 
-              {/* 手動フォント切り替えボタン群 */}
+              {/* フォント手動切り替えボタン群 */}
               {availableFonts.map((f) => {
                 const scoreObj = fontScores?.find((s) => s.id === f.id);
-                const isBest = f.id === bestFontId;
                 const isSelected = selectedFont === f.id;
                 return (
                   <button
                     key={f.id}
-                    className={`font-pill-btn ${isSelected ? "active-manual" : ""}`}
+                    className={`font-btn ${isSelected ? "active-manual" : ""}`}
                     onClick={() => onFontChange(f.id)}
-                    title={`${f.name} (${f.style}): ${f.description}`}
+                    title={`${f.name} (${f.style})`}
                   >
                     <span>{f.name}</span>
                     {scoreObj && (
-                      <span className={`font-score-tag ${isBest ? "best-score" : ""}`}>
+                      <span className="font-score-text">
                         {Math.round(scoreObj.score * 100)}%
-                        {isBest && " 👑"}
                       </span>
                     )}
                   </button>
                 );
               })}
 
-              {/* 詳細比較トグルボタン */}
+              {/* 詳細比較トグル */}
               {fontScores && fontScores.length > 0 && (
                 <button
-                  className="font-compare-toggle-btn"
+                  className="font-toggle-details-btn"
                   onClick={() => setShowFontDetails(!showFontDetails)}
-                  title="5フォントの幾何スコアと適合度比較一覧を表示"
+                  title="全フォントの幾何スコアと最適シフトを表示"
                 >
-                  {showFontDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  <span>{showFontDetails ? "比較を閉じる" : "スコア比較"}</span>
+                  <span>比較</span>
+                  {showFontDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 </button>
               )}
             </div>
 
-            {/* フォント最適化・座標補正ステータス案内 */}
+            {/* 最適化情報バナー (Subtractive & Anti-vibe-coded) */}
             {selectedFontName && (
-              <div className="font-auto-summary">
-                <Sparkles size={15} className="sparkle-anim" />
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", width: "100%" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <span>
-                      {selectedFont === "auto" ? "🏆 自動最適化適用中: " : "手動指定フォント: "}
-                      <strong>『{selectedFontName}』</strong>
-                      {bestScorePercent !== null && ` (${bestScorePercent}% 一致)`}
-                    </span>
-                    <span className="font-status-tag">
-                      スタイル: <strong>{selectedStyle || "標準"}</strong>
+              <div className="font-status-banner">
+                <div className="font-status-header">
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span style={{ fontWeight: 600 }}>{selectedFontName}</span>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      ({selectedStyle || "標準"})
                     </span>
                   </div>
+                  {bestScorePercent !== null && (
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
+                      {bestScorePercent}% 一致
+                    </span>
+                  )}
+                </div>
 
-                  {/* 座標揺らし＆フォント太らせ（ウェイト）結果の表示 */}
-                  <div style={{ display: "flex", gap: "1.2rem", fontSize: "0.75rem", opacity: 0.9, flexWrap: "wrap", marginTop: "0.15rem" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                      <span>📐 座標揺らし補正:</span>
-                      <strong style={{ color: "var(--md-sys-color-primary)" }}>
-                        {selectedOffsets && selectedOffsets.length > 0
-                          ? selectedOffsets.map((off, idx) => `文字ペア${idx + 1}(ΔX:${off[0] > 0 ? "+" : ""}${off[0]}px, ΔY:${off[1] > 0 ? "+" : ""}${off[1]}px)`).join(" | ")
-                          : "補正なし (0px, 0px)"}
-                      </strong>
+                <div className="font-status-specs">
+                  <span className="spec-item">
+                    <Crosshair size={12} />
+                    <span>座標補正:</span>
+                    <span className="spec-val">
+                      {selectedOffsets && selectedOffsets.length > 0
+                        ? selectedOffsets.map((off, idx) => `P${idx + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
+                        : "(0, 0)"}
                     </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                      <span>⚖️ 事前太らせ (Pre-Bold):</span>
-                      <strong style={{ color: "var(--md-sys-color-primary)" }}>
-                        {preBold !== undefined ? `+${preBold}px 結合膨張` : "標準"}
-                      </strong>
+                  </span>
+                  <span className="spec-item">
+                    <Maximize2 size={12} />
+                    <span>事前太らせ:</span>
+                    <span className="spec-val">
+                      {preBold !== undefined ? `+${preBold}px` : "0px"}
                     </span>
-                  </div>
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* フォントスコア詳細展開パネル */}
+            {/* フォントスコア比較一覧 (展開時) */}
             {showFontDetails && fontScores && (
-              <div className="font-comparison-panel">
-                <div className="font-comp-title">
-                  <span>フォント別 重なり幾何スコア・座標補正 (調和平均IoU)</span>
-                  <span style={{ fontSize: "0.75rem", color: "#666" }}>
-                    ※クリックで直接そのフォントに切り替え可能
-                  </span>
-                </div>
-                <div className="font-comp-grid">
-                  {fontScores.map((s, idx) => {
-                    const isWinner = s.id === bestFontId;
-                    const isCurrent = (selectedFont === "auto" && isWinner) || selectedFont === s.id;
-                    const pct = Math.round(s.score * 100);
-                    const offsets = (s as any).offsets as [number, number][] | undefined;
-                    const offsetLabel = offsets && offsets.length > 0
-                      ? offsets.map((off, i) => `ペア${i + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
-                      : "(0, 0)";
+              <div className="font-comp-panel">
+                {fontScores.map((s, idx) => {
+                  const isWinner = s.id === bestFontId;
+                  const isCurrent = (selectedFont === "auto" && isWinner) || selectedFont === s.id;
+                  const pct = Math.round(s.score * 100);
+                  const offsets = (s as any).offsets as [number, number][] | undefined;
+                  const offsetLabel = offsets && offsets.length > 0
+                    ? offsets.map((off, i) => `P${i + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
+                    : "(0, 0)";
 
-                    return (
-                      <div
-                        key={s.id}
-                        className={`font-comp-item ${isCurrent ? "current-item" : ""} ${isWinner ? "winner-item" : ""}`}
-                        onClick={() => onFontChange(s.id)}
-                      >
-                        <div className="font-comp-row">
-                          <span className="font-comp-name">
-                            {idx === 0 && "🥇 "}
-                            {idx === 1 && "🥈 "}
-                            {idx === 2 && "🥉 "}
-                            {s.name}
-                            <span className="font-comp-style">({s.style})</span>
-                          </span>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span className="font-comp-offset-tag" title="座標揺らし探索で算出された最適オフセット">
-                              📐 {offsetLabel}
-                            </span>
-                            <span className="font-comp-pct">
-                              {pct}%
-                              {isWinner && <span className="winner-badge">最高</span>}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="font-comp-bar-bg">
-                          <div
-                            className={`font-comp-bar-fill ${isWinner ? "bar-winner" : ""}`}
-                            style={{ width: `${Math.max(10, pct)}%` }}
-                          />
-                        </div>
-                        <div className="font-comp-desc">{s.description}</div>
+                  return (
+                    <div
+                      key={s.id}
+                      className={`font-comp-item ${isCurrent ? "current-item" : ""}`}
+                      onClick={() => onFontChange(s.id)}
+                    >
+                      <span className="font-comp-name">
+                        <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginRight: "0.3rem" }}>
+                          {idx + 1}.
+                        </span>
+                        {s.name}
+                      </span>
+                      <span className="font-comp-tag">
+                        {offsetLabel}
+                      </span>
+                      <div className="font-comp-bar-wrapper">
+                        <div
+                          className={`font-comp-bar-fill ${isWinner ? "bar-winner" : ""}`}
+                          style={{ width: `${Math.max(5, pct)}%` }}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className="font-comp-pct">{pct}%</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
 
-        {/* 手法の動作概要ヒント */}
-        <div style={{ fontSize: "0.78rem", color: "#666", marginBottom: "1rem", textAlign: "center" }}>
-          {activeEngine === "morphology" && "★ 手法A: 正反のピクセル論理積 (AND) を『共通対称核』とし、モルフォロジー膨張で二重線を解消"}
-          {activeEngine === "skeleton" && "★ 手法B: 魏・山口 (2023) 準拠。調和平均距離場から中心骨格を抽出し、均一ブラシで一本化"}
-          {activeEngine === "vector" && "ベクター重ね合わせ: 2文字のアウトラインを直接重ね合わせる原案 (二重線・ゴーストが発生)"}
-          {activeEngine === "bitmap" && "ビットマップ最適化: 距離場と重み付きエネルギー合成による滑らかな輪郭融合"}
-        </div>
-
-        {/* ハイライトモード時の凡例表示 (石崎ほか 2024「ひらがな~る」着想) */}
+        {/* ベクターハイライト凡例 (アクティブ時のみ) */}
         {highlightMode && activeEngine === "vector" && (
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "1rem",
-              padding: "0.5rem 1rem",
-              background: "var(--md-sys-color-surface-container-high)",
-              borderRadius: "var(--md-sys-shape-corner-m)",
-              marginBottom: "1rem",
-              fontSize: "0.85rem",
-              fontWeight: 600,
+              gap: "1.25rem",
+              padding: "0.4rem 0.75rem",
+              background: "var(--bg-subtle)",
+              borderRadius: "var(--radius-sm)",
+              marginBottom: "0.75rem",
+              fontSize: "0.75rem",
             }}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#2563eb" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#2563eb" }} />
-              正位置固有ストローク
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#1d4ed8" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1d4ed8" }} />
+              正位置
             </span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#ea580c" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ea580c" }} />
-              180°反転固有ストローク
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#c2410c" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c2410c" }} />
+              180°反転
             </span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#065f46" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#065f46" }} />
-              共通・融合ストローク
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#047857" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#047857" }} />
+              共通・融合
             </span>
           </div>
         )}
 
-        {/* 回転アニメーションラッパー */}
+        {/* 回転アニメーションキャンバス */}
         <div
           className="canvas-rotating-wrapper"
           style={{ transform: `rotate(${rotation}deg)` }}
@@ -344,57 +331,51 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           {renderGraphicContent(false)}
         </div>
 
-        {/* 下部コントロール */}
-        <div className="viewer-controls" style={{ marginTop: "2rem" }}>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        {/* コントロールバー (Fittsの法則: 直下に機能を集約) */}
+        <div className="viewer-controls">
+          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
             <button
-              className="m3-btn m3-btn-primary"
+              className="swiss-btn swiss-btn-primary"
               onClick={toggleRotation}
-              title="180度反転"
+              title="180度回転"
             >
-              <RotateCw size={18} />
-              180° 回転 ({rotation}°)
+              <RotateCw size={14} />
+              <span>反転 (180°)</span>
             </button>
 
             <button
-              className={`m3-btn ${showSplitView ? "m3-btn-tonal" : "m3-btn-outlined"}`}
+              className={`swiss-btn ${showSplitView ? "swiss-btn-subtle" : "swiss-btn-outline"}`}
               onClick={() => setShowSplitView(!showSplitView)}
-              title="正位置・反転の同時比較表示"
+              title="正反スプリットビュー切り替え"
             >
-              <Split size={18} />
-              正反スプリット表示
+              <Columns size={14} />
+              <span>正反比較</span>
             </button>
 
-            {/* 先行研究着想: パーツ対応ハイライトトグル */}
             {activeEngine === "vector" && onToggleHighlightMode && (
               <button
-                className={`color-highlight-btn ${highlightMode ? "active" : "inactive"}`}
+                className={`swiss-btn ${highlightMode ? "swiss-btn-accent" : "swiss-btn-outline"}`}
                 onClick={onToggleHighlightMode}
-                title="共通・固有ストロークの色分け表示 (青:正位置 / 橙:反転 / 緑:共通融合) [石崎ほか 2024]"
-                id="stroke-color-toggle-btn"
+                title="ストロークパーツの色分け表示"
               >
-                <Palette size={18} />
-                <span>{highlightMode ? "ストローク色分け [ON]" : "ストローク色分け"}</span>
-                <span style={{ display: "inline-flex", gap: "4px", alignItems: "center", marginLeft: "2px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", display: "inline-block" }} title="正位置固有" />
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ea580c", display: "inline-block" }} title="反転固有" />
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} title="共通・融合" />
-                </span>
+                <Palette size={14} />
+                <span>色分け</span>
               </button>
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span style={{ fontSize: "0.85rem", color: "#555", fontWeight: 700 }}>
-              微調整: {rotation}°
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>
+              {rotation}°
             </span>
             <input
               type="range"
+              className="swiss-slider"
               min="0"
               max="180"
               value={rotation}
               onChange={(e) => setRotation(parseInt(e.target.value, 10))}
-              style={{ width: "120px" }}
+              style={{ width: "90px" }}
             />
           </div>
         </div>
@@ -404,13 +385,13 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
       {showSplitView && (
         <div className="split-view-container">
           <div className="split-card">
-            <span className="split-label">正位置 (0°)</span>
+            <span className="split-label">0° 正位置</span>
             <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
               {renderGraphicContent(false)}
             </div>
           </div>
           <div className="split-card">
-            <span className="split-label">180° 回転反転位置 (上下逆)</span>
+            <span className="split-label">180° 反転位置</span>
             <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
               {renderGraphicContent(true)}
             </div>
@@ -418,66 +399,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
         </div>
       )}
 
-      {/* 文字ペアの相性スコアカード */}
-      <div className="m3-card" style={{ gap: "0.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--md-sys-color-on-surface-variant)" }}>
-          <Layers size={16} />
-          <span>文字ペア対称性・スコア詳細 ({wordItem.reading}{wordItem.katakana && wordItem.katakana.length > 0 ? ` [${wordItem.katakana[0]}]` : (wordItem.kanji && wordItem.kanji.length > 0 && !["此処", "其処"].includes(wordItem.kanji[0]) ? ` [${wordItem.kanji[0]}]` : "")})</span>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "0.25rem" }}>
-          {wordItem.pairs.map((p, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: "var(--md-sys-color-surface-container-high)",
-                padding: "0.5rem 0.85rem",
-                borderRadius: "var(--md-sys-shape-corner-m)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                border: "1px solid var(--md-sys-color-outline-variant)",
-              }}
-            >
-              <span style={{ fontSize: "1.1rem", fontWeight: 700 }}>
-                {p.char1} {p.is_center ? "(自己反転)" : `↔ ${p.char2}`}
-              </span>
-              <span
-                style={{
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  color: "var(--md-sys-color-primary)",
-                  background: "var(--md-sys-color-surface-container-lowest)",
-                  padding: "0.15rem 0.4rem",
-                  borderRadius: "var(--md-sys-shape-corner-xs)",
-                }}
-              >
-                {(p.score * 100).toFixed(0)}%
-              </span>
-              {/* 井上・高橋 (2020) 査読実証ペアのバッジ */}
-              {p.empirical_verified && (
-                <span
-                  title="井上・高橋 (2020) 被験者実験で可読率100%が実証されたペア"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.2rem",
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                    color: "#059669",
-                    background: "#ecfdf5",
-                    padding: "0.15rem 0.4rem",
-                    borderRadius: "var(--md-sys-shape-corner-xs)",
-                    border: "1px solid #a7f3d0",
-                  }}
-                >
-                  <Award size={12} />
-                  実証ペア
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 };
