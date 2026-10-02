@@ -2,7 +2,12 @@
   "name": "ambigram-maker-root",
   "private": true,
   "scripts": {
-    "dev": "pnpm --prefix frontend dev",
+    "dev": "concurrently -k -n \"backend,frontend\" -c \"blue.bold,magenta.bold\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "uv run --project backend uvicorn app:app --app-dir backend --port 8000 --reload",
+    "dev:frontend": "pnpm --prefix frontend dev",
     "build": "pnpm --prefix frontend build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

@@ -93,19 +93,39 @@ ambigram-maker/
 
 ## セットアップと実行方法
 
-### 1. バックエンドの起動 (Python / uv)
+### 一括起動 (推奨: フロント & バックを同時起動)
+
+プロジェクトルートにて以下のいずれかを実行すると、バックエンド (FastAPI: 8000) とフロントエンド (Vite: 5173) が一括で起動します。
+
+```bash
+# 方法1: pnpm (推奨)
+pnpm dev
+
+# 方法2: Python スクリプト
+python run.py
+
+# 方法3: Windows バッチファイル (ダブルクリックでも可)
+run.bat
+```
+
+起動後、ブラウザで `http://localhost:5173` にアクセスしてください。Ctrl+C で両プロセスを安全に一括停止できます。
+
+---
+
+### 個別起動
+
+#### 1. バックエンドのみ起動 (Python / uv)
 ```bash
 cd backend
 uv run uvicorn app:app --port 8000 --reload
 ```
 
-### 2. フロントエンドの起動 (Node.js / pnpm)
+#### 2. フロントエンドのみ起動 (Node.js / pnpm)
 ```bash
 cd frontend
 pnpm install
 pnpm dev
 ```
-ブラウザで `http://localhost:5173` にアクセスしてください。
 
 ---
 
@@ -113,13 +133,14 @@ pnpm dev
 
 | 操作内容 | ディレクトリ | コマンド |
 | :--- | :--- | :--- |
+| **フロント ＆ バック一括起動** | ルート | `pnpm dev` または `python run.py` / `run.bat` |
 | バックエンド依存関係インストール | `backend/` | `uv sync` |
 | 辞書データの再構築 | `backend/` | `uv run python dictionary/parser.py` |
 | 適性マトリクスの再計算 | `backend/` | `uv run python scoring/matrix.py` |
 | 探索エンジンの単体テスト | `backend/` | `uv run python search/finder.py` |
-| バックエンドサーバー起動 | `backend/` | `uv run uvicorn app:app --port 8000 --reload` |
+| バックエンドサーバー単体起動 | `backend/` | `uv run uvicorn app:app --port 8000 --reload` |
 | フロントエンド依存関係インストール | `frontend/` | `pnpm install` |
-| フロントエンド開発サーバー起動 | `frontend/` | `pnpm dev` |
+| フロントエンド開発サーバー単体起動 | `frontend/` | `pnpm dev` |
 | フロントエンドビルド・型チェック | `frontend/` | `pnpm run build` |
 
 ---
