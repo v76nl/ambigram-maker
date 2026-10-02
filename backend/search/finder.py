@@ -43,6 +43,15 @@ HIRAGANA_PREFERRED = {
     "なりに", "どうぞ", "どうも", "いつも", "もっと", "ずっと", "かなり",
 }
 
+# 井上・高橋 (2020) §6.1 の実証可読ペアセット (ひらがな用)
+VERIFIED_HIRAGANA_PAIRS = {
+    ("あ", "ま"), ("い", "け"), ("え", "る"), ("き", "わ"), ("さ", "や"),
+    ("を", "を"), ("せ", "み"), ("た", "む"), ("は", "れ"), ("も", "よ"),
+    ("せ", "ぬ"), ("さ", "を"), ("つ", "む"), ("う", "ぬ"), ("あ", "そ"),
+    ("し", "つ"), ("の", "の"), ("こ", "こ"), ("く", "く"), ("へ", "へ"),
+    ("り", "り"), ("い", "い"), ("ー", "ー"),
+}
+
 def classify_script_types(reading: str, kanji_list: list[str], katakana_list: list[str]) -> tuple[bool, bool, bool, str, str, str]:
     """
     (is_pure_hiragana, has_kanji, has_katakana, primary_display, primary_kanji, primary_katakana)
@@ -139,6 +148,43 @@ class AmbigramFinder:
         """2文字の180度回転相性スコアを取得（ひらがな・カタカナ・漢字対応）"""
         return get_any_char_compatibility(c1, c2, self.matrix)
 
+    def make_pairs_for_target(self, target_text: str) -> tuple[list[dict[str, Any]], list[float]]:
+        """対象文字列の文字ペア情報とスコアリストを瞬時に生成"""
+        n = len(target_text)
+        pairs = []
+        scores = []
+        half_len = (n + 1) // 2
+        for i in range(half_len):
+            c1 = target_text[i]
+            c2 = target_text[n - 1 - i]
+            score = self.get_char_compatibility(c1, c2)
+            scores.append(score)
+            is_verified = (c1, c2) in VERIFIED_HIRAGANA_PAIRS or (c2, c1) in VERIFIED_HIRAGANA_PAIRS
+            pairs.append({
+                "index1": i,
+                "char1": c1,
+                "index2": n - 1 - i,
+                "char2": c2,
+                "is_center": i == (n - 1 - i),
+                "score": round(score, 4),
+                "empirical_verified": is_verified,
+            })
+        return pairs, scores
+
+    def _format_word_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        """軽量インデックスの単語アイテムをクライアント向け完全形式 (pairs付き) に展開"""
+        target_text = item.get("target_text") or item.get("word") or ""
+        res = dict(item)
+        res["word"] = target_text
+        res["target_text"] = target_text
+        res["length"] = len(target_text)
+        res["display"] = item.get("display") or target_text
+        res["common"] = item.get("common", True)
+        if "pairs" not in res:
+            pairs, _ = self.make_pairs_for_target(target_text)
+            res["pairs"] = pairs
+        return res
+
     def evaluate_word(
         self,
         word: str,
@@ -220,35 +266,8 @@ class AmbigramFinder:
                 "pairs": []
             }
 
-        pairs = []
-        scores = []
-        half_len = (n + 1) // 2
-
-        # 井上・高橋 (2020) §6.1 の実証可読ペアセット (ひらがな用)
-        verified_pairs = {
-            ("あ", "ま"), ("い", "け"), ("え", "る"), ("き", "わ"), ("さ", "や"),
-            ("を", "を"), ("せ", "み"), ("た", "む"), ("は", "れ"), ("も", "よ"),
-            ("せ", "ぬ"), ("さ", "を"), ("つ", "む"), ("う", "ぬ"), ("あ", "そ"),
-            ("し", "つ"), ("の", "の"), ("こ", "こ"), ("く", "く"), ("へ", "へ"),
-            ("り", "り"), ("い", "い"), ("ー", "ー"),
-        }
-
         # 4. target_text の実際の文字ペアで対称性・相性スコアを評価！
-        for i in range(half_len):
-            c1 = target_text[i]
-            c2 = target_text[n - 1 - i]
-            score = self.get_char_compatibility(c1, c2)
-            scores.append(score)
-            is_verified = (c1, c2) in verified_pairs or (c2, c1) in verified_pairs
-            pairs.append({
-                "index1": i,
-                "char1": c1,
-                "index2": n - 1 - i,
-                "char2": c2,
-                "is_center": i == (n - 1 - i),
-                "score": round(score, 4),
-                "empirical_verified": is_verified,
-            })
+        pairs, scores = self.make_pairs_for_target(target_text)
 
         # 幾何平均（全ペアが一定水準以上であることを評価）
         product = 1.0
@@ -374,7 +393,7 @@ class AmbigramFinder:
                 else:
                     if score >= effective_min_score and target_text not in seen_targets:
                         seen_targets.add(target_text)
-                        yield item
+                        yield self._format_word_item(item)
                         yielded_count += 1
                         if yielded_count >= limit:
                             return
@@ -386,7 +405,7 @@ class AmbigramFinder:
                     t_text = item.get("target_text") or item.get("word") or ""
                     if t_text not in seen_targets:
                         seen_targets.add(t_text)
-                        yield item
+                        yield self._format_word_item(item)
                         yielded_count += 1
                         if yielded_count >= limit:
                             return

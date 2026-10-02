@@ -60,14 +60,25 @@ def generate_index():
                     display=target_text,
                     force_target_text=target_text,
                 )
-                res["script_type"] = script_type
-                res["common"] = True
-                res["kanji"] = kanji_list
-                res["katakana"] = katakana_list
+                score = round(res["score"], 4)
 
-                # スコア0.45以上を網羅的に収録（ユーザーが0.50や0.75等に変更しても対応できるように）
-                if res["score"] >= 0.45:
-                    scored_words.append(res)
+                # UIスライダーの最小値であるスコア0.50以上のみを厳選
+                if score >= 0.50:
+                    clean_item = {
+                        "target_text": target_text,
+                        "reading": reading,
+                        "score": score,
+                        "script_type": script_type,
+                    }
+                    if kanji_list:
+                        clean_item["kanji"] = kanji_list
+                    if katakana_list:
+                        clean_item["katakana"] = katakana_list
+                    display = res.get("display", target_text)
+                    if display and display != target_text:
+                        clean_item["display"] = display
+
+                    scored_words.append(clean_item)
                     seen.add(target_text)
 
     # スコア降順に完全ソート
@@ -77,7 +88,7 @@ def generate_index():
     print(f"生成完了: {len(scored_words):,} 件 (所要時間: {t1 - t0:.2f}s)")
     print(f"ファイルを保存中: {OUTPUT_FILE}")
     with open(OUTPUT_FILE, "w", encoding="utf-8") as fp:
-        json.dump(scored_words, fp, ensure_ascii=False, indent=None)
+        json.dump(scored_words, fp, ensure_ascii=False, separators=(",", ":"))
 
     file_size_mb = OUTPUT_FILE.stat().st_size / (1024 * 1024)
     print(f"保存完了: {file_size_mb:.2f} MB")
