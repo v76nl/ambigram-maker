@@ -366,19 +366,27 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
       </div>
 
       {/* アクションフッター */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-subtle)", paddingTop: "1rem", marginTop: "0.5rem" }}>
-        <button
-          className="swiss-btn swiss-btn-primary"
-          onClick={onRegenerate}
-          disabled={isGenerating}
-        >
-          <RefreshCw size={14} className={isGenerating ? "spin" : ""} />
-          <span>{isGenerating ? "生成中..." : "パラメータを適用"}</span>
-        </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.85rem", marginTop: "0.5rem" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+          <button
+            className="swiss-btn swiss-btn-outline"
+            onClick={onRegenerate}
+            disabled={isGenerating}
+            title="手動で再生成を実行"
+          >
+            <RefreshCw size={13} className={isGenerating ? "spin" : ""} />
+            <span>{isGenerating ? "反映中..." : "再生成"}</span>
+          </button>
+          {isGenerating && (
+            <span style={{ fontSize: "0.72rem", color: "var(--accent)", fontWeight: 500 }}>
+              自動反映中...
+            </span>
+          )}
+        </div>
 
         {currentResult && currentResult.type !== "error" && (
           <button className="swiss-btn swiss-btn-outline" onClick={handleDownload}>
-            <Download size={14} />
+            <Download size={13} />
             <span>{currentResult.type.toUpperCase()} を保存</span>
           </button>
         )}

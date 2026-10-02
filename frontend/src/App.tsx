@@ -182,12 +182,30 @@ export const App: React.FC = () => {
     ]
   );
 
-  // 単語変更、エンジン変更、またはフォント変更時に生成
+  // 単語変更、エンジン変更、フォント変更、またはスライダー等のパラメータ変更時に自動反映 (デバウンス付き)
   useEffect(() => {
-    if (selectedWord) {
+    if (!selectedWord) return;
+
+    const timer = setTimeout(() => {
       triggerGenerate(selectedWord);
-    }
-  }, [selectedWord, activeEngine, selectedFont]);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedWord,
+    activeEngine,
+    selectedFont,
+    dilationSize,
+    strokeThickness,
+    preBold,
+    diffBlend,
+    blendRatio,
+    blendWeight,
+    smoothness,
+    thresholdVal,
+    stylePrompt,
+    triggerGenerate,
+  ]);
 
   const handleToggleHighlightMode = () => {
     const nextVal = !highlightMode;
