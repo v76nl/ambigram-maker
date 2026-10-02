@@ -76,11 +76,12 @@ def evaluate_word_fonts(word: str = Query(...)):
     if not word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
     eval_res = finder.evaluate_word(word)
-    target_word = eval_res["reading"]
+    target_word = eval_res.get("target_text") or word
     font_eval = font_manager.evaluate_word_fonts(target_word)
     return {
         "word": word,
-        "reading": target_word,
+        "target_text": target_word,
+        "reading": eval_res.get("reading", word),
         "best_font_id": font_eval["best_font_id"],
         "best_font_name": font_eval["best_font_name"],
         "font_scores": font_eval["font_scores"],
@@ -94,6 +95,9 @@ def search_words(
     min_score: float = Query(0.5, ge=0.0, le=1.0),
     limit: int = Query(50, ge=1, le=200),
     query: str = Query(""),
+    include_kanji: bool = Query(True),
+    include_katakana: bool = Query(True),
+    include_hiragana: bool = Query(True),
 ):
     """自己対称アンビグラム適性単語を検索・ランキング"""
     results = finder.search(
@@ -103,12 +107,15 @@ def search_words(
         min_score=min_score,
         limit=limit,
         query=query,
+        include_kanji=include_kanji,
+        include_katakana=include_katakana,
+        include_hiragana=include_hiragana,
     )
     return {"count": len(results), "words": results}
 
 @app.post("/api/words/evaluate")
 def evaluate_word(req: EvaluateRequest):
-    """指定された任意のひらがな単語の適性を評価"""
+    """指定された単語の適性を本来の表記で評価"""
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
     result = finder.evaluate_word(req.word)
@@ -116,13 +123,13 @@ def evaluate_word(req: EvaluateRequest):
 
 @app.post("/api/generate")
 def generate_ambigram(req: GenerateRequest):
-    """指定した単語のアンビグラムを生成"""
+    """指定した単語のアンビグラムを本来の表記（漢字・カタカナ・ひらがな）で生成"""
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
 
-    # 漢字やカタカナが渡された場合、自動的に読み（ひらがな）を解決
     eval_res = finder.evaluate_word(req.word)
-    target_word = eval_res["reading"]
+    # 本来の表記（漢字やカタカナ）そのものをアンビグラムの対象とする
+    target_word = eval_res.get("target_text") or req.word
     font_id = req.font or "auto"
 
     results: dict[str, Any] = {}

@@ -14,6 +14,12 @@ interface WordSearchProps {
   onLengthChange: (min: number, max: number) => void;
   commonOnly: boolean;
   onCommonOnlyChange: (val: boolean) => void;
+  includeHiragana: boolean;
+  includeKanji: boolean;
+  includeKatakana: boolean;
+  onToggleHiragana: () => void;
+  onToggleKanji: () => void;
+  onToggleKatakana: () => void;
   isLoading: boolean;
   loadError?: string | null;
   onRetry?: () => void;
@@ -31,6 +37,12 @@ export const WordSearch: React.FC<WordSearchProps> = ({
   onLengthChange,
   commonOnly,
   onCommonOnlyChange,
+  includeHiragana,
+  includeKanji,
+  includeKatakana,
+  onToggleHiragana,
+  onToggleKanji,
+  onToggleKatakana,
   isLoading,
   loadError,
   onRetry,
@@ -82,8 +94,40 @@ export const WordSearch: React.FC<WordSearchProps> = ({
         </div>
       </div>
 
-      {/* フィルタセグメント & 文字数スライダー */}
+      {/* フィルタセグメント & 文字種 & 文字数スライダー */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.75rem" }}>
+        {/* 文字種トグル */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          <span className="swiss-field-label">文字種</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.35rem" }}>
+            <button
+              type="button"
+              className={`script-toggle-btn ${includeHiragana ? "active" : ""}`}
+              onClick={onToggleHiragana}
+              title="元からひらがなの語（漢字・カタカナの変換語を含まない）"
+            >
+              ひらがな
+            </button>
+            <button
+              type="button"
+              className={`script-toggle-btn ${includeKanji ? "active" : ""}`}
+              onClick={onToggleKanji}
+              title="漢字表記を含む語"
+            >
+              漢字
+            </button>
+            <button
+              type="button"
+              className={`script-toggle-btn ${includeKatakana ? "active" : ""}`}
+              onClick={onToggleKatakana}
+              title="カタカナ表記を含む語"
+            >
+              カタカナ
+            </button>
+          </div>
+        </div>
+
+        {/* 語彙範囲 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span className="swiss-field-label">
             <Layers size={13} />
@@ -166,34 +210,20 @@ export const WordSearch: React.FC<WordSearchProps> = ({
 
         <div className="word-list">
           {words.map((w) => {
-            const isSelected = selectedWord?.reading === w.reading;
-            const hasVerified = w.pairs.some((p) => p.empirical_verified);
-            const mainReading = w.reading;
-
-            let meaningHint = "";
-            if (w.katakana && w.katakana.length > 0) {
-              meaningHint = w.katakana[0];
-            } else if (w.kanji && w.kanji.length > 0) {
-              const firstKanji = w.kanji[0];
-              if (!["此処", "其処", "何処", "此れ", "其れ", "彼処", "貴方"].includes(firstKanji)) {
-                meaningHint = firstKanji;
-              }
-            }
+            const mainText = w.target_text || w.primary_display || w.reading;
+            const currentSelectedText = selectedWord?.target_text || selectedWord?.primary_display || selectedWord?.reading;
+            const isSelected = currentSelectedText === mainText;
+            const hasSub = mainText !== w.reading;
 
             return (
               <div
-                key={w.reading}
+                key={`${mainText}_${w.reading}`}
                 className={`word-item ${isSelected ? "selected" : ""}`}
                 onClick={() => onSelectWord(w)}
               >
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <span className="word-main">{mainReading}</span>
-                  {meaningHint && <span className="word-hint">({meaningHint})</span>}
-                  {hasVerified && (
-                    <span className="word-badge-verified" title="実験実証済みペア">
-                      実証
-                    </span>
-                  )}
+                <div style={{ display: "flex", alignItems: "baseline", gap: "0.45rem", minWidth: 0 }}>
+                  <span className="word-main">{mainText}</span>
+                  {hasSub && <span className="word-reading-sub">{w.reading}</span>}
                 </div>
                 <div className="word-score">
                   {Math.round(w.score * 100)}%

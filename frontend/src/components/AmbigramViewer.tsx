@@ -88,7 +88,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
       return (
         <img
           src={activeResult.data}
-          alt={`アンビグラム: ${wordItem.reading}`}
+          alt={`アンビグラム: ${wordItem.target_text || wordItem.primary_display || wordItem.reading}`}
           style={{
             maxWidth: "100%",
             height: "auto",

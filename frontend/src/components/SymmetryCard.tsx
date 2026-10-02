@@ -1,5 +1,5 @@
 import React from "react";
-import { Layers, Award } from "lucide-react";
+import { Layers } from "lucide-react";
 import type { WordItem } from "../services/api";
 
 interface SymmetryCardProps {
@@ -13,7 +13,7 @@ export const SymmetryCard: React.FC<SymmetryCardProps> = ({ wordItem }) => {
     <div className="swiss-card" style={{ gap: "0.6rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", fontWeight: 600, color: "var(--text-secondary)" }}>
         <Layers size={14} />
-        <span>対称ペア解析 ({wordItem.reading})</span>
+        <span>対称ペア解析 ({wordItem.target_text || wordItem.primary_display || wordItem.reading})</span>
       </div>
       <div className="pairs-grid">
         {wordItem.pairs.map((p, idx) => (
@@ -24,22 +24,6 @@ export const SymmetryCard: React.FC<SymmetryCardProps> = ({ wordItem }) => {
             <span className="pair-score">
               {Math.round(p.score * 100)}%
             </span>
-            {p.empirical_verified && (
-              <span
-                title="井上・高橋 (2020) 実験で実証済みペア"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.2rem",
-                  fontSize: "0.65rem",
-                  color: "var(--accent)",
-                  fontWeight: 700,
-                }}
-              >
-                <Award size={11} />
-                実証
-              </span>
-            )}
           </div>
         ))}
       </div>

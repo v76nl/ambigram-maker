@@ -20,6 +20,9 @@ export const App: React.FC = () => {
   const [minLength, setMinLength] = useState<number>(2);
   const [maxLength, setMaxLength] = useState<number>(5);
   const [commonOnly, setCommonOnly] = useState<boolean>(true);
+  const [includeHiragana, setIncludeHiragana] = useState<boolean>(true);
+  const [includeKanji, setIncludeKanji] = useState<boolean>(true);
+  const [includeKatakana, setIncludeKatakana] = useState<boolean>(true);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -57,6 +60,28 @@ export const App: React.FC = () => {
     "minimalist black calligraphy on pure white background, sharp vector aesthetic"
   );
 
+  // トグル制御 (すべてOFFになるのを防ぐ)
+  const handleToggleHiragana = useCallback(() => {
+    setIncludeHiragana((prev) => {
+      if (prev && !includeKanji && !includeKatakana) return prev; // 最後の1つはOFFにしない
+      return !prev;
+    });
+  }, [includeKanji, includeKatakana]);
+
+  const handleToggleKanji = useCallback(() => {
+    setIncludeKanji((prev) => {
+      if (prev && !includeHiragana && !includeKatakana) return prev;
+      return !prev;
+    });
+  }, [includeHiragana, includeKatakana]);
+
+  const handleToggleKatakana = useCallback(() => {
+    setIncludeKatakana((prev) => {
+      if (prev && !includeHiragana && !includeKanji) return prev;
+      return !prev;
+    });
+  }, [includeHiragana, includeKanji]);
+
   // フォント一覧の取得
   useEffect(() => {
     getAvailableFonts()
@@ -76,6 +101,9 @@ export const App: React.FC = () => {
         minScore: searchQuery.trim() ? 0.1 : 0.6, // 検索時は見つかりやすいよう閾値緩和
         query: searchQuery.trim() || undefined,
         limit: 50,
+        includeKanji,
+        includeKatakana,
+        includeHiragana,
       });
       setWords(fetched);
       if (fetched.length > 0) {
@@ -87,7 +115,7 @@ export const App: React.FC = () => {
     } finally {
       setIsLoadingWords(false);
     }
-  }, [minLength, maxLength, commonOnly, searchQuery]);
+  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana]);
 
   useEffect(() => {
     // 検索クエリ入力時のデバウンス
@@ -108,8 +136,9 @@ export const App: React.FC = () => {
       if (!wordToGen) return;
       setIsGenerating(true);
       try {
+        const targetText = wordToGen.target_text || wordToGen.primary_display || wordToGen.word || wordToGen.reading;
         const response = await generateAmbigram({
-          word: wordToGen.reading,
+          word: targetText,
           engine: (engineToGen || activeEngine) as any,
           font: fontToGen || selectedFont,
           blendRatio,
@@ -198,7 +227,11 @@ export const App: React.FC = () => {
         <div className="header-meta">
           {selectedWord && (
             <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
-              {selectedWord.reading} ({Math.round(selectedWord.score * 100)}%)
+              {selectedWord.primary_display || selectedWord.reading}
+              {selectedWord.primary_display && selectedWord.primary_display !== selectedWord.reading
+                ? ` (${selectedWord.reading})`
+                : ""}{" "}
+              ({Math.round(selectedWord.score * 100)}%)
             </span>
           )}
           <span style={{ color: "var(--border-medium)" }}>|</span>
@@ -227,6 +260,12 @@ export const App: React.FC = () => {
             }}
             commonOnly={commonOnly}
             onCommonOnlyChange={(val) => setCommonOnly(val)}
+            includeHiragana={includeHiragana}
+            includeKanji={includeKanji}
+            includeKatakana={includeKatakana}
+            onToggleHiragana={handleToggleHiragana}
+            onToggleKanji={handleToggleKanji}
+            onToggleKatakana={handleToggleKatakana}
             isLoading={isLoadingWords}
             loadError={loadError}
             onRetry={loadWords}

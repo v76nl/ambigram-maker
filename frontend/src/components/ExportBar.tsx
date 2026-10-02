@@ -17,13 +17,15 @@ export const ExportBar: React.FC<ExportBarProps> = ({
     return null;
   }
 
+  const nameBase = wordItem.target_text || wordItem.primary_display || wordItem.reading;
+
   const downloadSvg = () => {
     if (activeResult.type !== "svg") return;
     const blob = new Blob([activeResult.data], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `ambigram_${wordItem.reading}_vector.svg`;
+    link.download = `ambigram_${nameBase}_vector.svg`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -32,7 +34,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
     if (activeResult.type === "png") {
       const link = document.createElement("a");
       link.href = activeResult.data;
-      link.download = `ambigram_${wordItem.reading}_${activeEngine}.png`;
+      link.download = `ambigram_${nameBase}_${activeEngine}.png`;
       link.click();
       return;
     }
@@ -53,7 +55,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
           const pngUrl = canvas.toDataURL("image/png");
           const link = document.createElement("a");
           link.href = pngUrl;
-          link.download = `ambigram_${wordItem.reading}_vector.png`;
+          link.download = `ambigram_${nameBase}_vector.png`;
           link.click();
         }
         URL.revokeObjectURL(url);
@@ -75,7 +77,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
       <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
         <Download size={15} color="var(--accent)" />
         <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-          エクスポート ({wordItem.reading})
+          エクスポート ({nameBase})
         </span>
       </div>
 

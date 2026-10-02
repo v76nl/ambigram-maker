@@ -76,54 +76,155 @@ EMPIRICAL_UNREADABLE_PAIRS = {
     ("と", "の"): 0.15,
 }
 
-def render_char_image(char: str, font_path: Path, size: int = 128) -> np.ndarray:
-    """指定文字を画像としてレンダリングし、2値NumPy配列（0 or 1）を返す"""
-    img = Image.new("L", (size, size), 0)
+_char_image_cache: dict[tuple[str, Path, int], np.ndarray] = {}
+_pair_score_cache: dict[tuple[str, str], float] = {}
+
+# カタカナの代表的自己対称・高相性ペア（ルールベース補正）
+KATAKANA_SYMMETRIC_PAIRS = {
+    ("ー", "ー"): 1.00,
+    ("エ", "エ"): 0.95,
+    ("ロ", "ロ"): 0.96,
+    ("ハ", "ハ"): 0.92,
+    ("ト", "ト"): 0.88,
+    ("ス", "ヌ"): 0.90,
+    ("フ", "フ"): 0.86,
+    ("リ", "リ"): 0.88,
+    ("コ", "コ"): 0.85,
+    ("ニ", "ニ"): 0.90,
+    ("メ", "メ"): 0.86,
+    ("ク", "ク"): 0.82,
+    ("ヘ", "ヘ"): 0.94,
+    ("オ", "オ"): 0.78,
+}
+
+def render_proper_centered(char: str, font_path: Path = FONT_PATH, size: int = 64) -> np.ndarray:
+    """文字の実際のピクセル描画領域（バウンディングボックス）を基準に正確に中央配置した2値画像を生成"""
+    key = (char, font_path, size)
+    if key in _char_image_cache:
+        return _char_image_cache[key]
+
+    big_size = size * 2
+    img = Image.new("L", (big_size, big_size), 0)
     draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype(str(font_path), int(size * 0.75))
     except Exception:
         font = ImageFont.load_default()
-    
-    # バウンディングボックスの中央に配置
-    bbox = draw.textbbox((0, 0), char, font=font)
-    w = bbox[2] - bbox[0]
-    h = bbox[3] - bbox[1]
-    x = (size - w) // 2 - bbox[0]
-    y = (size - h) // 2 - bbox[1]
-    
-    draw.text((x, y), char, fill=255, font=font)
+
+    draw.text((big_size // 4, big_size // 4), char, fill=255, font=font)
     arr = np.array(img, dtype=np.float32) / 255.0
-    return (arr > 0.3).astype(np.float32)
+
+    rows, cols = np.where(arr > 0.3)
+    if len(rows) == 0:
+        res = np.zeros((size, size), dtype=np.float32)
+    else:
+        min_r, max_r = rows.min(), rows.max()
+        min_c, max_c = cols.min(), cols.max()
+        h = max_r - min_r + 1
+        w = max_c - min_c + 1
+        glyph = arr[min_r:max_r + 1, min_c:max_c + 1]
+
+        res = np.zeros((size, size), dtype=np.float32)
+        start_r = (size - h) // 2
+        start_c = (size - w) // 2
+        res[start_r:start_r + h, start_c:start_c + w] = glyph
+
+    binary_res = (res > 0.3).astype(np.float32)
+    _char_image_cache[key] = binary_res
+    return binary_res
+
+def render_char_image(char: str, font_path: Path, size: int = 128) -> np.ndarray:
+    """指定文字を画像としてレンダリングし、2値NumPy配列（0 or 1）を返す"""
+    return render_proper_centered(char, font_path, size)
+
+def calculate_geometric_similarity_with_jitter(img_a: np.ndarray, img_b: np.ndarray, max_jitter: int = 2) -> float:
+    """微小オフセット揺らし（±2px）を探索し、最も高い幾何対称性スコアを採用"""
+    img_b_rot = np.rot90(img_b, 2)
+    h, w = img_a.shape
+    best = 0.0
+
+    for dy in range(-max_jitter, max_jitter + 1):
+        for dx in range(-max_jitter, max_jitter + 1):
+            if dy == 0 and dx == 0:
+                shifted = img_b_rot
+            else:
+                shifted = np.zeros_like(img_b_rot)
+                sy1, sy2 = max(0, -dy), min(h, h - dy)
+                sx1, sx2 = max(0, -dx), min(w, w - dx)
+                dy1, dy2 = max(0, dy), min(h, h + dy)
+                dx1, dx2 = max(0, dx), min(w, w + dx)
+                shifted[dy1:dy2, dx1:dx2] = img_b_rot[sy1:sy2, sx1:sx2]
+
+            intersection = np.sum(img_a * shifted)
+            area_a = np.sum(img_a)
+            area_b = np.sum(shifted)
+
+            if area_a == 0 or area_b == 0 or intersection == 0:
+                s = 0.0
+            else:
+                cov_a = intersection / area_a
+                cov_b = intersection / area_b
+                harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
+                union = np.sum(np.clip(img_a + shifted, 0, 1))
+                iou = intersection / union if union > 0 else 0.0
+                s = float(0.3 * iou + 0.7 * harmonic_cov)
+
+            if s > best:
+                best = s
+
+    return best
 
 def calculate_geometric_similarity(img_a: np.ndarray, img_b: np.ndarray) -> float:
+    """微小座標揺らし付き幾何学的類似度計算"""
+    return calculate_geometric_similarity_with_jitter(img_a, img_b, max_jitter=2)
+
+def get_any_char_compatibility(c1: str, c2: str, hiragana_matrix: dict | None = None) -> float:
     """
-    文字Aと180度回転した文字Bの幾何学的類似度を計算
-    魏・山口 (2023) §2.2 に従い、正位置と180度反転位置の調和平均 (Harmonic Mean) を採用。
-    片方しか成立しない非対称ペアを数学的に排除する。
+    任意の2文字（ひらがな、カタカナ、漢字、英数字）の180度回転相性スコアを取得する。
+    - ひらがな同士: 井上・高橋 (2020) 実証マトリクスを優先使用
+    - カタカナ同士: 定番ペア補正 ＋ 幾何学的類似度
+    - 漢字・混在: 幾何学的類似度 (調和平均 ＋ IoU ＋ 座標揺らし)
     """
-    img_b_rot = np.rot90(img_b, 2)
-    
-    intersection = np.sum(img_a * img_b_rot)
-    area_a = np.sum(img_a)
-    area_b = np.sum(img_b_rot)
-    
-    if area_a == 0 or area_b == 0 or intersection == 0:
-        return 0.0
-    
-    # それぞれの文字に対するカバー率
-    cov_a = intersection / area_a
-    cov_b = intersection / area_b
-    
-    # 調和平均 (どちらか一方が低いと急激にペナルティがかかる)
-    harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
-    
-    # IoU
-    union = np.sum(np.clip(img_a + img_b_rot, 0, 1))
-    iou = intersection / union if union > 0 else 0.0
-    
-    # 幾何スコア（IoU 30% + 調和カバー率 70%）
-    return float(0.3 * iou + 0.7 * harmonic_cov)
+    if not c1 or not c2:
+        return 0.1
+
+    pair = (c1, c2)
+    rev_pair = (c2, c1)
+
+    if pair in _pair_score_cache:
+        return _pair_score_cache[pair]
+
+    # 1. ひらがなマトリクス
+    if hiragana_matrix and c1 in hiragana_matrix and c2 in hiragana_matrix[c1]:
+        score = hiragana_matrix[c1][c2]
+        _pair_score_cache[pair] = score
+        _pair_score_cache[rev_pair] = score
+        return score
+
+    # 2. カタカナ定番ペア
+    if pair in KATAKANA_SYMMETRIC_PAIRS:
+        score = KATAKANA_SYMMETRIC_PAIRS[pair]
+        _pair_score_cache[pair] = score
+        _pair_score_cache[rev_pair] = score
+        return score
+    if rev_pair in KATAKANA_SYMMETRIC_PAIRS:
+        score = KATAKANA_SYMMETRIC_PAIRS[rev_pair]
+        _pair_score_cache[pair] = score
+        _pair_score_cache[rev_pair] = score
+        return score
+
+    # 3. 幾何学的類似度計算 (漢字・カタカナ・混在)
+    im1 = render_proper_centered(c1, FONT_PATH, size=64)
+    im2 = render_proper_centered(c2, FONT_PATH, size=64)
+    raw_geom = calculate_geometric_similarity_with_jitter(im1, im2, max_jitter=2)
+
+    # 調和平均スコアを 0.0〜1.0 にスケーリング
+    score = min(1.0, raw_geom * 1.25)
+    score = round(max(0.1, score), 4)
+
+    _pair_score_cache[pair] = score
+    _pair_score_cache[rev_pair] = score
+    return score
 
 def build_compatibility_matrix(output_path: Path = OUTPUT_MATRIX_PATH) -> dict[str, dict[str, float]]:
     """全ひらがなペアのハイブリッド適性マトリクスを構築してJSONに保存"""

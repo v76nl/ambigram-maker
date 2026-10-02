@@ -11,12 +11,20 @@ export interface CharPair {
 }
 
 export interface WordItem {
+  word?: string;
+  target_text?: string;
   reading: string;
   length: number;
   common: boolean;
   kanji: string[];
   katakana?: string[];
   display?: string;
+  primary_display?: string;
+  primary_kanji?: string;
+  primary_katakana?: string;
+  is_pure_hiragana?: boolean;
+  has_kanji?: boolean;
+  has_katakana?: boolean;
   input?: string;
   score: number;
   geometric_mean: number;
@@ -31,6 +39,9 @@ export interface SearchWordsParams {
   minScore?: number;
   limit?: number;
   query?: string;
+  includeKanji?: boolean;
+  includeKatakana?: boolean;
+  includeHiragana?: boolean;
 }
 
 export interface FontMeta {
@@ -104,6 +115,9 @@ export async function searchWords(params: SearchWordsParams = {}): Promise<WordI
   if (params.minScore !== undefined) queryParams.set("min_score", params.minScore.toString());
   if (params.limit !== undefined) queryParams.set("limit", params.limit.toString());
   if (params.query) queryParams.set("query", params.query);
+  if (params.includeKanji !== undefined) queryParams.set("include_kanji", params.includeKanji.toString());
+  if (params.includeKatakana !== undefined) queryParams.set("include_katakana", params.includeKatakana.toString());
+  if (params.includeHiragana !== undefined) queryParams.set("include_hiragana", params.includeHiragana.toString());
 
   const res = await fetch(`${API_BASE_URL}/words/search?${queryParams.toString()}`);
   if (!res.ok) {

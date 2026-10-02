@@ -10,6 +10,11 @@ DATA_DIR = Path(__file__).parent.parent
 WORDS_PATH = DATA_DIR / "dictionary" / "hiragana_words.json"
 MATRIX_PATH = DATA_DIR / "scoring" / "compatibility.json"
 
+try:
+    from scoring.matrix import get_any_char_compatibility
+except ImportError:
+    from ..scoring.matrix import get_any_char_compatibility
+
 def katakana_to_hiragana(s: str) -> str:
     """カタカナをひらがなに変換する"""
     result = []
@@ -30,6 +35,46 @@ def hiragana_to_katakana(s: str) -> str:
         result.append(c)
     return "".join(result)
 
+HIRAGANA_PREFERRED = {
+    "ここ", "そこ", "どこ", "これ", "それ", "あれ", "どれ", "あなた",
+    "まあ", "まあまあ", "ささ", "ええ", "さあ", "わね", "えーと", "あのね",
+    "なりに", "どうぞ", "どうも", "いつも", "もっと", "ずっと", "かなり",
+}
+
+def classify_script_types(reading: str, kanji_list: list[str], katakana_list: list[str]) -> tuple[bool, bool, bool, str, str, str]:
+    """
+    (is_pure_hiragana, has_kanji, has_katakana, primary_display, primary_kanji, primary_katakana)
+    - has_kanji: 漢字表記が存在し、かつ日常的にも漢字表記されるもの
+    - has_katakana: カタカナ表記（外来語等）が存在するもの
+    - is_pure_hiragana: 漢字もカタカナもない、または日常的にひらがな表記が標準的なもの（※元が漢字等のものは含まない）
+    - primary_display: その単語の本質的な代表表記
+    - primary_kanji: 代表漢字表記
+    - primary_katakana: 代表カタカナ表記
+    """
+    has_katakana = bool(katakana_list and len(katakana_list) > 0 and any(len(k) > 1 for k in katakana_list))
+    
+    valid_kanjis = [
+        k for k in (kanji_list or [])
+        if not k.isdigit() and any("\u4e00" <= c <= "\u9fff" for c in k)
+    ]
+    has_kanji = bool(valid_kanjis and len(valid_kanjis) > 0 and reading not in HIRAGANA_PREFERRED)
+    
+    is_pure_hiragana = (not has_katakana and not has_kanji) or (reading in HIRAGANA_PREFERRED)
+
+    primary_kanji = valid_kanjis[0] if (has_kanji and valid_kanjis) else ""
+    primary_katakana = katakana_list[0] if (has_katakana and katakana_list) else ""
+
+    if has_katakana and (not has_kanji or len(primary_katakana) >= len(reading)):
+        primary_display = primary_katakana
+    elif has_kanji:
+        primary_display = primary_kanji
+    elif has_katakana:
+        primary_display = primary_katakana
+    else:
+        primary_display = reading
+
+    return is_pure_hiragana, has_kanji, has_katakana, primary_display, primary_kanji, primary_katakana
+
 class AmbigramFinder:
     def __init__(self, words_path: Path = WORDS_PATH, matrix_path: Path = MATRIX_PATH):
         print("探索エンジン初期化中...")
@@ -38,6 +83,9 @@ class AmbigramFinder:
             
         with open(matrix_path, "r", encoding="utf-8") as f:
             self.matrix: dict[str, dict[str, float]] = json.load(f)
+
+        # 評価結果のインメモリキャッシュ
+        self.eval_cache: dict[str, dict[str, Any]] = {}
             
         # 漢字表記およびカタカナ表記からの高速インデックス作成
         self.kanji_to_word: dict[str, dict[str, Any]] = {}
@@ -61,8 +109,8 @@ class AmbigramFinder:
         print(f"探索エンジン準備完了: 単語数 {len(self.words):,}")
 
     def get_char_compatibility(self, c1: str, c2: str) -> float:
-        """2文字の180度回転相性スコアを取得（マトリクスにない場合は0.1）"""
-        return self.matrix.get(c1, {}).get(c2, 0.1)
+        """2文字の180度回転相性スコアを取得（ひらがな・カタカナ・漢字対応）"""
+        return get_any_char_compatibility(c1, c2, self.matrix)
 
     def evaluate_word(
         self,
@@ -70,11 +118,15 @@ class AmbigramFinder:
         is_common: bool = False,
         kanji: list[str] = None,
         katakana: list[str] = None,
-        display: str = ""
+        display: str = "",
+        force_target_text: str = "",
     ) -> dict[str, Any]:
         """
-        指定された単語の自己対称アンビグラム適性を評価する
-        漢字（例: 大人）やカタカナ（例: アイス）が渡された場合、自動的に読み（ひらがな）を解決して評価する
+        指定された単語の自己対称アンビグラム適性を評価する。
+        漢字語（例: 「頼む」）なら漢字表記「頼む」そのものの文字ペア（頼-む）で評価。
+        カタカナ語（例: 「アイス」）ならカタカナ表記「アイス」そのものの文字ペア（ア-ス, イ-イ）で評価。
+        純粋ひらがな語（例: 「ここ」）ならひらがな表記「ここ」そのものの文字ペア（こ-こ）で評価。
+        ※ ひらがなに変換してアンビグラムを判定・生成する重大ミスを解消！
         """
         input_raw = word.strip()
         reading = input_raw
@@ -82,42 +134,70 @@ class AmbigramFinder:
         resolved_kanji = list(kanji) if kanji else []
         resolved_katakana = list(katakana) if katakana else []
 
-        # 1. 漢字が含まれている場合、辞書インデックスから読みを自動解決
-        has_kanji = any("\u4e00" <= c <= "\u9fff" for c in input_raw)
-        if has_kanji:
-            if input_raw in self.kanji_to_word:
-                matched = self.kanji_to_word[input_raw]
-                reading = matched["reading"]
-                is_common = matched.get("common", is_common)
-                resolved_kanji = matched.get("kanji", [input_raw])
-                resolved_katakana = matched.get("katakana", [])
-                resolved_display = matched.get("display", input_raw)
-            else:
-                # 辞書にない漢字単語の場合は部分一致またはそのまま
-                for k, matched in self.kanji_to_word.items():
-                    if input_raw in k:
-                        reading = matched["reading"]
-                        resolved_display = matched.get("display", input_raw)
-                        break
-
-        # 2. カタカナが含まれている場合、ひらがなに変換
-        has_katakana = any(0x30A1 <= ord(c) <= 0x30F6 for c in reading)
-        if has_katakana:
+        # 1. 読み（reading）とメタデータの解決
+        if input_raw in self.kanji_to_word:
+            matched = self.kanji_to_word[input_raw]
+            reading = matched["reading"]
+            is_common = matched.get("common", is_common)
+            resolved_kanji = matched.get("kanji", [input_raw])
+            resolved_katakana = matched.get("katakana", [])
+            resolved_display = matched.get("display", input_raw)
+        elif input_raw in self.katakana_to_word:
+            matched = self.katakana_to_word[input_raw]
+            reading = matched["reading"]
+            is_common = matched.get("common", is_common)
+            resolved_kanji = matched.get("kanji", [])
+            resolved_katakana = matched.get("katakana", [input_raw])
+            resolved_display = matched.get("display", input_raw)
+        elif any(0x30A1 <= ord(c) <= 0x30F6 for c in input_raw):
+            reading = katakana_to_hiragana(input_raw)
             if not resolved_katakana:
-                resolved_katakana = [reading]
-            if not resolved_display:
-                resolved_display = reading
-            reading = katakana_to_hiragana(reading)
+                resolved_katakana = [input_raw]
+            resolved_display = input_raw
+        elif any("\u4e00" <= c <= "\u9fff" for c in input_raw):
+            for k, matched in self.kanji_to_word.items():
+                if input_raw in k:
+                    reading = matched["reading"]
+                    resolved_display = matched.get("display", input_raw)
+                    break
 
-        n = len(reading)
+        # 2. 文字種別と代表表記の判定
+        is_pure_hg, has_kj, has_kt, primary_disp, primary_kj, primary_kt = classify_script_types(
+            reading, resolved_kanji, resolved_katakana
+        )
+
+        # 3. アンビグラムの真の対象文字列 (target_text) の決定
+        # ユーザーが指定した表記（force_target_text や input_raw に漢字・カタカナが含まれる場合）は最優先
+        if force_target_text:
+            target_text = force_target_text
+        elif any("\u4e00" <= c <= "\u9fff" for c in input_raw):
+            target_text = input_raw
+        elif any(0x30A1 <= ord(c) <= 0x30F6 for c in input_raw):
+            target_text = input_raw
+        elif has_kj:
+            target_text = primary_kj or input_raw
+        elif has_kt:
+            target_text = primary_kt or input_raw
+        else:
+            target_text = reading or input_raw
+
+        n = len(target_text)
         if n < 1:
-            return {"reading": reading, "input": input_raw, "score": 0.0, "pairs": []}
+            return {
+                "word": target_text,
+                "target_text": target_text,
+                "reading": reading,
+                "display": target_text,
+                "primary_display": target_text,
+                "score": 0.0,
+                "pairs": []
+            }
 
         pairs = []
         scores = []
         half_len = (n + 1) // 2
 
-        # 井上・高橋 (2020) §6.1 の実証可読ペアセット
+        # 井上・高橋 (2020) §6.1 の実証可読ペアセット (ひらがな用)
         verified_pairs = {
             ("あ", "ま"), ("い", "け"), ("え", "る"), ("き", "わ"), ("さ", "や"),
             ("を", "を"), ("せ", "み"), ("た", "む"), ("は", "れ"), ("も", "よ"),
@@ -126,9 +206,10 @@ class AmbigramFinder:
             ("り", "り"), ("い", "い"), ("ー", "ー"),
         }
 
+        # 4. target_text の実際の文字ペアで対称性・相性スコアを評価！
         for i in range(half_len):
-            c1 = reading[i]
-            c2 = reading[n - 1 - i]
+            c1 = target_text[i]
+            c2 = target_text[n - 1 - i]
             score = self.get_char_compatibility(c1, c2)
             scores.append(score)
             is_verified = (c1, c2) in verified_pairs or (c2, c1) in verified_pairs
@@ -138,7 +219,7 @@ class AmbigramFinder:
                 "index2": n - 1 - i,
                 "char2": c2,
                 "is_center": i == (n - 1 - i),
-                "score": score,
+                "score": round(score, 4),
                 "empirical_verified": is_verified,
             })
 
@@ -162,9 +243,17 @@ class AmbigramFinder:
         final_score = min(1.0, base_score * common_bias)
 
         return {
+            "word": target_text,
+            "target_text": target_text,
             "reading": reading,
             "input": input_raw,
-            "display": resolved_display or (resolved_kanji[0] if resolved_kanji else (resolved_katakana[0] if resolved_katakana else reading)),
+            "display": target_text,
+            "primary_display": target_text,
+            "primary_kanji": primary_kj,
+            "primary_katakana": primary_kt,
+            "is_pure_hiragana": is_pure_hg,
+            "has_kanji": has_kj,
+            "has_katakana": has_kt,
             "length": n,
             "common": is_common,
             "kanji": resolved_kanji,
@@ -183,6 +272,9 @@ class AmbigramFinder:
         min_score: float = 0.5,
         limit: int = 50,
         query: str = "",
+        include_kanji: bool = True,
+        include_katakana: bool = True,
+        include_hiragana: bool = True,
     ) -> list[dict[str, Any]]:
         """
         条件に合致する自己対称アンビグラム適性単語を探索してランキング順に返す
@@ -195,49 +287,82 @@ class AmbigramFinder:
 
         for item in self.words:
             reading = item["reading"]
-            length = item["length"]
             is_common = item["common"]
             kanji_list = item.get("kanji", [])
             katakana_list = item.get("katakana", [])
             display = item.get("display", "")
 
-            if length < min_length or length > max_length:
-                continue
             if common_only and not is_common:
+                continue
+
+            # 文字種フィルター (トグル)
+            # ※「元が漢字等でひらがなに変換したものは含まない」基準で判定
+            is_pure_hg, has_kj, has_kt, primary_disp, pk, pkt = classify_script_types(reading, kanji_list, katakana_list)
+            match_script = False
+            if include_hiragana and is_pure_hg:
+                match_script = True
+            if include_kanji and has_kj:
+                match_script = True
+            if include_katakana and has_kt:
+                match_script = True
+
+            if not match_script:
+                continue
+
+            # アンビグラムにする実際の対象表記と長さを決定
+            if has_kj and include_kanji:
+                target_script_text = pk or (kanji_list[0] if kanji_list else reading)
+            elif has_kt and include_katakana:
+                target_script_text = pkt or (katakana_list[0] if katakana_list else reading)
+            else:
+                target_script_text = reading
+
+            actual_len = len(target_script_text)
+            if actual_len < min_length or actual_len > max_length:
                 continue
 
             # 相互表記ゆれマッチング
             if q_clean:
                 match = False
-                # 1. ひらがな読みでの部分一致 (「あいす」または「アイス」で検索)
-                if q_h and q_h in reading:
+                # 1. 実際の対象表記での部分一致 (「頼む」「アイス」)
+                if q_clean in target_script_text:
                     match = True
-                # 2. カタカナ表記での部分一致
+                # 2. ひらがな読みでの部分一致 (「たのむ」「あいす」)
+                elif q_h and q_h in reading:
+                    match = True
+                # 3. カタカナ表記での部分一致
                 elif q_k and any(q_k in kat for kat in katakana_list):
                     match = True
-                # 3. 漢字表記での部分一致 (「花火」「大人」などで検索)
+                # 4. 漢字表記での部分一致
                 elif any(q_clean in k for k in kanji_list):
                     match = True
-                # 4. 代表表示名での部分一致
+                # 5. 代表表示名での部分一致
                 elif q_clean in display or (q_k and q_k in display):
                     match = True
 
                 if not match:
                     continue
 
-            eval_res = self.evaluate_word(
-                reading,
-                is_common=is_common,
-                kanji=kanji_list,
-                katakana=katakana_list,
-                display=display
-            )
+            # キャッシュを活用した評価
+            cache_key = (target_script_text, reading, is_common)
+            if cache_key in self.eval_cache:
+                eval_res = self.eval_cache[cache_key]
+            else:
+                eval_res = self.evaluate_word(
+                    target_script_text,
+                    is_common=is_common,
+                    kanji=kanji_list,
+                    katakana=katakana_list,
+                    display=target_script_text,
+                    force_target_text=target_script_text
+                )
+                self.eval_cache[cache_key] = eval_res
 
             # スコアフィルタ判定
             # キーワード検索時、完全一致または代表表記一致した単語はスコア足切りを免除して必ず候補に含める
             is_exact = False
             if q_clean:
-                if display == q_clean or q_h == reading or (kanji_list and kanji_list[0] == q_clean):
+                if target_script_text == q_clean or display == q_clean or q_h == reading:
                     is_exact = True
                 elif any(k == q_clean for k in kanji_list) or any(kat == q_clean for kat in katakana_list):
                     is_exact = True
