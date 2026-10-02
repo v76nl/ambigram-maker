@@ -498,93 +498,6 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 0.9rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.font-list-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.font-item-vertical {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 0.65rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--ease-fast);
-  user-select: none;
-}
-
-.font-item-vertical:hover {
-  background: var(--bg-subtle);
-  border-color: var(--border-medium);
-}
-
-.font-item-vertical.active {
-  background: var(--text-primary);
-  color: var(--text-inverse);
-  border-color: var(--text-primary);
-}
-
-.font-item-vertical.active .font-item-style,
-.font-item-vertical.active .font-item-score,
-.font-item-vertical.active .font-item-offsets {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.font-item-name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.font-item-style {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-left: 0.35rem;
-  font-weight: 400;
-}
-
-.font-item-score {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.font-item-offsets {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin-right: 0.4rem;
-}
-
-.font-badge-best-sm {
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 0.05rem 0.3rem;
-  border-radius: var(--radius-xs);
-  background: var(--accent);
-  color: #ffffff;
-  margin-right: 0.35rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-/* Font Selector Card (Right Pane Vertical List) */
-.font-selector-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
   padding: 0.85rem;
   display: flex;
   flex-direction: column;
@@ -605,10 +518,12 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all var(--ease-fast);
   gap: 0.5rem;
   min-height: 2.2rem;
+  user-select: none;
 }
 
 .font-item-vertical:hover {
@@ -623,17 +538,44 @@ body {
 }
 
 .font-item-name {
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: 0.84rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+/* Font Family Specific Previews */
+.font-family-zen_maru {
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-weight: 500;
+}
+
+.font-family-dela_gothic {
+  font-family: "Dela Gothic One", sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.font-family-mplus {
+  font-family: "M PLUS 1p", sans-serif;
+  font-weight: 700;
+}
+
+.font-family-klee {
+  font-family: "Klee One", cursive, sans-serif;
+  font-weight: 600;
+}
+
+.font-family-shippori {
+  font-family: "Shippori Mincho", serif;
+  font-weight: 700;
 }
 
 .font-item-style {
   font-size: 0.68rem;
   color: var(--text-muted);
-  margin-left: 0.3rem;
+  margin-left: 0.35rem;
   white-space: nowrap;
   flex-shrink: 0;
 }

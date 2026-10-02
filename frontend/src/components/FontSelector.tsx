@@ -18,7 +18,6 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const details = activeResult?.details;
   const bestFontId = details?.best_font_id;
   const selectedFontName = details?.selected_font_name;
-  const selectedStyle = details?.selected_style;
   const fontScores = details?.font_scores as FontScoreItem[] | undefined;
   const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
   const preBold = details?.pre_bold as number | undefined;
@@ -33,17 +32,33 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 
   const isAuto = selectedFont === "auto";
 
+  const getFontFamily = (fontId: string): string => {
+    switch (fontId) {
+      case "zen_maru":
+        return "'Zen Maru Gothic', sans-serif";
+      case "dela_gothic":
+        return "'Dela Gothic One', sans-serif";
+      case "mplus":
+        return "'M PLUS 1p', sans-serif";
+      case "klee":
+        return "'Klee One', cursive, sans-serif";
+      case "shippori":
+        return "'Shippori Mincho', serif";
+      default:
+        return "inherit";
+    }
+  };
+
   return (
     <div className="font-selector-card">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", fontWeight: 600, color: "var(--text-secondary)" }}>
           <Type size={14} />
-          <span>フォント選定 (Typography)</span>
+          <span>フォント</span>
         </div>
         {selectedFontName && (
           <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
             {selectedFontName}
-            {selectedStyle ? ` (${selectedStyle})` : ""}
           </span>
         )}
       </div>
@@ -58,10 +73,18 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
         >
           <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
             <Sparkles size={12} color={isAuto ? "var(--text-inverse)" : "var(--accent)"} style={{ marginRight: "0.4rem", flexShrink: 0 }} />
-            <span className="font-item-name">自動最適化 (Auto)</span>
+            <span className="font-item-name">自動最適化</span>
             {bestFontId && (
-              <span className="font-item-style">
-                (推奨: {availableFonts.find((f) => f.id === bestFontId)?.name || bestFontId})
+              <span
+                className="font-item-style"
+                style={{
+                  fontFamily: getFontFamily(bestFontId),
+                  fontSize: "0.7rem",
+                  marginLeft: "0.4rem",
+                  opacity: 0.85,
+                }}
+              >
+                {availableFonts.find((f) => f.id === bestFontId)?.name || bestFontId}
               </span>
             )}
           </div>
@@ -89,8 +112,12 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
               onClick={() => onFontChange(font.id)}
             >
               <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
-                <span className="font-item-name">{font.name}</span>
-                <span className="font-item-style">({font.style})</span>
+                <span
+                  className={`font-item-name font-family-${font.id}`}
+                  style={{ fontFamily: getFontFamily(font.id) }}
+                >
+                  {font.name}
+                </span>
               </div>
 
               <div style={{ display: "inline-flex", alignItems: "center" }}>
