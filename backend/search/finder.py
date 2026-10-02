@@ -10,6 +10,7 @@ if sys.platform == "win32":
 DATA_DIR = Path(__file__).parent.parent
 WORDS_PATH = DATA_DIR / "dictionary" / "hiragana_words.json"
 MATRIX_PATH = DATA_DIR / "scoring" / "compatibility.json"
+SCORED_WORDS_PATH = DATA_DIR / "dictionary" / "scored_words.json"
 
 try:
     from scoring.matrix import get_any_char_compatibility
@@ -121,6 +122,16 @@ class AmbigramFinder:
             for kat in katakana_list:
                 if kat not in self.katakana_to_word or (is_common and not self.katakana_to_word[kat].get("common")):
                     self.katakana_to_word[kat] = w
+
+        # 事前スコアインデックス（真のスコア降順ランキング用）のロード
+        self.scored_words: list[dict[str, Any]] = []
+        if SCORED_WORDS_PATH.exists():
+            try:
+                with open(SCORED_WORDS_PATH, "r", encoding="utf-8") as f:
+                    self.scored_words = json.load(f)
+                print(f"事前スコアインデックス読み込み完了: {len(self.scored_words):,} 単語 (スコア降順)")
+            except Exception as e:
+                print(f"事前スコアインデックス読み込み失敗: {e}")
                     
         print(f"探索エンジン準備完了: 単語数 {len(self.words):,}")
 
@@ -285,30 +296,107 @@ class AmbigramFinder:
         min_length: int = 2,
         max_length: int = 6,
         common_only: bool = True,
-        min_score: float = 0.5,
-        limit: int = 50,
+        min_score: float = 0.75,
+        limit: int = 100,
         query: str = "",
         include_kanji: bool = True,
         include_katakana: bool = True,
         include_hiragana: bool = True,
     ) -> Generator[dict[str, Any], None, None]:
         """
-        条件に合致する自己対称アンビグラム適性単語を探索し、見つかり次第即座にyieldする。
-        長さ別・常用語別インデックスを活用し、最初の1件からリアルタイムに高速ストリーミング配信。
+        条件に合致する自己対称アンビグラム適性単語を真のスコア降順で探索・ストリーミング配信する。
+        - 常用語インデックス (scored_words.json): 全単語から算出した真のスコア降順ランキングを即座に配信
+        - デフォルトスコア閾値: 0.75 (高い対称性・可読性を持つ高品質候補に厳選)
+        - デフォルト取得件数: 100件 (真のトップ100件を網羅)
         """
         q_clean = query.strip()
         q_h = katakana_to_hiragana(q_clean) if q_clean else ""
         q_k = hiragana_to_katakana(q_clean) if q_clean else ""
 
-        # 走査対象プール（長さ・常用語フィルターを事前インデックスで超高速化）
-        target_pool = []
+        effective_min_score = min(min_score, 0.2) if q_clean else min_score
+        seen_targets = set()
+        yielded_count = 0
+
+        # 1. 常用語かつスコアインデックスが存在する場合: 超高速・真のスコア降順配信
+        if common_only and self.scored_words:
+            matched_candidates = []
+            for item in self.scored_words:
+                target_text = item.get("target_text") or item.get("word") or ""
+                reading = item.get("reading", "")
+                script_type = item.get("script_type", "hiragana")
+                score = item.get("score", 0.0)
+
+                # スコア降順なので、閾値未満かつクエリなしなら走査打ち切り可能
+                if not q_clean and score < effective_min_score:
+                    break
+
+                actual_len = len(target_text)
+                if actual_len < min_length or actual_len > max_length:
+                    continue
+
+                # 文字種フィルター
+                if script_type == "hiragana" and not include_hiragana:
+                    continue
+                if script_type == "kanji" and not include_kanji:
+                    continue
+                if script_type == "katakana" and not include_katakana:
+                    continue
+
+                # クエリマッチ判定
+                if q_clean:
+                    kanji_list = item.get("kanji", [])
+                    katakana_list = item.get("katakana", [])
+                    display = item.get("display", "")
+                    
+                    is_exact = (
+                        target_text == q_clean or
+                        display == q_clean or
+                        q_h == reading or
+                        any(k == q_clean for k in kanji_list) or
+                        any(kat == q_clean for kat in katakana_list)
+                    )
+                    is_partial = (
+                        q_clean in target_text or
+                        (q_h and q_h in reading) or
+                        (q_k and any(q_k in kat for kat in katakana_list)) or
+                        any(q_clean in k for k in kanji_list) or
+                        q_clean in display or
+                        (q_k and q_k in display)
+                    )
+                    if not (is_exact or is_partial):
+                        continue
+
+                    if score < effective_min_score and not is_exact:
+                        continue
+
+                    priority = 2 if is_exact else 1
+                    matched_candidates.append((priority, score, item))
+                else:
+                    if score >= effective_min_score and target_text not in seen_targets:
+                        seen_targets.add(target_text)
+                        yield item
+                        yielded_count += 1
+                        if yielded_count >= limit:
+                            return
+
+            # クエリ検索時は完全一致最優先、次いでスコア降順で yield
+            if q_clean and matched_candidates:
+                matched_candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
+                for _, _, item in matched_candidates:
+                    t_text = item.get("target_text") or item.get("word") or ""
+                    if t_text not in seen_targets:
+                        seen_targets.add(t_text)
+                        yield item
+                        yielded_count += 1
+                        if yielded_count >= limit:
+                            return
+
+        # 2. 全単語検索 (common_only=False) または未登録語のフォールバック走査
         source_dict = self.common_words_by_len if common_only else self.words_by_len
+        target_pool = []
         for l in range(min_length, max_length + 1):
             if l in source_dict:
                 target_pool.extend(source_dict[l])
-
-        seen_targets = set()
-        yielded_count = 0
 
         for item in target_pool:
             reading = item["reading"]
@@ -317,8 +405,6 @@ class AmbigramFinder:
             katakana_list = item.get("katakana", [])
             display = item.get("display", "")
 
-            # 文字種フィルター (トグル)
-            # ※「元が漢字等でひらがなに変換したものは含まない」基準で判定
             is_pure_hg, has_kj, has_kt, primary_disp, pk, pkt = classify_script_types(reading, kanji_list, katakana_list)
             match_script = False
             if include_hiragana and is_pure_hg:
@@ -331,7 +417,6 @@ class AmbigramFinder:
             if not match_script:
                 continue
 
-            # アンビグラムにする実際の対象表記と長さを決定
             if has_kj and include_kanji:
                 target_script_text = pk or (kanji_list[0] if kanji_list else reading)
             elif has_kt and include_katakana:
@@ -343,7 +428,10 @@ class AmbigramFinder:
             if actual_len < min_length or actual_len > max_length:
                 continue
 
-            # 相互表記ゆれマッチング
+            if target_script_text in seen_targets:
+                continue
+
+            # クエリ判定
             if q_clean:
                 match = False
                 if q_clean in target_script_text:
@@ -356,15 +444,17 @@ class AmbigramFinder:
                     match = True
                 elif q_clean in display or (q_k and q_k in display):
                     match = True
-
                 if not match:
                     continue
 
-            # 重複防止
-            if target_script_text in seen_targets:
-                continue
+            # 端文字による高速枝刈り (評価関数の呼び出しを激減)
+            if actual_len >= 2 and not q_clean:
+                c_head = target_script_text[0]
+                c_tail = target_script_text[-1]
+                if self.get_char_compatibility(c_head, c_tail) < effective_min_score * 0.7:
+                    continue
 
-            # キャッシュを活用した評価
+            # 評価実行
             cache_key = (target_script_text, reading, is_common)
             if cache_key in self.eval_cache:
                 eval_res = self.eval_cache[cache_key]
@@ -379,7 +469,6 @@ class AmbigramFinder:
                 )
                 self.eval_cache[cache_key] = eval_res
 
-            # スコアフィルタ判定
             is_exact = False
             if q_clean:
                 if target_script_text == q_clean or display == q_clean or q_h == reading:
@@ -387,7 +476,6 @@ class AmbigramFinder:
                 elif any(k == q_clean for k in kanji_list) or any(kat == q_clean for kat in katakana_list):
                     is_exact = True
 
-            effective_min_score = min(min_score, 0.2) if q_clean else min_score
             if is_exact or eval_res["score"] >= effective_min_score:
                 seen_targets.add(target_script_text)
                 yield eval_res
@@ -400,8 +488,8 @@ class AmbigramFinder:
         min_length: int = 2,
         max_length: int = 6,
         common_only: bool = True,
-        min_score: float = 0.5,
-        limit: int = 50,
+        min_score: float = 0.75,
+        limit: int = 100,
         query: str = "",
         include_kanji: bool = True,
         include_katakana: bool = True,
@@ -415,7 +503,7 @@ class AmbigramFinder:
             max_length=max_length,
             common_only=common_only,
             min_score=min_score,
-            limit=limit * 2,
+            limit=limit,
             query=query,
             include_kanji=include_kanji,
             include_katakana=include_katakana,
@@ -433,7 +521,7 @@ class AmbigramFinder:
                     exact_match = 2
                 elif any(k == q_clean for k in x.get("kanji", [])) or any(kat == q_clean for kat in x.get("katakana", [])):
                     exact_match = 1
-            return (exact_match, x["score"], x["common"], -x["length"])
+            return (exact_match, x["score"], x.get("common", False), -x["length"])
 
         results.sort(key=sort_key, reverse=True)
         return results[:limit]

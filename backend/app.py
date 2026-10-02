@@ -117,8 +117,8 @@ async def stream_words(
     min_length: int = Query(2, ge=1, le=10),
     max_length: int = Query(6, ge=1, le=10),
     common_only: bool = Query(True),
-    min_score: float = Query(0.5, ge=0.0, le=1.0),
-    limit: int = Query(50, ge=1, le=200),
+    min_score: float = Query(0.75, ge=0.0, le=1.0),
+    limit: int = Query(100, ge=1, le=500),
     query: str = Query(""),
     include_kanji: bool = Query(True),
     include_katakana: bool = Query(True),
@@ -130,7 +130,7 @@ async def stream_words(
     """
     t0 = time.time()
     logger.info(
-        f"単語ストリーミング開始: query='{query}', 長さ={min_length}~{max_length}, "
+        f"単語ストリーミング開始: query='{query}', 長さ={min_length}~{max_length}, 最小スコア={min_score}, 件数上限={limit}, "
         f"常用語={common_only}, 漢字={include_kanji}, カタカナ={include_katakana}, ひらがな={include_hiragana}"
     )
 
@@ -171,8 +171,8 @@ def search_words(
     min_length: int = Query(2, ge=1, le=10),
     max_length: int = Query(6, ge=1, le=10),
     common_only: bool = Query(True),
-    min_score: float = Query(0.5, ge=0.0, le=1.0),
-    limit: int = Query(50, ge=1, le=200),
+    min_score: float = Query(0.75, ge=0.0, le=1.0),
+    limit: int = Query(100, ge=1, le=500),
     query: str = Query(""),
     include_kanji: bool = Query(True),
     include_katakana: bool = Query(True),

@@ -24,6 +24,8 @@ export const App: React.FC = () => {
   const [includeHiragana, setIncludeHiragana] = useState<boolean>(true);
   const [includeKanji, setIncludeKanji] = useState<boolean>(true);
   const [includeKatakana, setIncludeKatakana] = useState<boolean>(true);
+  const [minScore, setMinScore] = useState<number>(0.75); // デフォルト0.75 (高品質) に引き上げ
+  const [wordLimit, setWordLimit] = useState<number>(100); // デフォルト100件 (真のトップ100) に拡大
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -109,9 +111,9 @@ export const App: React.FC = () => {
         minLength,
         maxLength,
         commonOnly: searchQuery.trim() ? false : commonOnly,
-        minScore: searchQuery.trim() ? 0.1 : 0.6,
+        minScore: searchQuery.trim() ? 0.2 : minScore,
         query: searchQuery.trim() || undefined,
-        limit: 50,
+        limit: wordLimit,
         includeKanji,
         includeKatakana,
         includeHiragana,
@@ -142,7 +144,7 @@ export const App: React.FC = () => {
     );
 
     streamCancelRef.current = cancel;
-  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana]);
+  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, minScore, wordLimit]);
 
   useEffect(() => {
     // 検索クエリ入力時のデバウンス
@@ -294,6 +296,10 @@ export const App: React.FC = () => {
             onToggleHiragana={handleToggleHiragana}
             onToggleKanji={handleToggleKanji}
             onToggleKatakana={handleToggleKatakana}
+            minScore={minScore}
+            onMinScoreChange={setMinScore}
+            limit={wordLimit}
+            onLimitChange={setWordLimit}
             isLoading={isLoadingWords}
             loadError={loadError}
             onRetry={loadWords}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowRight, Search, AlertCircle, BookOpen, Layers } from "lucide-react";
+import { ArrowRight, Search, AlertCircle, BookOpen, Layers, SlidersHorizontal } from "lucide-react";
 import type { WordItem } from "../services/api";
 
 interface WordSearchProps {
@@ -20,6 +20,10 @@ interface WordSearchProps {
   onToggleHiragana: () => void;
   onToggleKanji: () => void;
   onToggleKatakana: () => void;
+  minScore: number;
+  onMinScoreChange: (val: number) => void;
+  limit: number;
+  onLimitChange: (val: number) => void;
   isLoading: boolean;
   loadError?: string | null;
   onRetry?: () => void;
@@ -43,6 +47,10 @@ export const WordSearch: React.FC<WordSearchProps> = ({
   onToggleHiragana,
   onToggleKanji,
   onToggleKatakana,
+  minScore,
+  onMinScoreChange,
+  limit,
+  onLimitChange,
   isLoading,
   loadError,
   onRetry,
@@ -166,6 +174,49 @@ export const WordSearch: React.FC<WordSearchProps> = ({
             value={maxLength}
             onChange={(e) => onLengthChange(2, parseInt(e.target.value, 10))}
           />
+        </div>
+
+        {/* 最小スコア (品質基準) スライダー */}
+        <div className="swiss-slider-group">
+          <div className="swiss-slider-header">
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+              <SlidersHorizontal size={11} />
+              最小スコア
+            </span>
+            <span className="swiss-slider-val">
+              {(minScore * 100).toFixed(0)}%
+              <span style={{ fontSize: "0.68rem", color: minScore >= 0.8 ? "var(--accent)" : "var(--text-muted)", marginLeft: "0.3rem" }}>
+                {minScore >= 0.85 ? "厳選" : minScore >= 0.75 ? "高品質" : "標準"}
+              </span>
+            </span>
+          </div>
+          <input
+            type="range"
+            className="swiss-slider"
+            min="0.50"
+            max="0.90"
+            step="0.05"
+            value={minScore}
+            onChange={(e) => onMinScoreChange(parseFloat(e.target.value))}
+          />
+        </div>
+
+        {/* 表示上限件数 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className="swiss-field-label">表示件数</span>
+          <div className="swiss-segmented">
+            {[50, 100, 200].map((num) => (
+              <button
+                key={num}
+                type="button"
+                className={`swiss-segmented-btn ${limit === num ? "active" : ""}`}
+                onClick={() => onLimitChange(num)}
+                style={{ padding: "0.2rem 0.5rem" }}
+              >
+                {num}件
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
