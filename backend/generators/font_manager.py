@@ -61,6 +61,8 @@ class FontManager:
 
         # レンダリングキャッシュ: (char, font_id, size, bold) -> np.ndarray
         self._char_cache: dict[tuple[str, str, int, bool], np.ndarray] = {}
+        # 骨格（スケルトン）キャッシュ: (char, font_id, size) -> np.ndarray
+        self._skel_cache: dict[tuple[str, str, int], np.ndarray] = {}
 
     def get_font_path(self, font_id: Optional[str] = None) -> Path:
         """指定されたフォントIDのファイルパスを取得（デフォルト: zen_maru）"""
@@ -72,6 +74,41 @@ class FontManager:
         """利用可能なフォントプリセットの一覧を取得"""
         return list(FONT_PRESETS.values())
 
+    def _extract_skeleton(self, binary_img: np.ndarray) -> np.ndarray:
+        """2値画像から1pxの細線化スケルトンを抽出"""
+        u8 = (binary_img * 255).astype(np.uint8)
+        try:
+            return (cv2.ximgproc.thinning(u8) > 0).astype(np.float32)
+        except Exception:
+            element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            temp = u8.copy()
+            skel = np.zeros_like(temp)
+            while True:
+                eroded = cv2.erode(temp, element)
+                opened = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, element)
+                subset = cv2.subtract(eroded, opened)
+                skel = cv2.bitwise_or(skel, subset)
+                temp = eroded.copy()
+                if cv2.countNonZero(temp) == 0:
+                    break
+            return (skel > 0).astype(np.float32)
+
+    def render_char_skeleton(
+        self,
+        char: str,
+        font_id: str,
+        size: int = 128,
+    ) -> np.ndarray:
+        """指定文字・指定フォントの細線化スケルトン（1px中心線）を取得（キャッシュ付き）"""
+        cache_key = (char, font_id, size)
+        if cache_key in self._skel_cache:
+            return self._skel_cache[cache_key]
+
+        raw = self.render_char_matrix(char, font_id, size, bold=False)
+        skel = self._extract_skeleton(raw)
+        self._skel_cache[cache_key] = skel
+        return skel
+
     def render_char_matrix(
         self,
         char: str,
@@ -81,8 +118,9 @@ class FontManager:
     ) -> np.ndarray:
         """
         指定文字・指定フォントの2値配列（0 or 1）を取得（キャッシュ付き）。
-        bold=True の場合、フォントを適度に太らせて（水平方向優先膨張）判定を強化し、
-        「の」の中央縦棒のような近接ストロークの重なり判定精度を高める。
+        適応的 Pre-Bold（太らせ制御）:
+        - Dela Gothic や黒画素率の高い極太文字は、文字内のスリット（ふところ）の黒潰れを防ぐため膨張をスキップ。
+        - 通常フォントは適度な膨張 (3x3 楕円カーネル) で画線の微小ズレを許容。
         """
         cache_key = (char, font_id, size, bold)
         if cache_key in self._char_cache:
@@ -105,9 +143,14 @@ class FontManager:
         draw.text((x, y), char, fill=255, font=font)
         u8 = np.array(img, dtype=np.uint8)
 
-        if bold:
-            # 水平方向をやや優先した膨張カーネル (3x3 または 5x3) でストロークを太らせる
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 3))
+        # 案A: 適応的太らせ判定
+        # 生の黒画素密度
+        raw_binary = (u8 > 90).astype(np.uint8)
+        density = float(np.mean(raw_binary))
+
+        # dela_gothic または黒画素率が 26% 以上の高密度文字は膨張をスキップ（内部空隙を保護）
+        if bold and font_id != "dela_gothic" and density <= 0.26:
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             u8 = cv2.dilate(u8, kernel, iterations=1)
 
         binary = (u8 > 90).astype(np.float32)
@@ -120,8 +163,15 @@ class FontManager:
         img_b: np.ndarray,
         dx: int,
         dy: int,
+        skel_a: Optional[np.ndarray] = None,
+        skel_b: Optional[np.ndarray] = None,
+        dil_skel_a: Optional[np.ndarray] = None,
+        dil_skel_b_rot: Optional[np.ndarray] = None,
     ) -> float:
-        """指定された特定の座標オフセット (dx, dy) での幾何類似度（調和平均IoU）を計算"""
+        """
+        指定された特定の座標オフセット (dx, dy) での総合幾何類似度を計算。
+        4つの柱（適応太らせ、偶然重なり補正、骨格スケルトン、負の空間/ふところ一致）を統合。
+        """
         img_b_rot = np.rot90(img_b, 2)
         h, w = img_a.shape
 
@@ -141,43 +191,124 @@ class FontManager:
         dst_x_start = max(0, dx)
         dst_x_end = min(w, w + dx)
 
-        if src_y_start < src_y_end and src_x_start < src_x_end and dst_y_start < dst_y_end and dst_x_start < dst_x_end:
-            shifted_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
-                img_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
+        if not (src_y_start < src_y_end and src_x_start < src_x_end and dst_y_start < dst_y_end and dst_x_start < dst_x_end):
+            return 0.0
 
+        shifted_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
+            img_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
+
+        # 1. 黒画素の交差 & 偶然重なり期待値補正 (Chance-Adjusted IoU)
         intersection = np.sum(img_a * shifted_b)
         if intersection == 0:
             return 0.0
+
+        union_mask = np.clip(img_a + shifted_b, 0, 1)
+        union_black = np.sum(union_mask)
+        raw_iou = intersection / union_black if union_black > 0 else 0.0
 
         cov_a = intersection / area_a
         cov_b = intersection / area_b
         harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
 
-        union = np.sum(np.clip(img_a + shifted_b, 0, 1))
-        iou = intersection / union if union > 0 else 0.0
+        # 文字ROI内での偶然重なり確率
+        pts = np.argwhere(union_mask > 0)
+        if pts.size == 0:
+            return 0.0
+        ymin = int(pts[:, 0].min())
+        xmin = int(pts[:, 1].min())
+        ymax = int(pts[:, 0].max())
+        xmax = int(pts[:, 1].max())
+        roi_area = max(1, (ymax - ymin + 1) * (xmax - xmin + 1))
 
-        return float(0.35 * iou + 0.65 * harmonic_cov)
+        p_a = area_a / roi_area
+        p_b = area_b / roi_area
+        e_iou = (p_a * p_b) / (p_a + p_b - p_a * p_b + 1e-6)
+        adj_iou = max(0.0, (raw_iou - e_iou) / (1.0 - e_iou + 1e-6))
+        area_score = float(0.50 * adj_iou + 0.50 * harmonic_cov)
+
+        # 2. 骨格構造（細線化スケルトン）の一致度
+        kernel_skel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        if skel_a is None:
+            skel_a = self._extract_skeleton(img_a)
+        if skel_b is None:
+            skel_b = self._extract_skeleton(img_b)
+
+        if dil_skel_a is None:
+            dil_skel_a = cv2.dilate(skel_a, kernel_skel)
+
+        skel_b_rot = np.rot90(skel_b, 2)
+        if dil_skel_b_rot is None:
+            dil_skel_b_rot = cv2.dilate(skel_b_rot, kernel_skel)
+
+        shifted_skel_b = np.zeros_like(skel_b_rot)
+        shifted_dil_b = np.zeros_like(dil_skel_b_rot)
+        shifted_skel_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
+            skel_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
+        shifted_dil_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
+            dil_skel_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
+
+        sum_skel_a = np.sum(skel_a)
+        sum_skel_b = np.sum(shifted_skel_b)
+        if sum_skel_a > 0 and sum_skel_b > 0:
+            skel_cov_a = np.sum(skel_a * shifted_dil_b) / sum_skel_a
+            skel_cov_b = np.sum(shifted_skel_b * dil_skel_a) / sum_skel_b
+            skel_score = float(2.0 * skel_cov_a * skel_cov_b / (skel_cov_a + skel_cov_b + 1e-6))
+        else:
+            skel_score = 0.0
+
+        # 3. 負の空間（Negative Space・ふところ・開口部）の整合性
+        roi_a_white = 1.0 - img_a[ymin:ymax+1, xmin:xmax+1]
+        roi_b_white = 1.0 - shifted_b[ymin:ymax+1, xmin:xmax+1]
+        inter_white = np.sum(roi_a_white * roi_b_white)
+        union_white = np.sum(np.clip(roi_a_white + roi_b_white, 0, 1))
+        neg_space_score = float(inter_white / union_white) if union_white > 0 else 1.0
+
+        # 総合ブレンド（面積: 45%, 骨格: 35%, 負の空間: 20%）
+        total_score = float(0.45 * area_score + 0.35 * skel_score + 0.20 * neg_space_score)
+        return float(np.clip(total_score, 0.0, 1.0))
 
     def calculate_pair_similarity_with_shift(
         self,
         img_a: np.ndarray,
         img_b: np.ndarray,
         max_shift: int = 5,
+        skel_a: Optional[np.ndarray] = None,
+        skel_b: Optional[np.ndarray] = None,
     ) -> tuple[float, tuple[int, int]]:
         """
-        正位置Aと180度反転Bの幾何類似度（調和平均IoU）を計算。
+        正位置Aと180度反転Bの幾何類似度を計算。
         座標揺らし探索 (-max_shift <= dx, dy <= max_shift) を行い、
         最も一致率が高くなる座標オフセットと最高スコアを採用する。
         """
         best_score = 0.0
         best_offset = (0, 0)
 
-        # 座標揺らし探索 (計 (2*max_shift+1)^2 点を全数探索)
+        # 骨格スケルトンの事前準備
+        kernel_skel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        if skel_a is None:
+            skel_a = self._extract_skeleton(img_a)
+        if skel_b is None:
+            skel_b = self._extract_skeleton(img_b)
+
+        dil_skel_a = cv2.dilate(skel_a, kernel_skel)
+        skel_b_rot = np.rot90(skel_b, 2)
+        dil_skel_b_rot = cv2.dilate(skel_b_rot, kernel_skel)
+
+        # 座標揺らし探索 (計 (2*max_shift+1)^2 点を探索)
         shifts = range(-max_shift, max_shift + 1, 1)
 
         for dy in shifts:
             for dx in shifts:
-                score = self.calculate_pair_similarity_for_offset(img_a, img_b, dx, dy)
+                score = self.calculate_pair_similarity_for_offset(
+                    img_a,
+                    img_b,
+                    dx,
+                    dy,
+                    skel_a=skel_a,
+                    skel_b=skel_b,
+                    dil_skel_a=dil_skel_a,
+                    dil_skel_b_rot=dil_skel_b_rot,
+                )
                 if score > best_score:
                     best_score = score
                     best_offset = (dx, dy)
@@ -205,9 +336,13 @@ class FontManager:
             c2 = word[n - 1 - i]
             img_a = self.render_char_matrix(c1, fid)
             img_b = self.render_char_matrix(c2, fid)
+            skel_a = self.render_char_skeleton(c1, fid)
+            skel_b = self.render_char_skeleton(c2, fid)
             offset = custom_offsets[i] if i < len(custom_offsets) else (0, 0)
             normalized_offsets.append(offset)
-            score = self.calculate_pair_similarity_for_offset(img_a, img_b, offset[0], offset[1])
+            score = self.calculate_pair_similarity_for_offset(
+                img_a, img_b, offset[0], offset[1], skel_a=skel_a, skel_b=skel_b
+            )
             pair_scores.append(round(float(score), 4))
 
         product = 1.0
@@ -247,7 +382,11 @@ class FontManager:
                 c2 = word[n - 1 - i]
                 img_a = self.render_char_matrix(c1, fid)
                 img_b = self.render_char_matrix(c2, fid)
-                score, offset = self.calculate_pair_similarity_with_shift(img_a, img_b)
+                skel_a = self.render_char_skeleton(c1, fid)
+                skel_b = self.render_char_skeleton(c2, fid)
+                score, offset = self.calculate_pair_similarity_with_shift(
+                    img_a, img_b, skel_a=skel_a, skel_b=skel_b
+                )
                 pair_scores.append(score)
                 offsets.append(offset)
 
