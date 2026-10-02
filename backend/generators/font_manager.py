@@ -222,6 +222,14 @@ class FontManager:
         font_evaluations.sort(key=lambda x: x["score"], reverse=True)
         best = font_evaluations[0]
 
+        import logging
+        logger = logging.getLogger("ambigram")
+        logger.info(
+            f"  [フォント幾何評価] 単語='{word}': 最適={best['name']} ({best['score']:.1%}) "
+            f"シフト={best['offsets']} | 他候補: " +
+            ", ".join([f"{f['name']}({f['score']:.1%})" for f in font_evaluations[1:]])
+        )
+
         return {
             "best_font_id": best["id"],
             "best_font_name": best["name"],

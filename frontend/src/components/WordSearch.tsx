@@ -171,9 +171,13 @@ export const WordSearch: React.FC<WordSearchProps> = ({
 
       {/* 単語リスト */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.75rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
           <span style={{ fontWeight: 600 }}>候補 ({words.length})</span>
-          {isLoading && <span>更新中...</span>}
+          {isLoading && (
+            <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 600 }}>
+              ● リアルタイム探索中...
+            </span>
+          )}
         </div>
 
         {loadError && (

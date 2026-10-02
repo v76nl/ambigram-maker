@@ -2,15 +2,9 @@ import React, { useState, useEffect } from "react";
 import {
   RotateCw,
   GitCompare,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  Crosshair,
-  Maximize2,
-  Type,
   Palette,
 } from "lucide-react";
-import type { WordItem, EngineResult, FontScoreItem, FontMeta } from "../services/api";
+import type { WordItem, EngineResult } from "../services/api";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
@@ -19,9 +13,6 @@ interface AmbigramViewerProps {
   onEngineChange?: (engine: string) => void;
   highlightMode?: boolean;
   onToggleHighlightMode?: () => void;
-  selectedFont?: string;
-  onFontChange?: (fontId: string) => void;
-  availableFonts?: FontMeta[];
 }
 
 export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
@@ -31,13 +22,9 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   onEngineChange,
   highlightMode = false,
   onToggleHighlightMode,
-  selectedFont = "auto",
-  onFontChange,
-  availableFonts = [],
 }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [showDiffView, setShowDiffView] = useState<boolean>(true);
-  const [showFontDetails, setShowFontDetails] = useState<boolean>(false);
   const [diffImageUrl, setDiffImageUrl] = useState<string | null>(null);
   const [diffStats, setDiffStats] = useState<{
     overlapRatio: number;
@@ -185,15 +172,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     setRotation((prev) => (prev === 0 ? 180 : 0));
   };
 
-  const details = activeResult?.details;
-  const selectedFontName = details?.selected_font_name;
-  const selectedStyle = details?.selected_style;
-  const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
-  const preBold = details?.pre_bold as number | undefined;
-  const bestFontId = details?.best_font_id;
-  const fontScores = details?.font_scores as FontScoreItem[] | undefined;
-  const bestScoreObj = fontScores?.find((s) => s.id === bestFontId);
-  const bestScorePercent = bestScoreObj ? Math.round(bestScoreObj.score * 100) : null;
 
   const renderGraphicContent = (isFlipped: boolean = false) => {
     if (!activeResult) {
@@ -291,141 +269,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           </div>
         )}
 
-        {/* フォント最適化コントロール */}
-        {onFontChange && (
-          <div className="font-opt-box">
-            <div className="font-opt-row">
-              <span className="font-opt-label">
-                <Type size={13} />
-                フォント:
-              </span>
-
-              {/* 自動最適化 (AUTO) ボタン */}
-              <button
-                className={`font-btn ${selectedFont === "auto" ? "active-auto" : ""}`}
-                onClick={() => onFontChange("auto")}
-                title="IoU幾何スコア最大のフォントを自動適用"
-              >
-                <Sparkles size={12} />
-                <span>自動最適化</span>
-                {bestScorePercent !== null && (
-                  <span className="font-score-text">({bestScorePercent}%)</span>
-                )}
-              </button>
-
-              {/* フォント手動切り替えボタン群 */}
-              {availableFonts.map((f) => {
-                const scoreObj = fontScores?.find((s) => s.id === f.id);
-                const isSelected = selectedFont === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    className={`font-btn ${isSelected ? "active-manual" : ""}`}
-                    onClick={() => onFontChange(f.id)}
-                    title={`${f.name} (${f.style})`}
-                  >
-                    <span>{f.name}</span>
-                    {scoreObj && (
-                      <span className="font-score-text">
-                        {Math.round(scoreObj.score * 100)}%
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-
-              {/* 詳細比較トグル */}
-              {fontScores && fontScores.length > 0 && (
-                <button
-                  className="font-toggle-details-btn"
-                  onClick={() => setShowFontDetails(!showFontDetails)}
-                  title="全フォントの幾何スコアと最適シフトを表示"
-                >
-                  <span>比較</span>
-                  {showFontDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                </button>
-              )}
-            </div>
-
-            {/* 最適化情報バナー (Subtractive & Anti-vibe-coded) */}
-            {selectedFontName && (
-              <div className="font-status-banner">
-                <div className="font-status-header">
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-                    <span style={{ fontWeight: 600 }}>{selectedFontName}</span>
-                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      ({selectedStyle || "標準"})
-                    </span>
-                  </div>
-                  {bestScorePercent !== null && (
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
-                      {bestScorePercent}% 一致
-                    </span>
-                  )}
-                </div>
-
-                <div className="font-status-specs">
-                  <span className="spec-item">
-                    <Crosshair size={12} />
-                    <span>座標補正:</span>
-                    <span className="spec-val">
-                      {selectedOffsets && selectedOffsets.length > 0
-                        ? selectedOffsets.map((off, idx) => `P${idx + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
-                        : "(0, 0)"}
-                    </span>
-                  </span>
-                  <span className="spec-item">
-                    <Maximize2 size={12} />
-                    <span>事前太らせ:</span>
-                    <span className="spec-val">
-                      {preBold !== undefined ? `+${preBold}px` : "0px"}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* フォントスコア比較一覧 (展開時) */}
-            {showFontDetails && fontScores && (
-              <div className="font-comp-panel">
-                {fontScores.map((s, idx) => {
-                  const isWinner = s.id === bestFontId;
-                  const isCurrent = (selectedFont === "auto" && isWinner) || selectedFont === s.id;
-                  const pct = Math.round(s.score * 100);
-                  const offsets = (s as any).offsets as [number, number][] | undefined;
-                  const offsetLabel = offsets && offsets.length > 0
-                    ? offsets.map((off, i) => `P${i + 1}(${off[0] > 0 ? "+" : ""}${off[0]}, ${off[1] > 0 ? "+" : ""}${off[1]})`).join(" ")
-                    : "(0, 0)";
-
-                  return (
-                    <div
-                      key={s.id}
-                      className={`font-comp-item ${isCurrent ? "current-item" : ""}`}
-                      onClick={() => onFontChange(s.id)}
-                    >
-                      <span className="font-comp-name">
-                        <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginRight: "0.3rem" }}>
-                          {idx + 1}.
-                        </span>
-                        {s.name}
-                      </span>
-                      <span className="font-comp-tag">
-                        {offsetLabel}
-                      </span>
-                      <div className="font-comp-bar-wrapper">
-                        <div
-                          className={`font-comp-bar-fill ${isWinner ? "bar-winner" : ""}`}
-                          style={{ width: `${Math.max(5, pct)}%` }}
-                        />
-                      </div>
-                      <span className="font-comp-pct">{pct}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* ベクターハイライト凡例 (アクティブ時のみ) */}
         {highlightMode && activeEngine === "vector" && (
@@ -498,20 +341,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>
-              {rotation}°
-            </span>
-            <input
-              type="range"
-              className="swiss-slider"
-              min="0"
-              max="180"
-              value={rotation}
-              onChange={(e) => setRotation(parseInt(e.target.value, 10))}
-              style={{ width: "90px" }}
-            />
-          </div>
         </div>
       </div>
 

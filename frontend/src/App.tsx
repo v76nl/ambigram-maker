@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { WordItem, EngineResult, FontMeta } from "./services/api";
 import {
-  searchWords,
+  searchWordsStream,
   evaluateWord,
   generateAmbigram,
   getAvailableFonts,
@@ -9,6 +9,7 @@ import {
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
 import { SymmetryCard } from "./components/SymmetryCard";
+import { FontSelector } from "./components/FontSelector";
 import { EngineCompare } from "./components/EngineCompare";
 import { ExportBar } from "./components/ExportBar";
 
@@ -89,41 +90,75 @@ export const App: React.FC = () => {
       .catch((err) => console.error("フォント一覧取得エラー:", err));
   }, []);
 
-  // 単語一覧の読み込み
-  const loadWords = useCallback(async () => {
+  // 単語一覧の読み込み（リアルタイムSSEストリーミング対応）
+  const streamCancelRef = useRef<(() => void) | null>(null);
+
+  const loadWords = useCallback(() => {
+    // 既存の通信があれば即座に中断
+    if (streamCancelRef.current) {
+      streamCancelRef.current();
+      streamCancelRef.current = null;
+    }
+
     setIsLoadingWords(true);
     setLoadError(null);
-    try {
-      const fetched = await searchWords({
+    setWords([]); // 新しい検索開始時にクリアし、届いた順に埋めていく
+
+    const cancel = searchWordsStream(
+      {
         minLength,
         maxLength,
-        commonOnly: searchQuery.trim() ? false : commonOnly, // 検索時は全単語から絞り込み
-        minScore: searchQuery.trim() ? 0.1 : 0.6, // 検索時は見つかりやすいよう閾値緩和
+        commonOnly: searchQuery.trim() ? false : commonOnly,
+        minScore: searchQuery.trim() ? 0.1 : 0.6,
         query: searchQuery.trim() || undefined,
         limit: 50,
         includeKanji,
         includeKatakana,
         includeHiragana,
-      });
-      setWords(fetched);
-      if (fetched.length > 0) {
-        setSelectedWord((prev) => prev || fetched[0]);
+      },
+      (newWord) => {
+        // 単語が1件見つかるごとにリアルタイムに追加・スコア降順ソート
+        setWords((prev) => {
+          const key = newWord.target_text || newWord.reading;
+          if (prev.some((w) => (w.target_text || w.reading) === key)) {
+            return prev;
+          }
+          const next = [...prev, newWord];
+          next.sort((a, b) => b.score - a.score);
+          return next;
+        });
+
+        // 最初の1件が届いた時点で初期選択
+        setSelectedWord((prev) => prev || newWord);
+      },
+      () => {
+        setIsLoadingWords(false);
+      },
+      (err) => {
+        console.error("単語読み込みエラー:", err);
+        setLoadError("バックエンドAPI (http://127.0.0.1:8000) への接続に失敗しました。サーバーが起動しているか確認してください。");
+        setIsLoadingWords(false);
       }
-    } catch (err: any) {
-      console.error("単語読み込みエラー:", err);
-      setLoadError("バックエンドAPI (http://127.0.0.1:8000) への接続に失敗しました。サーバーが起動しているか確認してください。");
-    } finally {
-      setIsLoadingWords(false);
-    }
+    );
+
+    streamCancelRef.current = cancel;
   }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana]);
 
   useEffect(() => {
     // 検索クエリ入力時のデバウンス
     const timer = setTimeout(() => {
       loadWords();
-    }, 250);
+    }, 200);
     return () => clearTimeout(timer);
   }, [loadWords]);
+
+  useEffect(() => {
+    return () => {
+      if (streamCancelRef.current) {
+        streamCancelRef.current();
+      }
+    };
+  }, []);
 
   // アンビグラム生成
   const triggerGenerate = useCallback(
@@ -234,31 +269,6 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Minimal Utility Bar (Subtractive: Top heading eliminated per design guidelines) */}
-      <header className="app-header">
-        <div className="brand-title">
-          <span className="brand-tag">180°</span>
-          <span style={{ fontSize: "0.82rem", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-secondary)" }}>
-            ROTATIONAL AMBIGRAM
-          </span>
-        </div>
-        <div className="header-meta">
-          {selectedWord && (
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
-              {selectedWord.primary_display || selectedWord.reading}
-              {selectedWord.primary_display && selectedWord.primary_display !== selectedWord.reading
-                ? ` (${selectedWord.reading})`
-                : ""}{" "}
-              ({Math.round(selectedWord.score * 100)}%)
-            </span>
-          )}
-          <span style={{ color: "var(--border-medium)" }}>|</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
-            {words.length > 0 ? `${words.length} CANDIDATES` : "LOADING"}
-          </span>
-        </div>
-      </header>
-
       {/* Main Layout (3ペイン) */}
       <main className="main-content-3pane">
         {/* 左ペイン: 単語探索 & フィルタ */}
@@ -299,16 +309,21 @@ export const App: React.FC = () => {
             onEngineChange={(engine) => setActiveEngine(engine)}
             highlightMode={highlightMode}
             onToggleHighlightMode={handleToggleHighlightMode}
-            selectedFont={selectedFont}
-            onFontChange={setSelectedFont}
-            availableFonts={availableFonts}
           />
         </section>
 
-        {/* 右ペイン: 対称ペア解析 ＋ パラメータ調整 ＋ エクスポート */}
+        {/* 右ペイン: 対称ペア解析 ＋ フォント選定 ＋ パラメータ調整 ＋ エクスポート */}
         <aside className="pane-right">
           {/* 対称文字ペア解析 */}
           <SymmetryCard wordItem={selectedWord} />
+
+          {/* フォント選定 (垂直リスト) */}
+          <FontSelector
+            selectedFont={selectedFont}
+            onFontChange={setSelectedFont}
+            availableFonts={availableFonts}
+            activeResult={currentResult}
+          />
 
           {/* 生成手法比較・パラメータ調整 */}
           <EngineCompare

@@ -1,7 +1,8 @@
+from collections import defaultdict
 import json
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Generator
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -90,20 +91,35 @@ class AmbigramFinder:
         # 漢字表記およびカタカナ表記からの高速インデックス作成
         self.kanji_to_word: dict[str, dict[str, Any]] = {}
         self.katakana_to_word: dict[str, dict[str, Any]] = {}
+
+        # リアルタイム高速検索用の長さ別・常用語別インデックス
+        self.words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)
+        self.common_words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)
+
         for w in self.words:
-            for k in w.get("kanji", []):
+            reading = w.get("reading", "")
+            is_common = w.get("common", False)
+            kanji_list = w.get("kanji", [])
+            katakana_list = w.get("katakana", [])
+
+            # 長さ別インデックス登録
+            w_len = len(reading)
+            self.words_by_len[w_len].append(w)
+            if is_common:
+                self.common_words_by_len[w_len].append(w)
+
+            for k in kanji_list:
                 if k not in self.kanji_to_word:
                     self.kanji_to_word[k] = w
                 else:
                     curr = self.kanji_to_word[k]
-                    # 代表漢字の近さ (index) と常用度、完全一致 display で優先度判定
                     curr_rank = (1 if curr.get("display") == k else 0, 1 if curr.get("common") else 0, -curr.get("kanji", []).index(k) if k in curr.get("kanji", []) else -99)
                     new_rank = (1 if w.get("display") == k else 0, 1 if w.get("common") else 0, -w.get("kanji", []).index(k) if k in w.get("kanji", []) else -99)
                     if new_rank > curr_rank:
                         self.kanji_to_word[k] = w
 
-            for kat in w.get("katakana", []):
-                if kat not in self.katakana_to_word or (w.get("common") and not self.katakana_to_word[kat].get("common")):
+            for kat in katakana_list:
+                if kat not in self.katakana_to_word or (is_common and not self.katakana_to_word[kat].get("common")):
                     self.katakana_to_word[kat] = w
                     
         print(f"探索エンジン準備完了: 単語数 {len(self.words):,}")
@@ -264,7 +280,7 @@ class AmbigramFinder:
             "pairs": pairs,
         }
 
-    def search(
+    def stream_search(
         self,
         min_length: int = 2,
         max_length: int = 6,
@@ -275,25 +291,31 @@ class AmbigramFinder:
         include_kanji: bool = True,
         include_katakana: bool = True,
         include_hiragana: bool = True,
-    ) -> list[dict[str, Any]]:
+    ) -> Generator[dict[str, Any], None, None]:
         """
-        条件に合致する自己対称アンビグラム適性単語を探索してランキング順に返す
-        ひらがな・カタカナ・漢字のどの表記で検索しても相互にヒットする
+        条件に合致する自己対称アンビグラム適性単語を探索し、見つかり次第即座にyieldする。
+        長さ別・常用語別インデックスを活用し、最初の1件からリアルタイムに高速ストリーミング配信。
         """
-        results = []
         q_clean = query.strip()
         q_h = katakana_to_hiragana(q_clean) if q_clean else ""
         q_k = hiragana_to_katakana(q_clean) if q_clean else ""
 
-        for item in self.words:
+        # 走査対象プール（長さ・常用語フィルターを事前インデックスで超高速化）
+        target_pool = []
+        source_dict = self.common_words_by_len if common_only else self.words_by_len
+        for l in range(min_length, max_length + 1):
+            if l in source_dict:
+                target_pool.extend(source_dict[l])
+
+        seen_targets = set()
+        yielded_count = 0
+
+        for item in target_pool:
             reading = item["reading"]
             is_common = item["common"]
             kanji_list = item.get("kanji", [])
             katakana_list = item.get("katakana", [])
             display = item.get("display", "")
-
-            if common_only and not is_common:
-                continue
 
             # 文字種フィルター (トグル)
             # ※「元が漢字等でひらがなに変換したものは含まない」基準で判定
@@ -324,24 +346,23 @@ class AmbigramFinder:
             # 相互表記ゆれマッチング
             if q_clean:
                 match = False
-                # 1. 実際の対象表記での部分一致 (「頼む」「アイス」)
                 if q_clean in target_script_text:
                     match = True
-                # 2. ひらがな読みでの部分一致 (「たのむ」「あいす」)
                 elif q_h and q_h in reading:
                     match = True
-                # 3. カタカナ表記での部分一致
                 elif q_k and any(q_k in kat for kat in katakana_list):
                     match = True
-                # 4. 漢字表記での部分一致
                 elif any(q_clean in k for k in kanji_list):
                     match = True
-                # 5. 代表表示名での部分一致
                 elif q_clean in display or (q_k and q_k in display):
                     match = True
 
                 if not match:
                     continue
+
+            # 重複防止
+            if target_script_text in seen_targets:
+                continue
 
             # キャッシュを活用した評価
             cache_key = (target_script_text, reading, is_common)
@@ -359,7 +380,6 @@ class AmbigramFinder:
                 self.eval_cache[cache_key] = eval_res
 
             # スコアフィルタ判定
-            # キーワード検索時、完全一致または代表表記一致した単語はスコア足切りを免除して必ず候補に含める
             is_exact = False
             if q_clean:
                 if target_script_text == q_clean or display == q_clean or q_h == reading:
@@ -369,7 +389,41 @@ class AmbigramFinder:
 
             effective_min_score = min(min_score, 0.2) if q_clean else min_score
             if is_exact or eval_res["score"] >= effective_min_score:
-                results.append(eval_res)
+                seen_targets.add(target_script_text)
+                yield eval_res
+                yielded_count += 1
+                if yielded_count >= limit:
+                    break
+
+    def search(
+        self,
+        min_length: int = 2,
+        max_length: int = 6,
+        common_only: bool = True,
+        min_score: float = 0.5,
+        limit: int = 50,
+        query: str = "",
+        include_kanji: bool = True,
+        include_katakana: bool = True,
+        include_hiragana: bool = True,
+    ) -> list[dict[str, Any]]:
+        """
+        条件に合致する自己対称アンビグラム適性単語を探索してランキング順に返す
+        """
+        results = list(self.stream_search(
+            min_length=min_length,
+            max_length=max_length,
+            common_only=common_only,
+            min_score=min_score,
+            limit=limit * 2,
+            query=query,
+            include_kanji=include_kanji,
+            include_katakana=include_katakana,
+            include_hiragana=include_hiragana,
+        ))
+
+        q_clean = query.strip()
+        q_h = katakana_to_hiragana(q_clean) if q_clean else ""
 
         # スコア降順ソート（完全一致・代表表記一致を最優先）
         def sort_key(x: dict[str, Any]):

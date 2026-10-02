@@ -1,8 +1,23 @@
+import asyncio
+import json
+import logging
+import sys
+import time
 from pathlib import Path
 from typing import Any, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
+# コンソールロギング設定 (時刻・プレフィックス付き)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("ambigram")
 
 from search.finder import AmbigramFinder
 from generators.vector_engine import VectorAmbigramEngine
@@ -68,16 +83,26 @@ def health_check():
 @app.get("/api/fonts")
 def get_available_fonts():
     """利用可能なフォント一覧とメタデータを返却"""
-    return {"fonts": font_manager.get_available_fonts()}
+    fonts = font_manager.get_available_fonts()
+    logger.info(f"フォント一覧取得: {len(fonts)}件の日本語フォントを提供")
+    return {"fonts": fonts}
 
 @app.get("/api/words/fonts-eval")
 def evaluate_word_fonts(word: str = Query(...)):
     """指定単語に対する各フォントの幾何スコアと最適フォントを評価"""
     if not word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
+    t0 = time.time()
+    logger.info(f"フォント評価開始: 単語='{word}'")
     eval_res = finder.evaluate_word(word)
     target_word = eval_res.get("target_text") or word
     font_eval = font_manager.evaluate_word_fonts(target_word)
+    elapsed = time.time() - t0
+    logger.info(
+        f"フォント評価完了: 単語='{word}' (対象表記='{target_word}') -> "
+        f"最適フォント='{font_eval['best_font_name']}' "
+        f"(所要時間: {elapsed:.3f}s)"
+    )
     return {
         "word": word,
         "target_text": target_word,
@@ -86,6 +111,60 @@ def evaluate_word_fonts(word: str = Query(...)):
         "best_font_name": font_eval["best_font_name"],
         "font_scores": font_eval["font_scores"],
     }
+
+@app.get("/api/words/stream")
+async def stream_words(
+    min_length: int = Query(2, ge=1, le=10),
+    max_length: int = Query(6, ge=1, le=10),
+    common_only: bool = Query(True),
+    min_score: float = Query(0.5, ge=0.0, le=1.0),
+    limit: int = Query(50, ge=1, le=200),
+    query: str = Query(""),
+    include_kanji: bool = Query(True),
+    include_katakana: bool = Query(True),
+    include_hiragana: bool = Query(True),
+):
+    """
+    自己対称アンビグラム適性単語をリアルタイムにSSEストリーミング配信
+    探索完了を待たずに、見つかった単語から即座にクライアントへ1件ずつプッシュ配信する。
+    """
+    t0 = time.time()
+    logger.info(
+        f"単語ストリーミング開始: query='{query}', 長さ={min_length}~{max_length}, "
+        f"常用語={common_only}, 漢字={include_kanji}, カタカナ={include_katakana}, ひらがな={include_hiragana}"
+    )
+
+    async def event_generator():
+        count = 0
+        try:
+            for word_item in finder.stream_search(
+                min_length=min_length,
+                max_length=max_length,
+                common_only=common_only,
+                min_score=min_score,
+                limit=limit,
+                query=query,
+                include_kanji=include_kanji,
+                include_katakana=include_katakana,
+                include_hiragana=include_hiragana,
+            ):
+                count += 1
+                yield f"data: {json.dumps(word_item, ensure_ascii=False)}\n\n"
+                await asyncio.sleep(0.001)  # イベントループに制御を戻す
+        finally:
+            elapsed = time.time() - t0
+            logger.info(f"単語ストリーミング終了: 送信数={count}件 (所要時間: {elapsed:.3f}s)")
+            yield "event: done\ndata: {}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
 
 @app.get("/api/words/search")
 def search_words(
@@ -100,6 +179,11 @@ def search_words(
     include_hiragana: bool = Query(True),
 ):
     """自己対称アンビグラム適性単語を検索・ランキング"""
+    t0 = time.time()
+    logger.info(
+        f"単語検索開始: query='{query}', 長さ={min_length}~{max_length}, "
+        f"常用語={common_only}, 漢字={include_kanji}, カタカナ={include_katakana}, ひらがな={include_hiragana}"
+    )
     results = finder.search(
         min_length=min_length,
         max_length=max_length,
@@ -111,6 +195,11 @@ def search_words(
         include_katakana=include_katakana,
         include_hiragana=include_hiragana,
     )
+    elapsed = time.time() - t0
+    top_word = results[0]["target_text"] if results else "該当なし"
+    logger.info(
+        f"単語検索完了: {len(results)}件マッチ (トップ: '{top_word}', 所要時間: {elapsed:.3f}s)"
+    )
     return {"count": len(results), "words": results}
 
 @app.post("/api/words/evaluate")
@@ -118,7 +207,9 @@ def evaluate_word(req: EvaluateRequest):
     """指定された単語の適性を本来の表記で評価"""
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
+    logger.info(f"単語評価リクエスト: '{req.word}'")
     result = finder.evaluate_word(req.word)
+    logger.info(f"単語評価結果: '{req.word}' (スコア: {result.get('score', 0):.2f})")
     return result
 
 @app.post("/api/generate")
@@ -127,14 +218,21 @@ def generate_ambigram(req: GenerateRequest):
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
 
+    t0 = time.time()
     eval_res = finder.evaluate_word(req.word)
     # 本来の表記（漢字やカタカナ）そのものをアンビグラムの対象とする
     target_word = eval_res.get("target_text") or req.word
     font_id = req.font or "auto"
 
+    logger.info(
+        f"アンビグラム生成開始: 単語='{req.word}' (対象表記='{target_word}', 手法='{req.engine}', フォント='{font_id}')"
+    )
+
     results: dict[str, Any] = {}
 
     if req.engine in ("vector", "all"):
+        te = time.time()
+        logger.info(f"  [原案: ベクター合成] 実行中 (比率={req.blend_ratio}, ハイライト={req.highlight_mode})...")
         results["vector"] = vector_engine.generate(
             target_word,
             blend_ratio=req.blend_ratio or 0.5,
@@ -142,8 +240,14 @@ def generate_ambigram(req: GenerateRequest):
             highlight_mode=req.highlight_mode or False,
             font_id=font_id,
         )
+        logger.info(f"  [原案: ベクター合成] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("morphology", "all"):
+        te = time.time()
+        logger.info(
+            f"  [手法A: 論理積＋膨張] 実行中 (膨張={req.dilation_size}px, 平滑={req.smoothness}px, "
+            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px)..."
+        )
         results["morphology"] = morphology_engine.generate(
             target_word,
             dilation_size=req.dilation_size or 11,
@@ -152,8 +256,14 @@ def generate_ambigram(req: GenerateRequest):
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
         )
+        logger.info(f"  [手法A: 論理積＋膨張] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("skeleton", "all"):
+        te = time.time()
+        logger.info(
+            f"  [手法B: 骨格平均化] 実行中 (線幅={req.stroke_thickness}px, "
+            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px)..."
+        )
         results["skeleton"] = skeleton_engine.generate(
             target_word,
             stroke_thickness=req.stroke_thickness or 15,
@@ -161,21 +271,33 @@ def generate_ambigram(req: GenerateRequest):
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
         )
+        logger.info(f"  [手法B: 骨格平均化] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("bitmap", "all"):
+        te = time.time()
+        logger.info(f"  [手法2: ビットマップ] 実行中 (重み={req.blend_weight}, 閾値={req.threshold_val})...")
         results["bitmap"] = bitmap_engine.generate(
             target_word,
             blend_weight=req.blend_weight or 0.65,
             smoothness=req.smoothness or 7,
             threshold_val=req.threshold_val or 110,
         )
+        logger.info(f"  [手法2: ビットマップ] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("gemini", "all"):
+        te = time.time()
+        logger.info(f"  [手法3: Gemini AI] 実行中...")
         results["gemini"] = gemini_engine.generate(
             target_word,
             api_key=req.api_key,
             style_prompt=req.style_prompt or "minimalist black calligraphy on pure white background, sharp vector aesthetic",
         )
+        logger.info(f"  [手法3: Gemini AI] 完了 ({time.time() - te:.3f}s)")
+
+    total_elapsed = time.time() - t0
+    logger.info(
+        f"アンビグラム生成完了: 単語='{req.word}' 生成手法数={len(results)} (総所要時間: {total_elapsed:.3f}s)"
+    )
 
     return {
         "word": req.word,
