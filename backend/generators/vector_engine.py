@@ -1,11 +1,6 @@
-import math
-from pathlib import Path
 from typing import Any
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
-from shapely.geometry import shape, MultiPolygon, Polygon
-from shapely.affinity import rotate, translate, scale
-import shapely.ops as ops
 
 from .base import BaseAmbigramGenerator
 

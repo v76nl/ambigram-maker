@@ -37,12 +37,16 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   // 点対称ピクセル差分（180度回転とのピクセル差分）のリアルタイム計算
   useEffect(() => {
     if (!activeResult || activeResult.type === "error" || !activeResult.data) {
-      setDiffImageUrl(null);
-      setDiffStats(null);
+      queueMicrotask(() => {
+        setDiffImageUrl(null);
+        setDiffStats(null);
+      });
       return;
     }
 
-    setIsDiffLoading(true);
+    queueMicrotask(() => {
+      setIsDiffLoading(true);
+    });
     let isMounted = true;
     const img = new Image();
 

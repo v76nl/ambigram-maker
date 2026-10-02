@@ -1,6 +1,5 @@
 import gzip
 import json
-import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import httpx

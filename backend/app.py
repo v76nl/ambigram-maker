@@ -3,7 +3,6 @@ import json
 import logging
 import sys
 import time
-from pathlib import Path
 from typing import Any, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware

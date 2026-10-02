@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Sparkles, Type, Maximize2, RotateCcw } from "lucide-react";
 import type { FontMeta, EngineResult, FontScoreItem } from "../services/api";
 
@@ -96,24 +96,25 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const scorePercent = Math.round(currentScore * 100);
   const baseScorePercent = Math.round(baseScore * 100);
 
-  const handleOffsetChange = (axis: "x" | "y", val: number) => {
-    const clamped = Math.max(-15, Math.min(15, val));
-    const next: [number, number][] = [];
-    for (let i = 0; i < halfLen; i++) {
-      const orig = currentOffsets[i] || [0, 0];
-      if (i === safePairIdx) {
-        next.push(axis === "x" ? [clamped, orig[1]] : [orig[0], clamped]);
-      } else {
-        next.push(orig);
+  const handleOffsetChange = useCallback(
+    (axis: "x" | "y", val: number) => {
+      const clamped = Math.max(-15, Math.min(15, val));
+      const next: [number, number][] = [];
+      for (let i = 0; i < halfLen; i++) {
+        const orig = currentOffsets[i] || [0, 0];
+        if (i === safePairIdx) {
+          next.push(axis === "x" ? [clamped, orig[1]] : [orig[0], clamped]);
+        } else {
+          next.push(orig);
+        }
       }
-    }
-    onCustomOffsetsChange?.(next);
-  };
+      onCustomOffsetsChange?.(next);
+    },
+    [halfLen, currentOffsets, safePairIdx, onCustomOffsetsChange]
+  );
 
   const rowXRef = useRef<HTMLDivElement>(null);
   const rowYRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef({ dx, dy, handleOffsetChange });
-  stateRef.current = { dx, dy, handleOffsetChange };
 
   useEffect(() => {
     const elX = rowXRef.current;
@@ -122,13 +123,13 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
     const onWheelX = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY !== 0 ? (e.deltaY < 0 ? 1 : -1) : (e.deltaX > 0 ? 1 : -1);
-      stateRef.current.handleOffsetChange("x", stateRef.current.dx + delta);
+      handleOffsetChange("x", dx + delta);
     };
 
     const onWheelY = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY !== 0 ? (e.deltaY < 0 ? 1 : -1) : (e.deltaX > 0 ? 1 : -1);
-      stateRef.current.handleOffsetChange("y", stateRef.current.dy + delta);
+      handleOffsetChange("y", dy + delta);
     };
 
     if (elX) {
@@ -142,7 +143,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
       if (elX) elX.removeEventListener("wheel", onWheelX);
       if (elY) elY.removeEventListener("wheel", onWheelY);
     };
-  }, []);
+  }, [dx, dy, handleOffsetChange]);
 
   return (
     <div className="font-selector-card">

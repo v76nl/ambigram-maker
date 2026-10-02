@@ -836,15 +836,6 @@ body {
   margin-top: 0.2rem;
 }
 
-.shift-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
 .shift-pair-tabs {
   display: flex;
   gap: 0.25rem;
