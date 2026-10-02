@@ -73,6 +73,7 @@ export interface GenerateParams {
   word: string;
   engine?: "vector" | "morphology" | "skeleton" | "bitmap" | "gemini" | "all";
   font?: string; // "auto", "zen_maru", "dela_gothic", "mplus", "klee", "shippori"
+  customOffsets?: [number, number][]; // 手動XYシフト微調整
   blendRatio?: number;
   strokeWidth?: number;
   highlightMode?: boolean;
@@ -85,6 +86,17 @@ export interface GenerateParams {
   thresholdVal?: number;
   apiKey?: string;
   stylePrompt?: string;
+}
+
+export interface EvalOffsetsResponse {
+  word: string;
+  target_text: string;
+  font_id: string;
+  score: number;
+  geometric_mean: number;
+  min_pair_score: number;
+  pair_scores: number[];
+  offsets: [number, number][];
 }
 
 export interface EngineResult {
@@ -221,6 +233,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       word: params.word,
       engine: params.engine || "all",
       font: params.font || "auto",
+      custom_offsets: params.customOffsets,
       blend_ratio: params.blendRatio,
       stroke_width: params.strokeWidth,
       highlight_mode: params.highlightMode,
@@ -246,6 +259,26 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
     data
   );
   return data;
+}
+
+export async function evaluateOffsets(
+  word: string,
+  font: string,
+  offsets: [number, number][]
+): Promise<EvalOffsetsResponse> {
+  const res = await fetch(`${API_BASE_URL}/words/eval-offsets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      word,
+      font,
+      offsets,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`オフセット評価エラー: ${res.statusText}`);
+  }
+  return res.json();
 }
 
 export async function getAvailableFonts(): Promise<FontMeta[]> {

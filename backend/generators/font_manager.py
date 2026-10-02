@@ -114,6 +114,50 @@ class FontManager:
         self._char_cache[cache_key] = binary
         return binary
 
+    def calculate_pair_similarity_for_offset(
+        self,
+        img_a: np.ndarray,
+        img_b: np.ndarray,
+        dx: int,
+        dy: int,
+    ) -> float:
+        """指定された特定の座標オフセット (dx, dy) での幾何類似度（調和平均IoU）を計算"""
+        img_b_rot = np.rot90(img_b, 2)
+        h, w = img_a.shape
+
+        area_a = np.sum(img_a)
+        area_b = np.sum(img_b_rot)
+        if area_a == 0 or area_b == 0:
+            return 0.0
+
+        shifted_b = np.zeros_like(img_b_rot)
+        src_y_start = max(0, -dy)
+        src_y_end = min(h, h - dy)
+        dst_y_start = max(0, dy)
+        dst_y_end = min(h, h + dy)
+
+        src_x_start = max(0, -dx)
+        src_x_end = min(w, w - dx)
+        dst_x_start = max(0, dx)
+        dst_x_end = min(w, w + dx)
+
+        if src_y_start < src_y_end and src_x_start < src_x_end and dst_y_start < dst_y_end and dst_x_start < dst_x_end:
+            shifted_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
+                img_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
+
+        intersection = np.sum(img_a * shifted_b)
+        if intersection == 0:
+            return 0.0
+
+        cov_a = intersection / area_a
+        cov_b = intersection / area_b
+        harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
+
+        union = np.sum(np.clip(img_a + shifted_b, 0, 1))
+        iou = intersection / union if union > 0 else 0.0
+
+        return float(0.35 * iou + 0.65 * harmonic_cov)
+
     def calculate_pair_similarity_with_shift(
         self,
         img_a: np.ndarray,
@@ -125,14 +169,6 @@ class FontManager:
         座標揺らし探索 (-max_shift <= dx, dy <= max_shift) を行い、
         最も一致率が高くなる座標オフセットと最高スコアを採用する。
         """
-        img_b_rot = np.rot90(img_b, 2)
-        h, w = img_a.shape
-
-        area_a = np.sum(img_a)
-        area_b = np.sum(img_b_rot)
-        if area_a == 0 or area_b == 0:
-            return 0.0, (0, 0)
-
         best_score = 0.0
         best_offset = (0, 0)
 
@@ -141,38 +177,54 @@ class FontManager:
 
         for dy in shifts:
             for dx in shifts:
-                shifted_b = np.zeros_like(img_b_rot)
-                
-                src_y_start = max(0, -dy)
-                src_y_end = min(h, h - dy)
-                dst_y_start = max(0, dy)
-                dst_y_end = min(h, h + dy)
-
-                src_x_start = max(0, -dx)
-                src_x_end = min(w, w - dx)
-                dst_x_start = max(0, dx)
-                dst_x_end = min(w, w + dx)
-
-                shifted_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
-                    img_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
-
-                intersection = np.sum(img_a * shifted_b)
-                if intersection == 0:
-                    continue
-
-                cov_a = intersection / area_a
-                cov_b = intersection / area_b
-                harmonic_cov = (2.0 * cov_a * cov_b) / (cov_a + cov_b + 1e-6)
-
-                union = np.sum(np.clip(img_a + shifted_b, 0, 1))
-                iou = intersection / union if union > 0 else 0.0
-
-                score = float(0.35 * iou + 0.65 * harmonic_cov)
+                score = self.calculate_pair_similarity_for_offset(img_a, img_b, dx, dy)
                 if score > best_score:
                     best_score = score
                     best_offset = (dx, dy)
 
         return best_score, best_offset
+
+    def evaluate_word_with_custom_offsets(
+        self,
+        word: str,
+        font_id: str,
+        custom_offsets: list[tuple[int, int]],
+    ) -> dict[str, Any]:
+        """指定単語・指定フォントに対し、カスタムオフセットでの一致率スコアを計算"""
+        n = len(word)
+        if n < 1:
+            return {"score": 0.0, "geometric_mean": 0.0, "min_pair_score": 0.0, "pair_scores": [], "offsets": []}
+
+        fid = font_id if (font_id and font_id != "auto") else "zen_maru"
+        half_len = (n + 1) // 2
+        pair_scores = []
+        normalized_offsets = []
+
+        for i in range(half_len):
+            c1 = word[i]
+            c2 = word[n - 1 - i]
+            img_a = self.render_char_matrix(c1, fid)
+            img_b = self.render_char_matrix(c2, fid)
+            offset = custom_offsets[i] if i < len(custom_offsets) else (0, 0)
+            normalized_offsets.append(offset)
+            score = self.calculate_pair_similarity_for_offset(img_a, img_b, offset[0], offset[1])
+            pair_scores.append(round(float(score), 4))
+
+        product = 1.0
+        for s in pair_scores:
+            product *= max(0.01, s)
+        geom_mean = product ** (1.0 / len(pair_scores))
+        min_score = min(pair_scores) if pair_scores else 0.0
+        total_score = 0.75 * geom_mean + 0.25 * min_score
+
+        return {
+            "font_id": fid,
+            "score": round(float(total_score), 4),
+            "geometric_mean": round(float(geom_mean), 4),
+            "min_pair_score": round(float(min_score), 4),
+            "pair_scores": pair_scores,
+            "offsets": normalized_offsets,
+        }
 
     def evaluate_word_fonts(self, word: str) -> dict[str, Any]:
         """

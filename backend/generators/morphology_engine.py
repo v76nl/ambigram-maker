@@ -151,6 +151,22 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
             selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
 
+        # カスタムオフセット指定時の上書きとスコア再計算
+        custom_offsets = params.get("custom_offsets")
+        if custom_offsets:
+            selected_offsets = [tuple(o) for o in custom_offsets]
+            custom_eval = font_manager.evaluate_word_with_custom_offsets(
+                word, selected_fid, selected_offsets
+            )
+            for fs in font_eval["font_scores"]:
+                if fs["id"] == selected_fid:
+                    fs["score"] = custom_eval["score"]
+                    fs["geometric_mean"] = custom_eval["geometric_mean"]
+                    fs["min_pair_score"] = custom_eval["min_pair_score"]
+                    fs["offsets"] = custom_eval["offsets"]
+            if selected_fid == font_eval["best_font_id"]:
+                font_eval["best_score"] = custom_eval["score"]
+
         selected_font_path = font_manager.get_font_path(selected_fid)
 
         slots = []

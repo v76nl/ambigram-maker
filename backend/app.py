@@ -53,10 +53,16 @@ skeleton_engine = SkeletonAmbigramEngine()
 class EvaluateRequest(BaseModel):
     word: str
 
+class EvalOffsetsRequest(BaseModel):
+    word: str
+    font: Optional[str] = "zen_maru"
+    offsets: list[list[int]]
+
 class GenerateRequest(BaseModel):
     word: str
     engine: str = "all"  # "vector", "morphology", "skeleton", "bitmap", "gemini", "all"
     font: Optional[str] = "auto"  # "auto", "zen_maru", "dela", "mplus", "klee", "shippori"
+    custom_offsets: Optional[list[list[int]]] = None  # 手動XYシフトオフセット [[dx, dy], ...]
     # ベクター用パラメータ
     blend_ratio: Optional[float] = 0.5
     stroke_width: Optional[float] = 0.0
@@ -212,6 +218,28 @@ def evaluate_word(req: EvaluateRequest):
     logger.info(f"単語評価結果: '{req.word}' (スコア: {result.get('score', 0):.2f})")
     return result
 
+@app.post("/api/words/eval-offsets")
+def eval_offsets(req: EvalOffsetsRequest):
+    """指定された単語・フォント・手動XYシフトにおける一致率スコアを即座に再計算"""
+    if not req.word:
+        raise HTTPException(status_code=400, detail="単語を指定してください")
+    eval_res = finder.evaluate_word(req.word)
+    target_word = eval_res.get("target_text") or req.word
+    custom_offsets = [tuple(o) for o in req.offsets]
+    res = font_manager.evaluate_word_with_custom_offsets(
+        target_word, req.font or "zen_maru", custom_offsets
+    )
+    return {
+        "word": req.word,
+        "target_text": target_word,
+        "font_id": res["font_id"],
+        "score": res["score"],
+        "geometric_mean": res["geometric_mean"],
+        "min_pair_score": res["min_pair_score"],
+        "pair_scores": res["pair_scores"],
+        "offsets": res["offsets"],
+    }
+
 @app.post("/api/generate")
 def generate_ambigram(req: GenerateRequest):
     """指定した単語のアンビグラムを本来の表記（漢字・カタカナ・ひらがな）で生成"""
@@ -225,7 +253,7 @@ def generate_ambigram(req: GenerateRequest):
     font_id = req.font or "auto"
 
     logger.info(
-        f"アンビグラム生成開始: 単語='{req.word}' (対象表記='{target_word}', 手法='{req.engine}', フォント='{font_id}')"
+        f"アンビグラム生成開始: 単語='{req.word}' (対象表記='{target_word}', 手法='{req.engine}', フォント='{font_id}', シフト={req.custom_offsets})"
     )
 
     results: dict[str, Any] = {}
@@ -246,7 +274,7 @@ def generate_ambigram(req: GenerateRequest):
         te = time.time()
         logger.info(
             f"  [手法A: 論理積＋膨張] 実行中 (膨張={req.dilation_size}px, 平滑={req.smoothness}px, "
-            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px)..."
+            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px, シフト={req.custom_offsets})..."
         )
         results["morphology"] = morphology_engine.generate(
             target_word,
@@ -255,6 +283,7 @@ def generate_ambigram(req: GenerateRequest):
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
+            custom_offsets=req.custom_offsets,
         )
         logger.info(f"  [手法A: 論理積＋膨張] 完了 ({time.time() - te:.3f}s)")
 
@@ -262,7 +291,7 @@ def generate_ambigram(req: GenerateRequest):
         te = time.time()
         logger.info(
             f"  [手法B: 骨格平均化] 実行中 (線幅={req.stroke_thickness}px, "
-            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px)..."
+            f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px, シフト={req.custom_offsets})..."
         )
         results["skeleton"] = skeleton_engine.generate(
             target_word,
@@ -270,6 +299,7 @@ def generate_ambigram(req: GenerateRequest):
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
+            custom_offsets=req.custom_offsets,
         )
         logger.info(f"  [手法B: 骨格平均化] 完了 ({time.time() - te:.3f}s)")
 

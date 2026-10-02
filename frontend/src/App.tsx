@@ -5,6 +5,7 @@ import {
   evaluateWord,
   generateAmbigram,
   getAvailableFonts,
+  evaluateOffsets,
 } from "./services/api";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
@@ -32,6 +33,9 @@ export const App: React.FC = () => {
   // フォント最適化ステート
   const [selectedFont, setSelectedFont] = useState<string>("auto");
   const [availableFonts, setAvailableFonts] = useState<FontMeta[]>([]);
+  // 手動XYシフトオフセット & リアルタイム再計算スコア
+  const [customOffsets, setCustomOffsets] = useState<[number, number][] | null>(null);
+  const [recalculatedScore, setRecalculatedScore] = useState<number | null>(null);
 
   // グラフィック生成ステート
   const [activeEngine, setActiveEngine] = useState<string>("morphology"); // 手法Aをデフォルトにして二重線を解消
@@ -168,16 +172,19 @@ export const App: React.FC = () => {
       wordToGen: WordItem | null,
       engineToGen?: string,
       overrideHighlight?: boolean,
-      fontToGen?: string
+      fontToGen?: string,
+      offsetsToGen?: [number, number][] | null
     ) => {
       if (!wordToGen) return;
       setIsGenerating(true);
       try {
         const targetText = wordToGen.target_text || wordToGen.primary_display || wordToGen.word || wordToGen.reading;
+        const offsets = offsetsToGen !== undefined ? offsetsToGen : customOffsets;
         const response = await generateAmbigram({
           word: targetText,
           engine: (engineToGen || activeEngine) as any,
           font: fontToGen || selectedFont,
+          customOffsets: offsets || undefined,
           blendRatio,
           strokeWidth: 0.0,
           highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
@@ -205,6 +212,7 @@ export const App: React.FC = () => {
     [
       activeEngine,
       selectedFont,
+      customOffsets,
       blendRatio,
       highlightMode,
       dilationSize,
@@ -219,7 +227,43 @@ export const App: React.FC = () => {
     ]
   );
 
-  // 単語変更、エンジン変更、フォント変更、またはスライダー等のパラメータ変更時に自動反映 (デバウンス付き)
+  // 手動XYシフト変更ハンドラ（即座に一致率を再計算）
+  const handleCustomOffsetsChange = useCallback(
+    (newOffsets: [number, number][]) => {
+      setCustomOffsets(newOffsets);
+      const targetText =
+        selectedWord?.target_text ||
+        selectedWord?.primary_display ||
+        selectedWord?.word ||
+        selectedWord?.reading;
+      if (targetText) {
+        evaluateOffsets(targetText, selectedFont, newOffsets)
+          .then((res) => {
+            setRecalculatedScore(res.score);
+          })
+          .catch((err) => console.error("オフセット評価エラー:", err));
+      }
+    },
+    [selectedWord, selectedFont]
+  );
+
+  // 手動XYシフトのリセット
+  const handleResetOffsets = useCallback(() => {
+    setCustomOffsets(null);
+    setRecalculatedScore(null);
+    if (selectedWord) {
+      triggerGenerate(selectedWord, undefined, undefined, undefined, null);
+    }
+  }, [selectedWord, triggerGenerate]);
+
+  // フォント変更ハンドラ (手動シフトをリセット)
+  const handleFontChange = useCallback((fontId: string) => {
+    setSelectedFont(fontId);
+    setCustomOffsets(null);
+    setRecalculatedScore(null);
+  }, []);
+
+  // 単語変更、エンジン変更、フォント変更、パラメータ変更時に自動反映 (デバウンス付き)
   useEffect(() => {
     if (!selectedWord) return;
 
@@ -232,6 +276,7 @@ export const App: React.FC = () => {
     selectedWord,
     activeEngine,
     selectedFont,
+    customOffsets,
     dilationSize,
     strokeThickness,
     preBold,
@@ -252,9 +297,11 @@ export const App: React.FC = () => {
     }
   };
 
-  // 単語選択ハンドラ
+  // 単語選択ハンドラ (手動シフトをリセット)
   const handleSelectWord = (w: WordItem) => {
     setSelectedWord(w);
+    setCustomOffsets(null);
+    setRecalculatedScore(null);
   };
 
   // 自由入力単語ハンドラ
@@ -262,6 +309,8 @@ export const App: React.FC = () => {
     try {
       const evaluated = await evaluateWord(inputWord);
       setSelectedWord(evaluated);
+      setCustomOffsets(null);
+      setRecalculatedScore(null);
     } catch (err) {
       console.error("単語評価エラー:", err);
     }
@@ -323,12 +372,17 @@ export const App: React.FC = () => {
           {/* 対称文字ペア解析 */}
           <SymmetryCard wordItem={selectedWord} />
 
-          {/* フォント選定 (垂直リスト) */}
+          {/* フォント選定 (垂直リスト & XYシフト調整) */}
           <FontSelector
             selectedFont={selectedFont}
-            onFontChange={setSelectedFont}
+            onFontChange={handleFontChange}
             availableFonts={availableFonts}
             activeResult={currentResult}
+            customOffsets={customOffsets}
+            onCustomOffsetsChange={handleCustomOffsetsChange}
+            onResetOffsets={handleResetOffsets}
+            targetWord={selectedWord?.target_text || selectedWord?.primary_display || selectedWord?.word || selectedWord?.reading}
+            recalculatedScore={recalculatedScore}
           />
 
           {/* 生成手法比較・パラメータ調整 */}
