@@ -12,9 +12,49 @@ JMDICT_XML_PATH = DATA_DIR / "JMdict.xml"
 OUTPUT_JSON_PATH = DATA_DIR / "hiragana_words.json"
 
 # 頻出度フラグ（日常語判定に使用）
-COMMON_PRIORITY_TAGS = {
-    "news1", "news2", "ichi1", "ichi2", "spec1", "spec2", "gai1", "gai2"
-}
+# 優先度タグ定義
+CORE_COMMON_TAGS = {"news1", "ichi1", "spec1", "gai1"}
+
+def get_tag_priority_score(tags: list[str]) -> int:
+    """JMdictの優先度タグから出現頻度・日常語スコアを算出"""
+    score = 0
+    for t in tags:
+        if t == "ichi1": score += 100
+        elif t == "news1": score += 90
+        elif t == "spec1": score += 80
+        elif t == "gai1": score += 80
+        elif t.startswith("nf"):
+            try:
+                rank = int(t[2:])
+                if rank <= 10:
+                    score += (11 - rank) * 10  # 100〜10点
+                elif rank <= 20:
+                    score += (21 - rank) * 4   # 40〜4点
+            except ValueError:
+                pass
+        elif t == "news2": score += 20
+        elif t == "ichi2": score += 20
+        elif t == "spec2": score += 15
+        elif t == "gai2": score += 15
+    return score
+
+def is_core_common(tags: set[str]) -> bool:
+    """
+    真の日常語かどうかの判定。
+    news1(上位1.2万語), ichi1(一万語選定), spec1, gai1、または nf01〜nf20(上位1万語以内) を要求。
+    ※ news2(1.2万〜2.4万語のお役所・行政記事用語) 単独は日常語から除外。
+    """
+    if CORE_COMMON_TAGS.intersection(tags):
+        return True
+    for t in tags:
+        if t.startswith("nf"):
+            try:
+                rank = int(t[2:])
+                if rank <= 20:  # 上位1万語以内
+                    return True
+            except ValueError:
+                pass
+    return False
 
 def katakana_to_hiragana(s: str) -> str:
     """カタカナをひらがなに変換する"""
@@ -78,15 +118,15 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
         context = ET.iterparse(gz_file, events=("end",))
         for event, elem in context:
             if elem.tag == "entry":
-                # 漢字表記
-                kanji_list = [k.text for k in elem.findall("k_ele/keb") if k.text]
-                
-                # 漢字側の優先度タグ
-                k_pri_tags = set()
+                # 各漢字表記とその優先度スコア
+                kanji_entries: list[tuple[str, int, list[str]]] = []
                 for k_ele in elem.findall("k_ele"):
-                    k_pri_tags.update(p.text for p in k_ele.findall("ke_pri") if p.text)
-                
-                has_common_kanji = bool(COMMON_PRIORITY_TAGS.intersection(k_pri_tags))
+                    keb = k_ele.findtext("keb")
+                    if not keb:
+                        continue
+                    k_pri = [p.text for p in k_ele.findall("ke_pri") if p.text]
+                    score = get_tag_priority_score(k_pri)
+                    kanji_entries.append((keb, score, k_pri))
 
                 # 読みと優先度
                 for r_ele in elem.findall("r_ele"):
@@ -100,19 +140,21 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
                     
                     # カタカナ語（外来語表記など）の判定
                     is_katakana_orig = any(0x30A1 <= ord(c) <= 0x30F6 for c in reb)
-                    katakana_form = reb if is_katakana_orig else hiragana_to_katakana(hiragana)
                     
-                    # 優先度タグのチェック
-                    r_pri_tags = set(p.text for p in r_ele.findall("re_pri") if p.text)
-                    is_common = bool(COMMON_PRIORITY_TAGS.intersection(r_pri_tags)) or has_common_kanji
-                    is_gai = bool({"gai1", "gai2"}.intersection(r_pri_tags))
+                    r_pri = [p.text for p in r_ele.findall("re_pri") if p.text]
+                    all_tags = set(r_pri)
+                    for _, _, k_pri in kanji_entries:
+                        all_tags.update(k_pri)
+
+                    # 厳格な日常語判定（news2単独や専門語はFalse）
+                    is_common = is_core_common(all_tags)
                     
                     if hiragana not in words_map:
                         words_map[hiragana] = {
                             "reading": hiragana,
                             "length": len(hiragana),
                             "common": is_common,
-                            "kanji": list(kanji_list[:3]),
+                            "kanji_scores": {},  # 漢字 -> 最高スコア
                             "katakana": [reb] if is_katakana_orig else [],
                             "display": "",
                             "score_bias": 1.2 if is_common else 1.0,
@@ -121,31 +163,41 @@ def parse_jmdict(gz_path: Path = JMDICT_GZ_PATH, output_path: Path = OUTPUT_JSON
                         if is_common:
                             words_map[hiragana]["common"] = True
                             words_map[hiragana]["score_bias"] = 1.2
-                        for k in kanji_list[:3]:
-                            if k not in words_map[hiragana]["kanji"]:
-                                words_map[hiragana]["kanji"].append(k)
                         if is_katakana_orig and reb not in words_map[hiragana]["katakana"]:
                             words_map[hiragana]["katakana"].append(reb)
 
+                    # 漢字表記をスコア付きでマージ
+                    target_k_scores = words_map[hiragana]["kanji_scores"]
+                    for keb, score, k_pri in kanji_entries:
+                        # 読み側のタグも加味した複合スコア
+                        total_k_score = score + get_tag_priority_score(r_pri)
+                        if keb not in target_k_scores or total_k_score > target_k_scores[keb]:
+                            target_k_scores[keb] = total_k_score
+
                 elem.clear()
 
-    # 代表表示名 (display) の決定
+    # 代表表示名 (display) および漢字リストの優先度順ソート
     for w in words_map.values():
-        kanjis = w["kanji"]
+        k_scores = w.pop("kanji_scores", {})
+        # スコア降順にソートした漢字リスト（同点なら文字の自然順）
+        sorted_kanjis = [
+            k for k, _ in sorted(k_scores.items(), key=lambda x: x[1], reverse=True)
+        ]
+        w["kanji"] = sorted_kanjis[:5]  # 上位5件まで保持
+        
         katakanas = w["katakana"]
         reading = w["reading"]
         
         # 1. 外来語（カタカナが主で、漢字がないか外来語扱い）
-        if katakanas and (not kanjis or w.get("common")):
-            # 外来語としてポピュラーな場合はカタカナを代表表示に優先
-            if not kanjis:
+        if katakanas and (not sorted_kanjis or w.get("common")):
+            if not sorted_kanjis:
                 w["display"] = katakanas[0]
             else:
                 # 漢字もカタカナもある場合（例: アイス / 愛す）
-                w["display"] = f"{katakanas[0]} / {kanjis[0]}"
-        elif kanjis:
-            # 2. 漢字表記がある日常語
-            w["display"] = kanjis[0]
+                w["display"] = f"{katakanas[0]} / {sorted_kanjis[0]}"
+        elif sorted_kanjis:
+            # 2. 漢字表記がある日常語（最高スコアの漢字を代表表示に採用）
+            w["display"] = sorted_kanjis[0]
         else:
             # 3. かなのみ
             w["display"] = reading
