@@ -113,28 +113,37 @@ flowchart TD
 
 ---
 
-### Step 5: 単語総合スコアリング & 最適フォント決定
+### Step 5: 単語総合スコアリング & 文脈認知補完数理モデル (Inoue & Takahashi 2020)
 
 全文字ペアの最高スコア $S_1, S_2, \dots, S_K$ から、単語全体のアンビグラムスコアを算出します。
+井上・高橋 (2020) §6.2 表5 の実証（単語文脈が存在する場合、単一文字の可読性が低くても単語全体として 87.8% が正しく読める）に基づき、**文脈認知補完数理モデル** を導入しています。
 
-- **ボトルネック重視の調和型統合式**:
-  $$\text{Score}_{\text{word}} = 0.75 \times \left( \prod_{i=1}^K S_i \right)^{1/K} + 0.25 \times \min(S_1, \dots, S_K)$$
-  - 幾何平均（Geometric Mean）により、1文字でも破綻している単語を厳しく抑制。
-  - ボトルネック最小値（Min Score）を 25% 加味することで、「最も読みにくい文字ペア」の品質を保証。
+- **文脈認知補完数理モデル**:
+  $$\text{Score}_{\text{word}} = (1 - \alpha) \cdot \mu_{\text{geom}} + \alpha \cdot \min(S_1, \dots, S_K)$$
+  ここで、幾何平均 $\mu_{\text{geom}} = \left( \prod_{i=1}^K S_i \right)^{1/K}$。
+  ボトルネック文字の引き下げ重み $\alpha$ は、単語全体の幾何平均および単語長 $N$、日常語（常用語）フラグによって以下のように動的制御されます：
+  $$\alpha = \begin{cases}
+  0.25 & (\mu_{\text{geom}} < 0.70 \text{ または未知語}) \\
+  0.15 & (\mu_{\text{geom}} \ge 0.70, \text{常用語, } N=2) \\
+  0.08 & (\mu_{\text{geom}} \ge 0.75, \text{常用語, } N \ge 3) \\
+  0.05 & (\mu_{\text{geom}} \ge 0.85, \text{常用語, } N \ge 4)
+  \end{cases}$$
+  これにより、前後の文字から容易に推測可能な高適性・日常単語において、1文字の微小な形状不一致による過剰な足切りを防止し、人間の実際の読解感覚と一致したランキングを実現します。
+
 - **最適フォントの自動選出 (Auto-Optimizer)**:
   - 5 つのフォント候補の単語総合スコアを比較し、**最も高得点となったフォント（およびその各文字ペアの最適 XY シフト）** をデフォルトの最適フォントとして自動選定。
 
 ---
 
-### Step 6: 生成エンジン固有パラメータの最適化
+### Step 6: 生成エンジン固有パラメータの最適化 & 先行研究モデルの適用
 
-選定されたフォントと最適オフセットに基づき、各生成エンジンが最適な描画パラメータを自動適用して画像を生成します。
+選定されたフォントと最適オフセットに基づき、各生成エンジンが最適な描画パラメータおよび先行研究モデルを自動適用して画像を生成します。
 
-| エンジン | 特徴 | 自動適用される最適パラメータ |
+| エンジン | 特徴 | 自動適用される最適パラメータ・先行研究モデル |
 | :--- | :--- | :--- |
-| **手法A: 論理積＋モルフォロジー (`morphology_engine.py`)** | 正反ピクセルの積（AND）を核とし、二重線・ゴーストを解消した丸みのある単一ストローク | - `dilation_size`: 11px（ストローク接続膨張）<br>- `diff_blend`: 0.35（固有差分の半透明ブレンド率）<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ |
-| **手法B: スケルトン平均化 (`skeleton_engine.py`)** | 調和平均距離場から中心骨格を抽出し、均一ブラシで一本化 | - `stroke_thickness`: 15px（均一ブラシ幅）<br>- `diff_blend`: 0.35<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ |
-| **原案: ベクター幾何合成 (`vector_engine.py`)** | FontTools による SVG アウトライン重ね合わせとパーツ色分け | - `blend_ratio`: 0.5<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ |
+| **手法A: 論理積＋モルフォロジー (`morphology_engine.py`)** | 正反ピクセルの積（AND）を核とし、二重線・ゴーストを解消した丸みのある単一ストローク | - `dilation_size`: 11px（ストローク接続膨張）<br>- `diff_blend`: 0.35（固有差分の半透明ブレンド率）<br>- `enable_snap`: True（**近接ストローク吸引・局所非剛体スナップ / Issue #1, #2 解決**）<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ |
+| **手法B: スケルトン平均化 (`skeleton_engine.py`)** | 調和平均距離場から中心骨格を抽出し、筆文字または均一ブラシで一本化 | - `stroke_thickness`: 15px<br>- `diff_blend`: 0.35<br>- `brush_style`: `"calligraphic"`（**井上・高橋 §5 / 野村 2018 毛筆45°楕円ブラシ**）<br>- `stroke_modulation`: True（**共通核太線化・固有部細線化**）<br>- `enable_snap`: True（**近接ストローク吸引スナップ**）<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ |
+| **原案: ベクター幾何合成 (`vector_engine.py`)** | FontTools による SVG アウトライン重ね合わせとパーツ色分け | - `blend_ratio`: 0.5<br>- `custom_offsets`: Step 4 で求めた最適 $(\Delta x, \Delta y)$ を幾何アライメントに完全反映 |
 
 ---
 
@@ -146,21 +155,38 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor User as ユーザー
-    participant UI as フロントエンド (FontSelector)
+    participant UI as フロントエンド (FontSelector / EngineCompare)
     participant API as バックエンド (FastAPI)
-    participant FM as FontManager
+    participant FM as FontManager / Engines
+    participant REC as Recognizer (魏・山口 2023)
 
     User->>UI: フォント切り替え or スライダー/ホイール操作 (dx, dy)
     UI->>API: POST /api/words/eval-offsets (word, font_id, offsets)
     API->>FM: evaluate_word_with_custom_offsets()
-    FM-->>API: 新スコア (4層エンジンによる再計算値)
+    FM-->>API: 新スコア (4層幾何エンジンによる再計算値)
     API-->>UI: リアルタイムスコア & 各ペアの一致率
     UI-->>User: 画面上のスコアバッジ即座更新 (ミリ秒応答)
     
-    User->>UI: 画像生成ボタン or 自動プレビュー
-    UI->>API: POST /api/generate (custom_offsets を渡す)
-    API-->>UI: 手動シフトが完全反映されたアンビグラム画像
+    User->>UI: 画像生成 or 手法選択
+    UI->>API: POST /api/generate (custom_offsets, brush_style, enable_snap)
+    API-->>UI: 手動シフト・筆文字・スナップが反映された画像
+    UI->>API: POST /api/evaluate-readability (生成結果スロット)
+    API->>REC: evaluate_ambigram_slot() (正反両方向の認識確率)
+    REC-->>API: P(c1), P(c2), 調和平均可読性
+    API-->>UI: AI双方向文字認識率・客観可読性カードを更新
 ```
 
-- **ホイールスクロール対応**: スライダー上にマウスを乗せてホイールを上下させるだけで、$\pm 1\text{px}$ 単位で滑らかに微調整可能。
-- **即時スコア再計算**: シフトを動かすたびに `POST /api/words/eval-offsets` が走り、新スコアがリアルタイムにフィードバックされます。
+---
+
+### Step 8: 客観的文字認識・双方向可読性評価 (Wei & Yamaguchi 2023 §2.2)
+
+魏・山口 (2023) の客観的可読性評価モデルに基づき、生成されたアンビグラムの正反両方向に対する機械文字認識スコアを自動計測します。
+
+- **特徴量設計 (192次元多重解像度特徴)**:
+  1. **ゾーン密度特徴 (64次元)**: $8 \times 8$ グリッド内の黒画素占有率。大局的な文字形状・マクロ配置を捉える。
+  2. **エッジ勾配方向ヒストグラム (128次元)**: $4 \times 4$ サブリージョンごとに Sobel 勾配による 8 方向のエッジ強度を量子化。文字の画数・ストローク方向の微小構造を捉える。
+- **正反双方向認識確率と調和平均**:
+  基準フォントのテンプレート特徴量とのコサイン類似度から Softmax 認識確率を算出：
+  $$H_{\text{read}} = \frac{2 \cdot P(c_1) \cdot P(c_2)}{P(c_1) + P(c_2) + \epsilon}$$
+  片方しか読めない騙し絵状態を排し、両方向から正しく読めるアンビグラムのみを「高品質」として客観評価・UI可視化します。
+
