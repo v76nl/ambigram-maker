@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from .base import BaseAmbigramGenerator
+from .base import BaseAmbigramGenerator, array_to_png_data_uri, make_bicolor_overlay
 from .font_manager import font_manager
 from .snap_warper import snap_warper
 
@@ -69,7 +69,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         brush_style: str = "calligraphic",
         stroke_modulation: bool = True,
         enable_snap: bool = True,
-    ) -> np.ndarray:
+        return_intermediates: bool = False,
+    ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
         - c1: 正位置の文字
@@ -81,6 +82,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - brush_style: 'calligraphic' (毛筆楕円ブラシ: 筆先角度135度) または 'uniform' (均一円形)
         - stroke_modulation: 井上・高橋(2020)§5に基づくストローク太さ変調 (共通部強調・固有部細線化)
         - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        - return_intermediates: 中間ステップ画像（バイカラー、距離場、骨格線等）を辞書で返すか
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
@@ -101,6 +103,9 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             img1 = cv2.warpAffine(img1, M1, (size, size))
             img2_rot = cv2.warpAffine(img2_rot, M2, (size, size))
 
+        # 中間ステップ1: 正反配置 (バイカラー)
+        step1_overlay = make_bicolor_overlay(img1, img2_rot)
+
         # ② 事前太らせ (Pre-Bold) で距離場の交差領域・吸引力を強化
         if pre_bold > 0:
             kw = pre_bold * 2 + 1
@@ -117,6 +122,9 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
                 p_img1, p_img2_rot, max_distance=24, snap_strength=0.5
             )
+
+        # 中間ステップ2: 太らせ＆TPSスナップ後 (バイカラー)
+        step2_overlay = make_bicolor_overlay(p_img1, p_img2_rot)
 
         # 1. 各文字のL2ユークリッド距離変換
         d1 = cv2.distanceTransform((p_img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
@@ -140,11 +148,17 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         else:
             field_norm = np.zeros(img1.shape, dtype=np.uint8)
 
+        # 中間ステップ3: 調和平均距離場エネルギーマップ (uint8)
+        step3_field = field_norm.copy()
+
         thresh_val = int(255 * threshold_ratio)
         _, field_bin = cv2.threshold(field_norm, thresh_val, 255, cv2.THRESH_BINARY)
 
         # 4. 平均骨格（スケルトン中心線）を抽出
         skeleton = self._morphological_skeleton(field_bin)
+
+        # 中間ステップ4: 細線化スケルトン (uint8)
+        step4_skeleton = skeleton.copy()
 
         # 5. 井上・高橋 (2020) §5 および野村 (2018) に基づくストローク太さ変調 & 筆文字描画
         base_radius = max(2, stroke_thickness // 2)
@@ -202,6 +216,17 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         # 自己回転対称文字 (c1 == c2) の場合、180度自己回転との対称和をとることで微小なラスタライズ誤差を完全に解消
         if c1 == c2:
             result = cv2.bitwise_or(result, cv2.rotate(result, cv2.ROTATE_180))
+
+        if return_intermediates:
+            step5_render = result.copy()
+            intermediates = {
+                "step1": step1_overlay,
+                "step2": step2_overlay,
+                "step3": step3_field,
+                "step4": step4_skeleton,
+                "step5": step5_render,
+            }
+            return result, intermediates
 
         return result
 
@@ -262,6 +287,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         selected_font_path = font_manager.get_font_path(selected_fid)
 
         slots = [None] * n
+        slot_intermediates = [None] * n
         half_len = (n + 1) // 2
         for i in range(half_len):
             c1 = word[i]
@@ -269,7 +295,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             is_center = (i == n - 1 - i)
             shift = (0, 0) if is_center else (selected_offsets[i] if i < len(selected_offsets) else (0, 0))
 
-            slot_img = self.generate_slot(
+            slot_img, inter = self.generate_slot(
                 c1,
                 c2,
                 size=slot_size,
@@ -281,11 +307,20 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 brush_style=brush_style,
                 stroke_modulation=stroke_modulation,
                 enable_snap=enable_snap,
+                return_intermediates=True,
             )
             slots[i] = slot_img
+            slot_intermediates[i] = inter
             if not is_center:
                 # 自己回転対称性の厳密保証: 後半スロットは対応する前半スロットの180度回転画像
                 slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
+                slot_intermediates[n - 1 - i] = {
+                    "step1": cv2.rotate(inter["step1"], cv2.ROTATE_180),
+                    "step2": cv2.rotate(inter["step2"], cv2.ROTATE_180),
+                    "step3": cv2.rotate(inter["step3"], cv2.ROTATE_180),
+                    "step4": cv2.rotate(inter["step4"], cv2.ROTATE_180),
+                    "step5": cv2.rotate(inter["step5"], cv2.ROTATE_180),
+                }
 
         # 水平方向に連結
         full_width_img = np.hstack(slots)
@@ -305,11 +340,12 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
 
         # 背景白、文字黒のRGBA画像に変換
         h, w = padded_img.shape
-        rgba = np.zeros((h, w, 4), dtype=np.uint8)
-        rgba[:, :, 0] = 17  # #111111
-        rgba[:, :, 1] = 17
-        rgba[:, :, 2] = 17
-        rgba[:, :, 3] = padded_img
+        rgba = np.full((h, w, 4), 255, dtype=np.uint8)
+        mask = padded_img > 0
+        rgba[mask, 0] = 17  # #111111
+        rgba[mask, 1] = 17
+        rgba[mask, 2] = 17
+        rgba[mask, 3] = 255
 
         pil_img = Image.fromarray(rgba, mode="RGBA")
         buffer = io.BytesIO()
@@ -317,10 +353,51 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         b64_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         data_uri = f"data:image/png;base64,{b64_str}"
 
+        # 中間ステップのフル画像結合とData URI生成
+        step1_img = np.hstack([s["step1"] for s in slot_intermediates])
+        step2_img = np.hstack([s["step2"] for s in slot_intermediates])
+        step3_img = np.hstack([s["step3"] for s in slot_intermediates])
+        step4_img = np.hstack([s["step4"] for s in slot_intermediates])
+        step5_img = np.hstack([s["step5"] for s in slot_intermediates])
+
+        steps = [
+            {
+                "step": 1,
+                "title": "正反配置＆最適シフト",
+                "description": "正位置（青）と180度反転（赤）を初期配置し、幾何学的重なりを最大化する相対シフトを配分",
+                "image": array_to_png_data_uri(step1_img, color_mode="raw", add_padding=True),
+            },
+            {
+                "step": 2,
+                "title": "事前太らせ＆局所TPS吸引",
+                "description": "ストロークを太らせて交差親和性を高め、薄板スプライン(TPS)変形で近接ストロークを相互に引き寄せ",
+                "image": array_to_png_data_uri(step2_img, color_mode="raw", add_padding=True),
+            },
+            {
+                "step": 3,
+                "title": "調和平均距離場 (エネルギー場)",
+                "description": "両文字のユークリッド距離場から調和平均 H = 2·d1·d2/(d1+d2) を算出し、中心線エネルギーの尾根を形成",
+                "image": array_to_png_data_uri(step3_img, color_mode="heatmap", add_padding=True),
+            },
+            {
+                "step": 4,
+                "title": "細線化中心骨格抽出",
+                "description": "モルフォロジー細線化アルゴリズムにより、エネルギー場の尾根に沿った幅1pxの平均骨格中心線を抽出",
+                "image": array_to_png_data_uri(step4_img, color_mode="black_on_white", add_padding=True),
+            },
+            {
+                "step": 5,
+                "title": "筆文字変調再描画",
+                "description": "共通部の線幅変調・端点の筆圧減衰を適用し、角度135度の毛筆楕円ブラシで滑らかに輪郭を形成",
+                "image": array_to_png_data_uri(step5_img, color_mode="black_on_white", add_padding=True),
+            },
+        ]
+
         return {
             "engine": "skeleton",
             "type": "png",
             "data": data_uri,
+            "steps": steps,
             "details": {
                 "word": word,
                 "length": n,

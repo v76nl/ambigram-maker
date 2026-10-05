@@ -124,6 +124,13 @@ export interface EvalOffsetsResponse {
   offsets: [number, number][];
 }
 
+export interface PipelineStep {
+  step: number;
+  title: string;
+  description: string;
+  image: string;
+}
+
 export interface EngineResult {
   engine: string;
   type: "svg" | "png" | "error";
@@ -131,6 +138,7 @@ export interface EngineResult {
   status?: string;
   message?: string;
   details?: Record<string, any>;
+  steps?: PipelineStep[];
 }
 
 export interface GenerateResponse {

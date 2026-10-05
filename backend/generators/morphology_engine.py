@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from .base import BaseAmbigramGenerator
+from .base import BaseAmbigramGenerator, array_to_png_data_uri, make_bicolor_overlay
 from .font_manager import font_manager
 from .snap_warper import snap_warper
 
@@ -51,7 +51,8 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
         enable_snap: bool = True,
-    ) -> np.ndarray:
+        return_intermediates: bool = False,
+    ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
         1文字スロットの論理積＋モルフォロジー最適化
         - c1: 正位置の文字
@@ -59,6 +60,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         - pre_bold: 事前太らせ量 (水平異方性膨張により「の」の中央縦棒等の近接ストロークを確実に結合)
         - shift: 座標揺らし探索で得られた最適オフセット (dx, dy)
         - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        - return_intermediates: 中間ステップ画像（バイカラー、AND核、ブレンド等）を辞書で返すか
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
@@ -79,6 +81,9 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             img1 = cv2.warpAffine(img1, M1, (size, size))
             img2_rot = cv2.warpAffine(img2_rot, M2, (size, size))
 
+        # 中間ステップ1: 正反配置 (バイカラー)
+        step1_overlay = make_bicolor_overlay(img1, img2_rot)
+
         # ② フォントを太らせて（Pre-Dilation）判定・共通核を強化
         # 水平方向を優先した異方性カーネルにより、左右に離れやすい縦棒同士を確実に接触・合体させる
         if pre_bold > 0:
@@ -97,8 +102,14 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 p_img1, p_img2_rot, max_distance=24, snap_strength=0.5
             )
 
+        # 中間ステップ2: 事前太らせ＆TPSスナップ後 (バイカラー)
+        step2_overlay = make_bicolor_overlay(p_img1, p_img2_rot)
+
         # 1. 論理積 (AND): 太らせた文字同士の交差領域を抽出
         intersection = cv2.bitwise_and(p_img1, p_img2_rot)
+
+        # 中間ステップ3: 論理積 (AND) 共通核
+        step3_and = intersection.copy()
 
         # 2. 差分抽出 (異文字ペアの固有識別ストローク)
         diff1 = cv2.subtract(img1, img2_rot)
@@ -113,6 +124,9 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             )
             base_img = np.clip(blended, 0, 255).astype(np.uint8)
             _, base_img = cv2.threshold(base_img, 60, 255, cv2.THRESH_BINARY)
+
+        # 中間ステップ4: 固有差分ブレンド
+        step4_blend = base_img.copy()
 
         # 3. モルフォロジー膨張 (Dilation) でフォントの太さを復元
         ksize = max(3, dilation_size if dilation_size % 2 != 0 else dilation_size + 1)
@@ -135,6 +149,17 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         # 自己回転対称文字 (c1 == c2) の場合、180度自己回転との対称和をとることで微小なラスタライズ誤差を完全に解消
         if c1 == c2:
             opened = cv2.bitwise_or(opened, cv2.rotate(opened, cv2.ROTATE_180))
+
+        if return_intermediates:
+            step5_final = opened.copy()
+            intermediates = {
+                "step1": step1_overlay,
+                "step2": step2_overlay,
+                "step3": step3_and,
+                "step4": step4_blend,
+                "step5": step5_final,
+            }
+            return opened, intermediates
 
         return opened
 
@@ -191,6 +216,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         selected_font_path = font_manager.get_font_path(selected_fid)
 
         slots = [None] * n
+        slot_intermediates = [None] * n
         half_len = (n + 1) // 2
         for i in range(half_len):
             c1 = word[i]
@@ -198,7 +224,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             is_center = (i == n - 1 - i)
             shift = (0, 0) if is_center else (selected_offsets[i] if i < len(selected_offsets) else (0, 0))
 
-            slot_img = self.generate_slot(
+            slot_img, inter = self.generate_slot(
                 c1,
                 c2,
                 size=slot_size,
@@ -209,11 +235,20 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 font_path=selected_font_path,
                 shift=shift,
                 enable_snap=enable_snap,
+                return_intermediates=True,
             )
             slots[i] = slot_img
+            slot_intermediates[i] = inter
             if not is_center:
                 # 自己回転対称性の厳密保証: 後半スロットは対応する前半スロットの180度回転画像
                 slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
+                slot_intermediates[n - 1 - i] = {
+                    "step1": cv2.rotate(inter["step1"], cv2.ROTATE_180),
+                    "step2": cv2.rotate(inter["step2"], cv2.ROTATE_180),
+                    "step3": cv2.rotate(inter["step3"], cv2.ROTATE_180),
+                    "step4": cv2.rotate(inter["step4"], cv2.ROTATE_180),
+                    "step5": cv2.rotate(inter["step5"], cv2.ROTATE_180),
+                }
 
         # 水平方向に連結
         full_width_img = np.hstack(slots)
@@ -233,11 +268,12 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
 
         # 背景白、文字黒のRGBA画像に変換
         h, w = padded_img.shape
-        rgba = np.zeros((h, w, 4), dtype=np.uint8)
-        rgba[:, :, 0] = 17  # #111111 (ダークグレー/黒)
-        rgba[:, :, 1] = 17
-        rgba[:, :, 2] = 17
-        rgba[:, :, 3] = padded_img  # アルファチャンネルに文字マスクを設定
+        rgba = np.full((h, w, 4), 255, dtype=np.uint8)
+        mask = padded_img > 0
+        rgba[mask, 0] = 17  # #111111 (ダークグレー/黒)
+        rgba[mask, 1] = 17
+        rgba[mask, 2] = 17
+        rgba[mask, 3] = 255
 
         pil_img = Image.fromarray(rgba, mode="RGBA")
         buffer = io.BytesIO()
@@ -245,10 +281,51 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         b64_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         data_uri = f"data:image/png;base64,{b64_str}"
 
+        # 中間ステップのフル画像結合とData URI生成
+        step1_img = np.hstack([s["step1"] for s in slot_intermediates])
+        step2_img = np.hstack([s["step2"] for s in slot_intermediates])
+        step3_img = np.hstack([s["step3"] for s in slot_intermediates])
+        step4_img = np.hstack([s["step4"] for s in slot_intermediates])
+        step5_img = np.hstack([s["step5"] for s in slot_intermediates])
+
+        steps = [
+            {
+                "step": 1,
+                "title": "正反配置＆最適シフト",
+                "description": "正位置（青）と180度反転（赤）を初期配置し、幾何学的重なりを最大化する相対シフトを配分",
+                "image": array_to_png_data_uri(step1_img, color_mode="raw", add_padding=True),
+            },
+            {
+                "step": 2,
+                "title": "異方性事前太らせ＆局所TPS吸引",
+                "description": "水平楕円膨張で近接縦棒を結合させ、薄板スプライン(TPS)変形で近接ストロークを相互に引き寄せ",
+                "image": array_to_png_data_uri(step2_img, color_mode="raw", add_padding=True),
+            },
+            {
+                "step": 3,
+                "title": "論理積 (AND) 共通核抽出",
+                "description": "太らせた2文字のピクセル論理積を計算し、180度自己回転で不変な中心対称の核ストロークを抽出",
+                "image": array_to_png_data_uri(step3_img, color_mode="black_on_white", add_padding=True),
+            },
+            {
+                "step": 4,
+                "title": "固有差分ストローク適応ブレンド",
+                "description": "異文字ペアの識別性を担保するため、各文字固有の差分ストロークパーツを適応比率で共通核に融合",
+                "image": array_to_png_data_uri(step4_img, color_mode="black_on_white", add_padding=True),
+            },
+            {
+                "step": 5,
+                "title": "モルフォロジー膨張＆平滑化",
+                "description": "モルフォロジー膨張でフォント本来の線幅を復元し、ガウシアンフィルタで滑らかな輪郭を生成",
+                "image": array_to_png_data_uri(step5_img, color_mode="black_on_white", add_padding=True),
+            },
+        ]
+
         return {
             "engine": "morphology",
             "type": "png",
             "data": data_uri,
+            "steps": steps,
             "details": {
                 "word": word,
                 "length": n,

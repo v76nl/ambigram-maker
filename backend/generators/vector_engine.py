@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -103,6 +104,11 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
 
         half_len = (n + 1) // 2
 
+        # ステップ用パーツ
+        step1_slots = []
+        step2_slots = []
+        step3_slots = []
+
         # 各文字の配置
         for i in range(n):
             c1 = word[i]
@@ -144,32 +150,74 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
                 opacity1 = round(1.0 - blend_ratio * 0.25, 2)
                 opacity2 = round(1.0 - blend_ratio * 0.25, 2)
 
-            svg_parts.append(f'<g id="char-slot-{i}" class="char-slot" data-c1="{c1}" data-c2="{c2}">')
-
             # 1. 文字1（正位置 -shift/2）
-            svg_parts.append(
+            p1_element = (
                 f'<g class="stroke-c1" transform="translate({offset1_x}, {offset1_y}) scale({scale_factor}, -{scale_factor})">'
                 f'<path d="{path1}" fill="{color1}" fill-opacity="{opacity1}" />'
                 f'</g>'
             )
 
             # 2. 文字2（180度回転位置 +shift/2）
-            svg_parts.append(
+            p2_element = (
                 f'<g class="stroke-c2" transform="translate({center2_x}, {center2_y}) rotate(180) '
                 f'translate({-(width2 * scale_factor)/2}, {baseline - slot_center_y}) scale({scale_factor}, -{scale_factor})">'
                 f'<path d="{path2}" fill="{color2}" fill-opacity="{opacity2}" />'
                 f'</g>'
             )
 
-            svg_parts.append('</g>')
+            step3_slots.append(f'<g id="char-slot-{i}" class="char-slot" data-c1="{c1}" data-c2="{c2}">{p1_element}{p2_element}</g>')
+            
+            # Step 1: 正位置のみ (青)
+            p1_step = (
+                f'<g class="stroke-c1" transform="translate({offset1_x}, {offset1_y}) scale({scale_factor}, -{scale_factor})">'
+                f'<path d="{path1}" fill="#2563eb" fill-opacity="0.85" />'
+                f'</g>'
+            )
+            step1_slots.append(f'<g id="char-slot-s1-{i}">{p1_step}</g>')
 
-        svg_parts.append('</svg>')
-        svg_content = "\n".join(svg_parts)
+            # Step 2: 反転位置のみ (赤)
+            p2_step = (
+                f'<g class="stroke-c2" transform="translate({center2_x}, {center2_y}) rotate(180) '
+                f'translate({-(width2 * scale_factor)/2}, {baseline - slot_center_y}) scale({scale_factor}, -{scale_factor})">'
+                f'<path d="{path2}" fill="#e13b19" fill-opacity="0.85" />'
+                f'</g>'
+            )
+            step2_slots.append(f'<g id="char-slot-s2-{i}">{p2_step}</g>')
+
+        svg_content = "\n".join(svg_parts + step3_slots + ['</svg>'])
+
+        # 中間ステップのSVG生成とData URI変換
+        def _make_svg(content_slots: list[str]) -> str:
+            svg_doc = "\n".join(svg_parts + content_slots + ['</svg>'])
+            b64 = base64.b64encode(svg_doc.encode("utf-8")).decode("utf-8")
+            return f"data:image/svg+xml;base64,{b64}"
+
+        steps = [
+            {
+                "step": 1,
+                "title": "正位置ベクターグリフ配置",
+                "description": "TrueTypeフォントから抽出したベクター輪郭パスを正位置に配置（青）",
+                "image": _make_svg(step1_slots),
+            },
+            {
+                "step": 2,
+                "title": "180度反転ベクターグリフ配置",
+                "description": "対称位置の文字パスを幾何学的に180度反転させて配置（赤）",
+                "image": _make_svg(step2_slots),
+            },
+            {
+                "step": 3,
+                "title": "幾何学的合成・重なり融合",
+                "description": "最適重心シフトで位置を精密微調整し、正反両ストロークを融合配置",
+                "image": _make_svg(step3_slots),
+            },
+        ]
 
         return {
             "engine": "vector",
             "type": "svg",
             "data": svg_content,
+            "steps": steps,
             "details": {
                 "word": word,
                 "length": n,

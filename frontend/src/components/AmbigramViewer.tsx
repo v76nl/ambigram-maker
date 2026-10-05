@@ -7,8 +7,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Layers,
+  Eye,
+  Undo2,
 } from "lucide-react";
-import type { WordItem, EngineResult, ReadabilityResponse } from "../services/api";
+import type { WordItem, EngineResult, ReadabilityResponse, PipelineStep } from "../services/api";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
@@ -41,6 +44,16 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     rotDiffRatio: number;
   } | null>(null);
   const [isDiffLoading, setIsDiffLoading] = useState<boolean>(false);
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
+
+  // 手法や結果が変わった場合はステッププレビュー選択をリセット
+  useEffect(() => {
+    setSelectedStepIndex(null);
+  }, [activeEngine, activeResult?.data]);
+
+  const pipelineSteps: PipelineStep[] = activeResult?.steps || [];
+  const activeStep: PipelineStep | null =
+    selectedStepIndex !== null && pipelineSteps[selectedStepIndex] ? pipelineSteps[selectedStepIndex] : null;
 
   // 点対称ピクセル差分（180度回転とのピクセル差分）のリアルタイム計算
   useEffect(() => {
@@ -186,6 +199,21 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
 
   const renderGraphicContent = (isFlipped: boolean = false) => {
+    // 中間工程ステップがプレビュー選択されている場合
+    if (activeStep) {
+      return (
+        <img
+          src={activeStep.image}
+          alt={`Step ${activeStep.step}: ${activeStep.title}`}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            transform: isFlipped ? "rotate(180deg)" : "none",
+          }}
+        />
+      );
+    }
+
     if (!activeResult) {
       return <div style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>生成中...</div>;
     }
@@ -312,6 +340,27 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           </div>
         )}
 
+        {/* 中間ステッププレビュー中バナー */}
+        {activeStep && (
+          <div className="pipeline-preview-banner">
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Eye size={15} color="var(--accent)" />
+              <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
+                中間工程プレビュー中: STEP {activeStep.step} - {activeStep.title}
+              </span>
+            </div>
+            <button
+              className="swiss-btn swiss-btn-subtle"
+              style={{ padding: "0.2rem 0.6rem", fontSize: "0.72rem" }}
+              onClick={() => setSelectedStepIndex(null)}
+              title="完成アンビグラム表示に戻す"
+            >
+              <Undo2 size={12} />
+              <span>完成結果に戻す</span>
+            </button>
+          </div>
+        )}
+
         {/* 回転アニメーションキャンバス */}
         <div
           className="canvas-rotating-wrapper"
@@ -355,6 +404,70 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
         </div>
       </div>
+
+      {/* 生成工程パイプライン (Processing Pipeline Steps) */}
+      {pipelineSteps.length > 0 && (
+        <div className="diff-view-card" style={{ marginTop: "1rem" }}>
+          <div className="diff-header">
+            <div className="diff-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <Layers size={15} color="var(--accent)" />
+              <span style={{ fontWeight: 600 }}>生成工程パイプライン (Processing Pipeline)</span>
+              <span
+                style={{
+                  fontSize: "0.68rem",
+                  padding: "0.1rem 0.4rem",
+                  borderRadius: "4px",
+                  background: "var(--bg-subtle, #f4f4f5)",
+                  color: "var(--text-muted, #71717a)",
+                  border: "1px solid var(--border-subtle, #e4e4e7)",
+                }}
+              >
+                全 {pipelineSteps.length} 工程
+              </span>
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+              各ステップをクリックしてメインビューワーで拡大プレビュー
+            </div>
+          </div>
+
+          <div className="pipeline-steps-grid">
+            {pipelineSteps.map((step, idx) => {
+              const isSelected = selectedStepIndex === idx;
+              return (
+                <div
+                  key={step.step}
+                  className={`pipeline-step-card ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedStepIndex(isSelected ? null : idx)}
+                  title={`クリックで STEP ${step.step} をプレビュー`}
+                >
+                  <div className="pipeline-step-header">
+                    <span className={`pipeline-step-badge ${isSelected ? "active" : ""}`}>
+                      STEP {step.step}
+                    </span>
+                    <span className="pipeline-step-name">{step.title}</span>
+                  </div>
+
+                  <div className="pipeline-step-thumb-wrap">
+                    <img
+                      src={step.image}
+                      alt={step.title}
+                      className="pipeline-step-thumb"
+                    />
+                    <div className="pipeline-step-overlay-hint">
+                      <Eye size={13} />
+                      <span>{isSelected ? "表示中" : "プレビュー"}</span>
+                    </div>
+                  </div>
+
+                  <div className="pipeline-step-desc">
+                    {step.description}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 点対称ピクセル差分インスペクター (180° Symmetry Difference) */}
       {showDiffView && (
