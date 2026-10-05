@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-05T03:56:11.488Z",
+  "reproducibility": {
+    "target": {
+      "word": "気の毒",
+      "reading": "きのどく",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "zen_maru",
+      "name": "Zen Maru Gothic",
+      "style": "丸ゴシック"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -3,
+          -2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 13,
+      "diff_blend": 0.6,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.8789,
+      "min_pair_score": 0.8789,
+      "overall_readability": 0.5804,
+      "readability_slots": [
+        {
+          "char1": "気",
+          "char2": "毒",
+          "prob1": 0.8083,
+          "prob2": 0.759,
+          "harmonic_readability": 0.7829,
+          "status": "perfect",
+          "top1_pred": "せ",
+          "top2_pred": "ユ",
+          "predictions_normal": [
+            {
+              "char": "せ",
+              "similarity": 0.8083,
+              "probability": 0.0569
+            },
+            {
+              "char": "お",
+              "similarity": 0.7986,
+              "probability": 0.0504
+            },
+            {
+              "char": "ね",
+              "similarity": 0.7709,
+              "probability": 0.0357
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ユ",
+              "similarity": 0.759,
+              "probability": 0.0446
+            },
+            {
+              "char": "エ",
+              "similarity": 0.7518,
+              "probability": 0.0407
+            },
+            {
+              "char": "る",
+              "similarity": 0.7453,
+              "probability": 0.0375
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "の",
+          "char2": "の",
+          "prob1": 0.3779,
+          "prob2": 0.3779,
+          "harmonic_readability": 0.3779,
+          "status": "perfect",
+          "top1_pred": "の",
+          "top2_pred": "の",
+          "predictions_normal": [
+            {
+              "char": "の",
+              "similarity": 0.8794,
+              "probability": 0.3779
+            },
+            {
+              "char": "ロ",
+              "similarity": 0.7816,
+              "probability": 0.1112
+            },
+            {
+              "char": "い",
+              "similarity": 0.7178,
+              "probability": 0.0501
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "の",
+              "similarity": 0.8794,
+              "probability": 0.3779
+            },
+            {
+              "char": "ロ",
+              "similarity": 0.7816,
+              "probability": 0.1112
+            },
+            {
+              "char": "い",
+              "similarity": 0.7178,
+              "probability": 0.0501
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "気の毒",
+      "engine": "skeleton",
+      "font": "zen_maru",
+      "customOffsets": [
+        [
+          -3,
+          -2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "stroke_thickness": 13,
+      "diff_blend": 0.6,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"気の毒\",\"engine\":\"skeleton\",\"font\":\"zen_maru\",\"customOffsets\":[[-3,-2],[0,0]],\"stroke_thickness\":13,\"diff_blend\":0.6,\"pre_bold\":7,\"brush_style\":\"uniform\",\"stroke_modulation\":true,\"enable_snap\":true}'"
+  }
+}

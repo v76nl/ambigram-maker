@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-05T04:29:33.556Z",
+  "reproducibility": {
+    "target": {
+      "word": "垂直",
+      "reading": "すいちょく",
+      "length": 2,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "zen_maru",
+      "name": "Zen Maru Gothic",
+      "style": "丸ゴシック"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          5,
+          5
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 15,
+      "diff_blend": 0.45,
+      "pre_bold": 4,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.8326,
+      "min_pair_score": 0.8326,
+      "overall_readability": 0.8135,
+      "readability_slots": [
+        {
+          "char1": "垂",
+          "char2": "直",
+          "prob1": 0.8245,
+          "prob2": 0.8028,
+          "harmonic_readability": 0.8135,
+          "status": "perfect",
+          "top1_pred": "ぬ",
+          "top2_pred": "エ",
+          "predictions_normal": [
+            {
+              "char": "ぬ",
+              "similarity": 0.8245,
+              "probability": 0.0413
+            },
+            {
+              "char": "お",
+              "similarity": 0.8121,
+              "probability": 0.0353
+            },
+            {
+              "char": "エ",
+              "similarity": 0.8014,
+              "probability": 0.0309
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "エ",
+              "similarity": 0.8028,
+              "probability": 0.0335
+            },
+            {
+              "char": "ま",
+              "similarity": 0.7992,
+              "probability": 0.032
+            },
+            {
+              "char": "ヲ",
+              "similarity": 0.793,
+              "probability": 0.0296
+            }
+          ],
+          "slot_index": 0
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "垂直",
+      "engine": "skeleton",
+      "font": "zen_maru",
+      "customOffsets": [
+        [
+          5,
+          5
+        ]
+      ],
+      "stroke_thickness": 15,
+      "diff_blend": 0.45,
+      "pre_bold": 4,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"垂直\",\"engine\":\"skeleton\",\"font\":\"zen_maru\",\"customOffsets\":[[5,5]],\"stroke_thickness\":15,\"diff_blend\":0.45,\"pre_bold\":4,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true}'"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-05T04:41:36.414Z",
+  "reproducibility": {
+    "target": {
+      "word": "追い風",
+      "reading": "おいて",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "zen_maru",
+      "name": "Zen Maru Gothic",
+      "style": "丸ゴシック"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 11,
+      "diff_blend": 0.55,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.8141,
+      "min_pair_score": 0.8141,
+      "overall_readability": 0.6728,
+      "readability_slots": [
+        {
+          "char1": "追",
+          "char2": "風",
+          "prob1": 0.8203,
+          "prob2": 0.8179,
+          "harmonic_readability": 0.8191,
+          "status": "perfect",
+          "top1_pred": "ま",
+          "top2_pred": "あ",
+          "predictions_normal": [
+            {
+              "char": "ま",
+              "similarity": 0.8203,
+              "probability": 0.0461
+            },
+            {
+              "char": "あ",
+              "similarity": 0.8189,
+              "probability": 0.0452
+            },
+            {
+              "char": "き",
+              "similarity": 0.8025,
+              "probability": 0.0369
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "あ",
+              "similarity": 0.8179,
+              "probability": 0.0459
+            },
+            {
+              "char": "ま",
+              "similarity": 0.8162,
+              "probability": 0.045
+            },
+            {
+              "char": "ぬ",
+              "similarity": 0.792,
+              "probability": 0.0332
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "い",
+          "char2": "い",
+          "prob1": 0.5265,
+          "prob2": 0.5265,
+          "harmonic_readability": 0.5265,
+          "status": "perfect",
+          "top1_pred": "い",
+          "top2_pred": "い",
+          "predictions_normal": [
+            {
+              "char": "い",
+              "similarity": 0.7409,
+              "probability": 0.5265
+            },
+            {
+              "char": "ハ",
+              "similarity": 0.5491,
+              "probability": 0.0479
+            },
+            {
+              "char": "の",
+              "similarity": 0.5107,
+              "probability": 0.0296
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "い",
+              "similarity": 0.7409,
+              "probability": 0.5265
+            },
+            {
+              "char": "ハ",
+              "similarity": 0.5491,
+              "probability": 0.0479
+            },
+            {
+              "char": "の",
+              "similarity": 0.5107,
+              "probability": 0.0296
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "追い風",
+      "engine": "skeleton",
+      "font": "zen_maru",
+      "customOffsets": [
+        [
+          -1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "stroke_thickness": 11,
+      "diff_blend": 0.55,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"追い風\",\"engine\":\"skeleton\",\"font\":\"zen_maru\",\"customOffsets\":[[-1,0],[0,0]],\"stroke_thickness\":11,\"diff_blend\":0.55,\"pre_bold\":7,\"brush_style\":\"uniform\",\"stroke_modulation\":true,\"enable_snap\":true}'"
+  }
+}

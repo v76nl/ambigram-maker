@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-05T04:01:25.583Z",
+  "reproducibility": {
+    "target": {
+      "word": "トロイ",
+      "reading": "とろい",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "zen_maru",
+      "name": "Zen Maru Gothic",
+      "style": "丸ゴシック"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 13,
+      "diff_blend": 0.6,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.8662,
+      "min_pair_score": 0.8662,
+      "overall_readability": 0.2192,
+      "readability_slots": [
+        {
+          "char1": "ト",
+          "char2": "イ",
+          "prob1": 0.0964,
+          "prob2": 0.4364,
+          "harmonic_readability": 0.1579,
+          "status": "perfect",
+          "top1_pred": "ト",
+          "top2_pred": "イ",
+          "predictions_normal": [
+            {
+              "char": "ト",
+              "similarity": 0.7166,
+              "probability": 0.0964
+            },
+            {
+              "char": "お",
+              "similarity": 0.7077,
+              "probability": 0.0863
+            },
+            {
+              "char": "を",
+              "similarity": 0.6734,
+              "probability": 0.0562
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "イ",
+              "similarity": 0.8495,
+              "probability": 0.4364
+            },
+            {
+              "char": "オ",
+              "similarity": 0.6867,
+              "probability": 0.057
+            },
+            {
+              "char": "そ",
+              "similarity": 0.6529,
+              "probability": 0.0374
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "ロ",
+          "char2": "ロ",
+          "prob1": 0.2805,
+          "prob2": 0.2805,
+          "harmonic_readability": 0.2805,
+          "status": "perfect",
+          "top1_pred": "ロ",
+          "top2_pred": "ロ",
+          "predictions_normal": [
+            {
+              "char": "ロ",
+              "similarity": 0.8846,
+              "probability": 0.2805
+            },
+            {
+              "char": "の",
+              "similarity": 0.8308,
+              "probability": 0.1432
+            },
+            {
+              "char": "つ",
+              "similarity": 0.7845,
+              "probability": 0.0802
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ロ",
+              "similarity": 0.8846,
+              "probability": 0.2805
+            },
+            {
+              "char": "の",
+              "similarity": 0.8308,
+              "probability": 0.1432
+            },
+            {
+              "char": "つ",
+              "similarity": 0.7845,
+              "probability": 0.0802
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "トロイ",
+      "engine": "skeleton",
+      "font": "zen_maru",
+      "customOffsets": [
+        [
+          -1,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "stroke_thickness": 13,
+      "diff_blend": 0.6,
+      "pre_bold": 7,
+      "brush_style": "uniform",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"トロイ\",\"engine\":\"skeleton\",\"font\":\"zen_maru\",\"customOffsets\":[[-1,2],[0,0]],\"stroke_thickness\":13,\"diff_blend\":0.6,\"pre_bold\":7,\"brush_style\":\"uniform\",\"stroke_modulation\":true,\"enable_snap\":true}'"
+  }
+}

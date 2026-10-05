@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-05T03:25:41.933Z",
+  "reproducibility": {
+    "target": {
+      "word": "そなえ",
+      "reading": "そなえ",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "morphology",
+      "name": "手法A: 論理積モルフォロジー (AND & Dilation)",
+      "academic_reference": "魏・山口 (2023) §2.1"
+    },
+    "font": {
+      "id": "dela_gothic",
+      "name": "Dela Gothic One",
+      "style": "極太フラット"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -5,
+          -5
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "dilation_size": 3,
+      "smoothness": 0,
+      "diff_blend": 0.05,
+      "pre_bold": 9,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.4816,
+      "min_pair_score": 0.447,
+      "overall_readability": 0.0119,
+      "readability_slots": [
+        {
+          "char1": "そ",
+          "char2": "え",
+          "prob1": 0.004,
+          "prob2": 0.0113,
+          "harmonic_readability": 0.0059,
+          "status": "poor",
+          "top1_pred": "エ",
+          "top2_pred": "ぬ",
+          "predictions_normal": [
+            {
+              "char": "エ",
+              "similarity": 0.6748,
+              "probability": 0.0533
+            },
+            {
+              "char": "の",
+              "similarity": 0.6637,
+              "probability": 0.0464
+            },
+            {
+              "char": "め",
+              "similarity": 0.6574,
+              "probability": 0.0428
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ぬ",
+              "similarity": 0.6898,
+              "probability": 0.0562
+            },
+            {
+              "char": "ね",
+              "similarity": 0.6854,
+              "probability": 0.0532
+            },
+            {
+              "char": "エ",
+              "similarity": 0.6727,
+              "probability": 0.0454
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "な",
+          "char2": "な",
+          "prob1": 0.018,
+          "prob2": 0.018,
+          "harmonic_readability": 0.018,
+          "status": "poor",
+          "top1_pred": "ぬ",
+          "top2_pred": "ぬ",
+          "predictions_normal": [
+            {
+              "char": "ぬ",
+              "similarity": 0.802,
+              "probability": 0.0754
+            },
+            {
+              "char": "ホ",
+              "similarity": 0.7899,
+              "probability": 0.0649
+            },
+            {
+              "char": "ゆ",
+              "similarity": 0.7748,
+              "probability": 0.0537
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ぬ",
+              "similarity": 0.802,
+              "probability": 0.0754
+            },
+            {
+              "char": "ホ",
+              "similarity": 0.7899,
+              "probability": 0.0649
+            },
+            {
+              "char": "ゆ",
+              "similarity": 0.7748,
+              "probability": 0.0537
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "そなえ",
+      "engine": "morphology",
+      "font": "dela_gothic",
+      "customOffsets": [
+        [
+          -5,
+          -5
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "dilation_size": 3,
+      "smoothness": 0,
+      "diff_blend": 0.05,
+      "pre_bold": 9,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"そなえ\",\"engine\":\"morphology\",\"font\":\"dela_gothic\",\"customOffsets\":[[-5,-5],[0,0]],\"dilation_size\":3,\"smoothness\":0,\"diff_blend\":0.05,\"pre_bold\":9,\"enable_snap\":true}'"
+  }
+}
