@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Known Ambigram Benchmark Words",
+  "description": "180度回転型アンビグラムにおいて優れた幾何学的親和性や先行作例が知られている既知の単語データセット (sigma投稿、みんビグラム等)",
+  "version": "1.0.0",
+  "symmetry_type": "180_rotational",
+  "words": [
+    {
+      "word": "動画",
+      "reading": "どうが",
+      "type": "kanji",
+      "length": 2,
+      "source": "既知の作例 / sigma等",
+      "description": "「動」と「画」のペア。偏旁構成と幾何学的輪郭の相性が良く、代表的な漢字アンビグラム作例として知られる"
+    },
+    {
+      "word": "奥歯",
+      "reading": "おくば",
+      "type": "kanji",
+      "length": 2,
+      "source": "既知の作例",
+      "description": "「奥」と「歯」のペア。「奥」の冠・大と「歯」の止・米構造が回転対称に調和しやすい"
+    },
+    {
+      "word": "秋桜",
+      "reading": "あきざくら",
+      "type": "kanji",
+      "length": 2,
+      "source": "既知の作例",
+      "description": "「秋」と「桜」のペア。禾偏と木偏、火と旁のバランスが良好"
+    },
+    {
+      "word": "道具",
+      "reading": "どうぐ",
+      "type": "kanji",
+      "length": 2,
+      "source": "みんビグラム",
+      "description": "「道」と「具」のペア。しんにょうと「具」の下部（ハ部）の相互対応"
+    },
+    {
+      "word": "遊",
+      "reading": "ゆう",
+      "type": "kanji",
+      "length": 1,
+      "source": "みんビグラム",
+      "description": "単一文字での180度自己回転アンビグラム。しんにょうと右上（方・子）の自己対称性"
+    },
+    {
+      "word": "ゆめ",
+      "reading": "ゆめ",
+      "type": "hiragana",
+      "length": 2,
+      "source": "みんビグラム",
+      "description": "ひらがなペア。「ゆ」の結びと「め」の交差ループが相互に高い親和性を持つ"
+    },
+    {
+      "word": "乱れ打ち",
+      "reading": "みだれうち",
+      "type": "mixed",
+      "length": 4,
+      "source": "既知の作例",
+      "description": "4文字の漢字かな交じり文。「乱」↔「ち」、「れ」↔「打」のクロス対称配置"
+    }
+  ]
+}
