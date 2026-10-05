@@ -4,7 +4,10 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from generators.font_manager import font_manager
+try:
+    from generators.font_manager import font_manager
+except ImportError:
+    from backend.generators.font_manager import font_manager
 
 # 対象とする主要文字セット (ひらがな全文字 + 主要カタカナ)
 HIRAGANA_CHARS = list("あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん")
