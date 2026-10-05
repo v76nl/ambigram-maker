@@ -70,6 +70,8 @@ class GenerateRequest(BaseModel):
     dilation_size: Optional[int] = 11
     # 手法B (スケルトン平均化) 用パラメータ
     stroke_thickness: Optional[int] = 15
+    brush_style: Optional[str] = "calligraphic"  # "calligraphic" (毛筆楕円ブラシ) または "uniform" (均一円形)
+    stroke_modulation: Optional[bool] = True  # 井上・高橋(2020)§5に基づくストローク太さ変調
     # 手法A/B 共通パラメータ
     diff_blend: Optional[float] = 0.35
     pre_bold: Optional[int] = 4  # 事前太らせ量 (近接縦棒の結合力強化)
@@ -298,6 +300,8 @@ def generate_ambigram(req: GenerateRequest):
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             font_id=font_id,
+            brush_style=req.brush_style or "calligraphic",
+            stroke_modulation=req.stroke_modulation if req.stroke_modulation is not None else True,
             custom_offsets=req.custom_offsets,
         )
         logger.info(f"  [手法B: 骨格平均化] 完了 ({time.time() - te:.3f}s)")

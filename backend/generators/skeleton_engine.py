@@ -66,15 +66,19 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         pre_bold: int = 4,
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
+        brush_style: str = "calligraphic",
+        stroke_modulation: bool = True,
     ) -> np.ndarray:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
         - c1: 正位置の文字
         - c2: 180度反転位置の文字
-        - stroke_thickness: 再描画するストロークの線幅 (px)
+        - stroke_thickness: 再描画するストロークの基準線幅 (px)
         - diff_blend: 異文字ペア時に固有ストローク骨格を残す重み
         - pre_bold: 事前太らせ量 (近接ストローク距離場の吸引力を強化)
         - shift: 重心微小シフト (dx, dy)
+        - brush_style: 'calligraphic' (毛筆楕円ブラシ: 筆先角度135度) または 'uniform' (均一円形)
+        - stroke_modulation: 井上・高橋(2020)§5に基づくストローク太さ変調 (共通部強調・固有部細線化)
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
@@ -128,14 +132,58 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         # 4. 平均骨格（スケルトン中心線）を抽出
         skeleton = self._morphological_skeleton(field_bin)
 
-        # 5. 指定された均一ストローク幅 (円形ブラシ) で再描画
-        radius = max(3, stroke_thickness if stroke_thickness % 2 != 0 else stroke_thickness + 1)
-        brush = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius, radius))
-        stroked = cv2.dilate(skeleton, brush)
+        # 5. 井上・高橋 (2020) §5 および野村 (2018) に基づくストローク太さ変調 & 筆文字描画
+        base_radius = max(2, stroke_thickness // 2)
+        canvas = np.zeros((size, size), dtype=np.uint8)
+
+        if stroke_modulation or brush_style == "calligraphic":
+            # 共通部分（論理積）の距離場による共通度スコア算出
+            common_overlap = cv2.bitwise_and(img1, img2_rot)
+            dist_common = cv2.distanceTransform(common_overlap, cv2.DIST_L2, 5)
+            max_dc = dist_common.max()
+            if max_dc > 0:
+                dist_common /= max_dc
+
+            # スケルトン画素の座標取得
+            pts = np.argwhere(skeleton > 0)
+            if pts.size > 0:
+                # 8近傍カーネルで端点を検出 (近傍画素数 == 1)
+                kernel_nbr = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]], dtype=np.uint8)
+                nbr_count = cv2.filter2D((skeleton > 0).astype(np.uint8), -1, kernel_nbr)
+
+                for y, x in pts:
+                    # 共通部分への近さ (0.0: 固有ストローク, 1.0: 共通核)
+                    match_ratio = float(dist_common[y, x]) if max_dc > 0 else 0.5
+                    
+                    # 井上・高橋 式(10)(11): 共通部分は太く強調し、非共通部分は細くする
+                    if stroke_modulation:
+                        r = base_radius * (0.65 + 0.70 * match_ratio)
+                    else:
+                        r = base_radius
+
+                    # 端点（ハライ・起筆）の筆圧減衰
+                    is_endpoint = nbr_count[y, x] <= 1
+                    if is_endpoint and stroke_modulation:
+                        r *= 0.75
+
+                    r_int = max(2, int(round(r)))
+
+                    if brush_style == "calligraphic":
+                        # 石亀ら(1997)・井上ら(2020): 筆先角度135度（-45度）の毛筆楕円ブラシ
+                        ax_major = max(3, int(round(r_int * 1.5)))
+                        ax_minor = max(2, int(round(r_int * 0.65)))
+                        cv2.ellipse(canvas, (int(x), int(y)), (ax_major, ax_minor), -45, 0, 360, 255, -1)
+                    else:
+                        cv2.circle(canvas, (int(x), int(y)), r_int, 255, -1)
+            stroked = canvas
+        else:
+            radius = max(3, stroke_thickness if stroke_thickness % 2 != 0 else stroke_thickness + 1)
+            brush = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius, radius))
+            stroked = cv2.dilate(skeleton, brush)
 
         # 6. 端点の丸めと滑らかな輪郭化
-        blurred = cv2.GaussianBlur(stroked, (7, 7), 0)
-        _, result = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        blurred = cv2.GaussianBlur(stroked, (5, 5), 0)
+        _, result = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
 
         return result
 
@@ -147,12 +195,18 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         pre_bold: int = 4,
         slot_size: int = 512,
         font_id: str = "auto",
+        brush_style: str = "calligraphic",
+        stroke_modulation: bool = True,
         **params,
     ) -> dict[str, Any]:
         """単語全体の平均骨格アンビグラム画像を生成してBase64形式で返却"""
         n = len(word)
         if n == 0:
             return {"engine": "skeleton", "type": "png", "data": "", "details": {}}
+
+        # paramsからの上書きチェック
+        brush_style = params.get("brush_style", brush_style)
+        stroke_modulation = params.get("stroke_modulation", stroke_modulation)
 
         # 全フォントの幾何スコアと最適シフトを評価
         font_eval = font_manager.evaluate_word_fonts(word)
@@ -206,6 +260,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 pre_bold=pre_bold,
                 font_path=selected_font_path,
                 shift=shift,
+                brush_style=brush_style,
+                stroke_modulation=stroke_modulation,
             )
             slots.append(slot_img)
 
@@ -249,6 +305,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "stroke_thickness": stroke_thickness,
                 "diff_blend": diff_blend,
                 "pre_bold": pre_bold,
+                "brush_style": brush_style,
+                "stroke_modulation": stroke_modulation,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",
