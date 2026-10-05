@@ -10,7 +10,7 @@
       "reading": "どうが",
       "type": "kanji",
       "length": 2,
-      "source": "既知の作例 / sigma等",
+      "source": "既知の作例",
       "description": "「動」と「画」のペア。偏旁構成と幾何学的輪郭の相性が良く、代表的な漢字アンビグラム作例として知られる"
     },
     {
@@ -60,6 +60,70 @@
       "length": 4,
       "source": "既知の作例",
       "description": "4文字の漢字かな交じり文。「乱」↔「ち」、「れ」↔「打」のクロス対称配置"
+    },
+    {
+      "word": "そなえ",
+      "reading": "そなえ",
+      "type": "hiragana",
+      "length": 3,
+      "source": "既知の作例",
+      "description": "3文字のひらがな。「そ」と「え」のペア、「な」の自己対称性"
+    },
+    {
+      "word": "最古の文書",
+      "reading": "さいこのぶんしょ",
+      "type": "mixed",
+      "length": 5,
+      "source": "みんビグラム",
+      "description": "5文字の漢字かな交じり文。「最」と「書」、「古」と「文」、「の」の自己対称性"
+    },
+    {
+      "word": "片側通行",
+      "reading": "かたがわつうこう",
+      "type": "kanji",
+      "length": 4,
+      "source": "みんビグラム",
+      "description": "4文字の漢字。「片」と「行」、「側」と「通」のペア"
+    },
+    {
+      "word": "鼠小僧",
+      "reading": "ねずみこぞう",
+      "type": "kanji",
+      "length": 4,
+      "source": "みんビグラム",
+      "description": "4文字の漢字。「鼠」と「僧」、「小」と「僧」のペア"
+    },
+    {
+      "word": "新聞紙",
+      "reading": "しんぶんし",
+      "type": "kanji",
+      "length": 3,
+      "source": "みんビグラム",
+      "description": "3文字の漢字。「新」と「聞」、「聞」と「紙」のペア"
+    },
+    {
+      "word": "忘年会",
+      "reading": "ぼうねんかい",
+      "type": "kanji",
+      "length": 3,
+      "source": "みんビグラム",
+      "description": "3文字の漢字。「忘」と「会」、「忘」と「年」のペア"
+    },
+    {
+      "word": "考古学者",
+      "reading": "こうこがくしゃ",
+      "type": "kanji",
+      "length": 4,
+      "source": "みんビグラム",
+      "description": "4文字の漢字。「考」と「学」、「古」と「者」のペア"
+    },
+    {
+      "word": "卒業式",
+      "reading": "そつぎょうしき",
+      "type": "kanji",
+      "length": 3,
+      "source": "みんビグラム",
+      "description": "3文字の漢字。「卒」と「式」、「卒」と「業」のペア"
     }
   ]
 }
