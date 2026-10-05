@@ -17,6 +17,11 @@ try:
 except ImportError:
     from ..scoring.matrix import get_any_char_compatibility
 
+try:
+    from generators.font_manager import compute_word_cognitive_score
+except ImportError:
+    from ..generators.font_manager import compute_word_cognitive_score
+
 def katakana_to_hiragana(s: str) -> str:
     """カタカナをひらがなに変換する"""
     result = []
@@ -48,6 +53,7 @@ VERIFIED_HIRAGANA_PAIRS = {
     ("あ", "ま"), ("い", "け"), ("え", "る"), ("き", "わ"), ("さ", "や"),
     ("を", "を"), ("せ", "み"), ("た", "む"), ("は", "れ"), ("も", "よ"),
     ("せ", "ぬ"), ("さ", "を"), ("つ", "む"), ("う", "ぬ"), ("あ", "そ"),
+    ("ま", "れ"),
     ("し", "つ"), ("の", "の"), ("こ", "こ"), ("く", "く"), ("へ", "へ"),
     ("り", "り"), ("い", "い"), ("ー", "ー"),
 }
@@ -269,24 +275,10 @@ class AmbigramFinder:
         # 4. target_text の実際の文字ペアで対称性・相性スコアを評価！
         pairs, scores = self.make_pairs_for_target(target_text)
 
-        # 幾何平均（全ペアが一定水準以上であることを評価）
-        product = 1.0
-        for s in scores:
-            product *= max(0.01, s)
-        geometric_mean = product ** (1.0 / len(scores))
-        
-        # 最小ペアルックスコア（弱点ペナルティ）
-        min_score = min(scores) if scores else 0.0
-
-        # 文脈認知補完モデル (井上・高橋 2020)
-        if is_common:
-            base_score = 0.82 * geometric_mean + 0.18 * min_score
-            common_bias = 1.12
-        else:
-            base_score = 0.65 * geometric_mean + 0.35 * min_score
-            common_bias = 1.0
-            
-        final_score = min(1.0, base_score * common_bias)
+        # 井上・高橋 (2020) §6.2 文脈認知補完数理モデルによる単語総合スコア算出
+        final_score, geometric_mean, min_score = compute_word_cognitive_score(
+            scores, word_len=n, is_common=is_common
+        )
 
         return {
             "word": target_text,

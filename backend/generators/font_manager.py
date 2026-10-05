@@ -45,6 +45,44 @@ FONT_PRESETS = {
     },
 }
 
+def compute_word_cognitive_score(
+    scores: list[float],
+    word_len: int,
+    is_common: bool = False,
+) -> tuple[float, float, float]:
+    """
+    井上・高橋 (2020) §6.2「単語の可読性の評価」に基づく文脈認知補完スコア算出。
+    - 単語を構成する他の文字の可読率が高いほど、1文字の低可読性（ボトルネック）が単語全体の可読性に
+      及ぼす悪影響は大幅に減衰する（表5: 被験者の87.8%が単語として読めた実証）。
+    - 幾何平均と単語長N、日常語フラグに応じてmin_scoreのペナルティ重みを適応的に減衰。
+    """
+    if not scores:
+        return 0.0, 0.0, 0.0
+
+    product = 1.0
+    for s in scores:
+        product *= max(0.01, float(s))
+    geom_mean = product ** (1.0 / len(scores))
+    min_score = min(scores)
+
+    # 単語長Nに応じた文脈冗長度 (文字数が多いほど1文字の欠損を前後文脈で補完可能)
+    context_power = (word_len - 1) / max(1, word_len) if word_len > 1 else 0.0
+    
+    # 常用語ではトップダウンの語彙親密度補完が働く (井上・高橋 2020 §6.2)
+    common_factor = 1.25 if is_common else 1.0
+
+    # ボトルネック最小値に対する重み:
+    # 通常0.25から、幾何平均と文脈冗長度が高い場合に最大0.05まで適応的に減少
+    reduction = (geom_mean ** 2) * context_power * common_factor
+    w_min = 0.25 * max(0.20, 1.0 - reduction)
+    w_geom = 1.0 - w_min
+
+    base_score = w_geom * geom_mean + w_min * min_score
+    bias = 1.10 if is_common else 1.0
+    final_score = min(1.0, base_score * bias)
+
+    return round(float(final_score), 4), round(float(geom_mean), 4), round(float(min_score), 4)
+
 class FontManager:
     """複数フォントの管理・レンダリング・幾何最適化判定を行うマネージャー"""
     def __init__(self, fonts_dir: Path = FONTS_DIR):
@@ -345,23 +383,21 @@ class FontManager:
             )
             pair_scores.append(round(float(score), 4))
 
-        product = 1.0
-        for s in pair_scores:
-            product *= max(0.01, s)
-        geom_mean = product ** (1.0 / len(pair_scores))
-        min_score = min(pair_scores) if pair_scores else 0.0
-        total_score = 0.75 * geom_mean + 0.25 * min_score
+        # 井上・高橋 (2020) §6.2 文脈認知補完モデルによる単語総合スコア算出
+        total_score, geom_mean, min_score = compute_word_cognitive_score(
+            pair_scores, word_len=n, is_common=False
+        )
 
         return {
             "font_id": fid,
-            "score": round(float(total_score), 4),
-            "geometric_mean": round(float(geom_mean), 4),
-            "min_pair_score": round(float(min_score), 4),
+            "score": total_score,
+            "geometric_mean": geom_mean,
+            "min_pair_score": min_score,
             "pair_scores": pair_scores,
             "offsets": normalized_offsets,
         }
 
-    def evaluate_word_fonts(self, word: str) -> dict[str, Any]:
+    def evaluate_word_fonts(self, word: str, is_common: bool = False) -> dict[str, Any]:
         """
         指定単語に対し、全フォント候補の幾何一致度スコアと最適オフセットを算出。
         最もスコアが高いフォントを自動決定する。
@@ -390,22 +426,19 @@ class FontManager:
                 pair_scores.append(score)
                 offsets.append(offset)
 
-            # 幾何平均スコアとボトルネック最小値
-            product = 1.0
-            for s in pair_scores:
-                product *= max(0.01, s)
-            geom_mean = product ** (1.0 / len(pair_scores))
-            min_score = min(pair_scores) if pair_scores else 0.0
-            total_score = 0.75 * geom_mean + 0.25 * min_score
+            # 井上・高橋 (2020) §6.2 文脈認知補完モデルによる単語総合スコア算出
+            total_score, geom_mean, min_score = compute_word_cognitive_score(
+                pair_scores, word_len=n, is_common=is_common
+            )
 
             font_evaluations.append({
                 "id": fid,
                 "name": meta["name"],
                 "style": meta["style"],
                 "description": meta["description"],
-                "score": round(float(total_score), 4),
-                "geometric_mean": round(float(geom_mean), 4),
-                "min_pair_score": round(float(min_score), 4),
+                "score": total_score,
+                "geometric_mean": geom_mean,
+                "min_pair_score": min_score,
                 "offsets": offsets,
             })
 
