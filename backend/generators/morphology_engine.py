@@ -7,8 +7,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .base import BaseAmbigramGenerator
-
 from .font_manager import font_manager
+from .snap_warper import snap_warper
 
 class MorphologyAmbigramEngine(BaseAmbigramGenerator):
     """
@@ -50,6 +50,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         pre_bold: int = 4,
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
+        enable_snap: bool = True,
     ) -> np.ndarray:
         """
         1文字スロットの論理積＋モルフォロジー最適化
@@ -57,6 +58,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         - c2: 180度反転位置の文字 (c2を180度回転して重ねる)
         - pre_bold: 事前太らせ量 (水平異方性膨張により「の」の中央縦棒等の近接ストロークを確実に結合)
         - shift: 座標揺らし探索で得られた最適オフセット (dx, dy)
+        - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
@@ -82,6 +84,12 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         else:
             p_img1 = img1
             p_img2_rot = img2_rot
+
+        # ③ 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        if enable_snap:
+            p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
+                p_img1, p_img2_rot, max_distance=24, snap_strength=0.5
+            )
 
         # 1. 論理積 (AND): 太らせた文字同士の交差領域を抽出
         intersection = cv2.bitwise_and(p_img1, p_img2_rot)
@@ -129,12 +137,15 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         pre_bold: int = 4,
         slot_size: int = 512,
         font_id: str = "auto",
+        enable_snap: bool = True,
         **params,
     ) -> dict[str, Any]:
         """単語全体のアンビグラム画像を生成してBase64形式で返却"""
         n = len(word)
         if n == 0:
             return {"engine": "morphology", "type": "png", "data": "", "details": {}}
+
+        enable_snap = params.get("enable_snap", enable_snap)
 
         # 全フォントの幾何スコアと最適シフトを評価
         font_eval = font_manager.evaluate_word_fonts(word)
@@ -191,6 +202,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 pre_bold=pre_bold,
                 font_path=selected_font_path,
                 shift=shift,
+                enable_snap=enable_snap,
             )
             slots.append(slot_img)
 
@@ -235,6 +247,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 "smoothness": smoothness,
                 "diff_blend": diff_blend,
                 "pre_bold": pre_bold,
+                "enable_snap": enable_snap,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",

@@ -75,6 +75,7 @@ class GenerateRequest(BaseModel):
     # 手法A/B 共通パラメータ
     diff_blend: Optional[float] = 0.35
     pre_bold: Optional[int] = 4  # 事前太らせ量 (近接縦棒の結合力強化)
+    enable_snap: Optional[bool] = True  # 近接ストローク吸引・局所非剛体変形 (Issue #1, #2)
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -283,6 +284,7 @@ def generate_ambigram(req: GenerateRequest):
             smoothness=req.smoothness or 7,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
+            enable_snap=req.enable_snap if req.enable_snap is not None else True,
             font_id=font_id,
             custom_offsets=req.custom_offsets,
         )
@@ -299,6 +301,7 @@ def generate_ambigram(req: GenerateRequest):
             stroke_thickness=req.stroke_thickness or 15,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
+            enable_snap=req.enable_snap if req.enable_snap is not None else True,
             font_id=font_id,
             brush_style=req.brush_style or "calligraphic",
             stroke_modulation=req.stroke_modulation if req.stroke_modulation is not None else True,

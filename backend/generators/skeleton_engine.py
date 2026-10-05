@@ -7,8 +7,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .base import BaseAmbigramGenerator
-
 from .font_manager import font_manager
+from .snap_warper import snap_warper
 
 class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     """
@@ -68,6 +68,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         shift: tuple[int, int] = (0, 0),
         brush_style: str = "calligraphic",
         stroke_modulation: bool = True,
+        enable_snap: bool = True,
     ) -> np.ndarray:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
@@ -79,6 +80,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - shift: 重心微小シフト (dx, dy)
         - brush_style: 'calligraphic' (毛筆楕円ブラシ: 筆先角度135度) または 'uniform' (均一円形)
         - stroke_modulation: 井上・高橋(2020)§5に基づくストローク太さ変調 (共通部強調・固有部細線化)
+        - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         """
         img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
@@ -103,6 +105,12 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         else:
             p_img1 = img1
             p_img2_rot = img2_rot
+
+        # ③ 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        if enable_snap:
+            p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
+                p_img1, p_img2_rot, max_distance=24, snap_strength=0.5
+            )
 
         # 1. 各文字のL2ユークリッド距離変換
         d1 = cv2.distanceTransform((p_img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
@@ -197,6 +205,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         font_id: str = "auto",
         brush_style: str = "calligraphic",
         stroke_modulation: bool = True,
+        enable_snap: bool = True,
         **params,
     ) -> dict[str, Any]:
         """単語全体の平均骨格アンビグラム画像を生成してBase64形式で返却"""
@@ -207,6 +216,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         # paramsからの上書きチェック
         brush_style = params.get("brush_style", brush_style)
         stroke_modulation = params.get("stroke_modulation", stroke_modulation)
+        enable_snap = params.get("enable_snap", enable_snap)
 
         # 全フォントの幾何スコアと最適シフトを評価
         font_eval = font_manager.evaluate_word_fonts(word)
@@ -262,6 +272,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 shift=shift,
                 brush_style=brush_style,
                 stroke_modulation=stroke_modulation,
+                enable_snap=enable_snap,
             )
             slots.append(slot_img)
 
@@ -307,6 +318,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "pre_bold": pre_bold,
                 "brush_style": brush_style,
                 "stroke_modulation": stroke_modulation,
+                "enable_snap": enable_snap,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",
