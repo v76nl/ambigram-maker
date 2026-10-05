@@ -470,6 +470,22 @@ export const App: React.FC = () => {
             wordItem={selectedWord}
             activeResult={currentResult}
             activeEngine={activeEngine}
+            selectedFont={selectedFont}
+            customOffsets={customOffsets}
+            readabilityData={readabilityData}
+            blendRatio={blendRatio}
+            highlightMode={highlightMode}
+            dilationSize={dilationSize}
+            strokeThickness={strokeThickness}
+            diffBlend={diffBlend}
+            preBold={preBold}
+            brushStyle={brushStyle}
+            strokeModulation={strokeModulation}
+            enableSnap={enableSnap}
+            blendWeight={blendWeight}
+            smoothness={smoothness}
+            thresholdVal={thresholdVal}
+            stylePrompt={stylePrompt}
           />
         </aside>
       </main>
