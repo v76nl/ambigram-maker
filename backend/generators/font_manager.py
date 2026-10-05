@@ -372,11 +372,12 @@ class FontManager:
         for i in range(half_len):
             c1 = word[i]
             c2 = word[n - 1 - i]
+            is_center = (i == n - 1 - i)
             img_a = self.render_char_matrix(c1, fid)
             img_b = self.render_char_matrix(c2, fid)
             skel_a = self.render_char_skeleton(c1, fid)
             skel_b = self.render_char_skeleton(c2, fid)
-            offset = custom_offsets[i] if i < len(custom_offsets) else (0, 0)
+            offset = (0, 0) if is_center else (custom_offsets[i] if i < len(custom_offsets) else (0, 0))
             normalized_offsets.append(offset)
             score = self.calculate_pair_similarity_for_offset(
                 img_a, img_b, offset[0], offset[1], skel_a=skel_a, skel_b=skel_b
@@ -416,13 +417,21 @@ class FontManager:
             for i in range(half_len):
                 c1 = word[i]
                 c2 = word[n - 1 - i]
+                is_center = (i == n - 1 - i)
                 img_a = self.render_char_matrix(c1, fid)
                 img_b = self.render_char_matrix(c2, fid)
                 skel_a = self.render_char_skeleton(c1, fid)
                 skel_b = self.render_char_skeleton(c2, fid)
-                score, offset = self.calculate_pair_similarity_with_shift(
-                    img_a, img_b, skel_a=skel_a, skel_b=skel_b
-                )
+                if is_center:
+                    # 自己回転対称文字は自己中心回転を保つためシフトを(0,0)に固定
+                    score = self.calculate_pair_similarity_for_offset(
+                        img_a, img_b, 0, 0, skel_a=skel_a, skel_b=skel_b
+                    )
+                    offset = (0, 0)
+                else:
+                    score, offset = self.calculate_pair_similarity_with_shift(
+                        img_a, img_b, skel_a=skel_a, skel_b=skel_b
+                    )
                 pair_scores.append(score)
                 offsets.append(offset)
 

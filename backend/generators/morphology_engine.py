@@ -64,14 +64,20 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
         img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
 
-        # 最適重心シフトの適用 (128px空間のオフセットを高解像度にスケール)
+        # 自己回転対称文字 (c1 == c2) の場合は中心対称性を保つためシフトを強制ゼロ化
+        if c1 == c2:
+            shift = (0, 0)
+
+        # 最適重心シフトの対称配分 (中心原点を基準に img1 に -s/2, img2_rot に +s/2)
         dx, dy = shift
         if dx != 0 or dy != 0:
             scale_factor = size / 128.0
-            shift_x = int(round(dx * scale_factor))
-            shift_y = int(round(dy * scale_factor))
-            M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
-            img2_rot = cv2.warpAffine(img2_rot, M, (size, size))
+            shift_x = dx * scale_factor
+            shift_y = dy * scale_factor
+            M1 = np.float32([[1, 0, -shift_x / 2.0], [0, 1, -shift_y / 2.0]])
+            M2 = np.float32([[1, 0, shift_x / 2.0], [0, 1, shift_y / 2.0]])
+            img1 = cv2.warpAffine(img1, M1, (size, size))
+            img2_rot = cv2.warpAffine(img2_rot, M2, (size, size))
 
         # ② フォントを太らせて（Pre-Dilation）判定・共通核を強化
         # 水平方向を優先した異方性カーネルにより、左右に離れやすい縦棒同士を確実に接触・合体させる
@@ -125,6 +131,10 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         # 微小孤立ノイズの除去
         clean_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         opened = cv2.morphologyEx(binary_slot, cv2.MORPH_OPEN, clean_kernel)
+
+        # 自己回転対称文字 (c1 == c2) の場合、180度自己回転との対称和をとることで微小なラスタライズ誤差を完全に解消
+        if c1 == c2:
+            opened = cv2.bitwise_or(opened, cv2.rotate(opened, cv2.ROTATE_180))
 
         return opened
 
@@ -180,17 +190,13 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
 
         selected_font_path = font_manager.get_font_path(selected_fid)
 
-        slots = []
+        slots = [None] * n
         half_len = (n + 1) // 2
-        for i in range(n):
+        for i in range(half_len):
             c1 = word[i]
             c2 = word[n - 1 - i]
-            # 対応する文字ペアの最適シフト
-            pair_idx = i if i < half_len else (n - 1 - i)
-            shift = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
-            if i >= half_len:
-                # 反転側ではシフト方向を反転
-                shift = (-shift[0], -shift[1])
+            is_center = (i == n - 1 - i)
+            shift = (0, 0) if is_center else (selected_offsets[i] if i < len(selected_offsets) else (0, 0))
 
             slot_img = self.generate_slot(
                 c1,
@@ -204,7 +210,10 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 shift=shift,
                 enable_snap=enable_snap,
             )
-            slots.append(slot_img)
+            slots[i] = slot_img
+            if not is_center:
+                # 自己回転対称性の厳密保証: 後半スロットは対応する前半スロットの180度回転画像
+                slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
 
         # 水平方向に連結
         full_width_img = np.hstack(slots)

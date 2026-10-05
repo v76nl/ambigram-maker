@@ -114,17 +114,22 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             slot_center_x = i * char_spacing + char_spacing / 2
             slot_center_y = height / 2
 
-            scale_factor = 0.8
-            offset1_x = slot_center_x - (width1 * scale_factor) / 2
-            offset1_y = baseline
-
             # 最適XYシフトの反映 (128px空間のオフセットをSVG座標系へスケール)
             pair_idx = i if i < half_len else (n - 1 - i)
-            dx, dy = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
+            is_center = (i == n - 1 - i)
+            dx, dy = (0, 0) if is_center else (selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0))
             if i >= half_len:
                 dx, dy = -dx, -dy
             shift_svg_x = dx * 6.0
             shift_svg_y = dy * 6.0
+
+            # 対称配分: 文字1(正位置) に -shift/2, 文字2(反転位置) に +shift/2
+            scale_factor = 0.8
+            offset1_x = slot_center_x - (width1 * scale_factor) / 2 - shift_svg_x / 2.0
+            offset1_y = baseline - shift_svg_y / 2.0
+
+            center2_x = slot_center_x + shift_svg_x / 2.0
+            center2_y = slot_center_y + shift_svg_y / 2.0
 
             # ハイライトモード時のカラー設定 (石崎ほか 2024)
             # 正位置: 青 (#2563eb), 反転位置: 橙 (#ea580c), 重なり部分は自然な混色 (濃紺/緑系)
@@ -141,16 +146,16 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
 
             svg_parts.append(f'<g id="char-slot-{i}" class="char-slot" data-c1="{c1}" data-c2="{c2}">')
 
-            # 1. 文字1（正位置）
+            # 1. 文字1（正位置 -shift/2）
             svg_parts.append(
                 f'<g class="stroke-c1" transform="translate({offset1_x}, {offset1_y}) scale({scale_factor}, -{scale_factor})">'
                 f'<path d="{path1}" fill="{color1}" fill-opacity="{opacity1}" />'
                 f'</g>'
             )
 
-            # 2. 文字2（180度回転位置 + 最適XY微小シフト反映）
+            # 2. 文字2（180度回転位置 +shift/2）
             svg_parts.append(
-                f'<g class="stroke-c2" transform="translate({slot_center_x + shift_svg_x}, {slot_center_y + shift_svg_y}) rotate(180) '
+                f'<g class="stroke-c2" transform="translate({center2_x}, {center2_y}) rotate(180) '
                 f'translate({-(width2 * scale_factor)/2}, {baseline - slot_center_y}) scale({scale_factor}, -{scale_factor})">'
                 f'<path d="{path2}" fill="{color2}" fill-opacity="{opacity2}" />'
                 f'</g>'

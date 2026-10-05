@@ -86,14 +86,20 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
         img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
 
-        # 最適重心シフトの適用
+        # 自己回転対称文字 (c1 == c2) の場合は中心対称性を保つためシフトを強制ゼロ化
+        if c1 == c2:
+            shift = (0, 0)
+
+        # 最適重心シフトの対称配分 (中心原点を基準に img1 に -s/2, img2_rot に +s/2)
         dx, dy = shift
         if dx != 0 or dy != 0:
             scale_factor = size / 128.0
-            shift_x = int(round(dx * scale_factor))
-            shift_y = int(round(dy * scale_factor))
-            M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
-            img2_rot = cv2.warpAffine(img2_rot, M, (size, size))
+            shift_x = dx * scale_factor
+            shift_y = dy * scale_factor
+            M1 = np.float32([[1, 0, -shift_x / 2.0], [0, 1, -shift_y / 2.0]])
+            M2 = np.float32([[1, 0, shift_x / 2.0], [0, 1, shift_y / 2.0]])
+            img1 = cv2.warpAffine(img1, M1, (size, size))
+            img2_rot = cv2.warpAffine(img2_rot, M2, (size, size))
 
         # ② 事前太らせ (Pre-Bold) で距離場の交差領域・吸引力を強化
         if pre_bold > 0:
@@ -193,6 +199,10 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         blurred = cv2.GaussianBlur(stroked, (5, 5), 0)
         _, result = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
 
+        # 自己回転対称文字 (c1 == c2) の場合、180度自己回転との対称和をとることで微小なラスタライズ誤差を完全に解消
+        if c1 == c2:
+            result = cv2.bitwise_or(result, cv2.rotate(result, cv2.ROTATE_180))
+
         return result
 
     def generate(
@@ -251,15 +261,13 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
 
         selected_font_path = font_manager.get_font_path(selected_fid)
 
-        slots = []
+        slots = [None] * n
         half_len = (n + 1) // 2
-        for i in range(n):
+        for i in range(half_len):
             c1 = word[i]
             c2 = word[n - 1 - i]
-            pair_idx = i if i < half_len else (n - 1 - i)
-            shift = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
-            if i >= half_len:
-                shift = (-shift[0], -shift[1])
+            is_center = (i == n - 1 - i)
+            shift = (0, 0) if is_center else (selected_offsets[i] if i < len(selected_offsets) else (0, 0))
 
             slot_img = self.generate_slot(
                 c1,
@@ -274,7 +282,10 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 stroke_modulation=stroke_modulation,
                 enable_snap=enable_snap,
             )
-            slots.append(slot_img)
+            slots[i] = slot_img
+            if not is_center:
+                # 自己回転対称性の厳密保証: 後半スロットは対応する前半スロットの180度回転画像
+                slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
 
         # 水平方向に連結
         full_width_img = np.hstack(slots)
