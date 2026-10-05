@@ -69,9 +69,16 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             selected_fid = font_id
             selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
             selected_name = selected_meta["name"] if selected_meta else font_id
+            selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
         else:
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
+            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
+            selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
+
+        custom_offsets = params.get("custom_offsets")
+        if custom_offsets:
+            selected_offsets = [tuple(o) for o in custom_offsets]
 
         char_spacing = 900
         total_width = n * char_spacing
@@ -94,6 +101,8 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
         )
         svg_parts.append('</defs>')
 
+        half_len = (n + 1) // 2
+
         # 各文字の配置
         for i in range(n):
             c1 = word[i]
@@ -108,6 +117,14 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             scale_factor = 0.8
             offset1_x = slot_center_x - (width1 * scale_factor) / 2
             offset1_y = baseline
+
+            # 最適XYシフトの反映 (128px空間のオフセットをSVG座標系へスケール)
+            pair_idx = i if i < half_len else (n - 1 - i)
+            dx, dy = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
+            if i >= half_len:
+                dx, dy = -dx, -dy
+            shift_svg_x = dx * 6.0
+            shift_svg_y = dy * 6.0
 
             # ハイライトモード時のカラー設定 (石崎ほか 2024)
             # 正位置: 青 (#2563eb), 反転位置: 橙 (#ea580c), 重なり部分は自然な混色 (濃紺/緑系)
@@ -131,9 +148,9 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
                 f'</g>'
             )
 
-            # 2. 文字2（180度回転位置）
+            # 2. 文字2（180度回転位置 + 最適XY微小シフト反映）
             svg_parts.append(
-                f'<g class="stroke-c2" transform="translate({slot_center_x}, {slot_center_y}) rotate(180) '
+                f'<g class="stroke-c2" transform="translate({slot_center_x + shift_svg_x}, {slot_center_y + shift_svg_y}) rotate(180) '
                 f'translate({-(width2 * scale_factor)/2}, {baseline - slot_center_y}) scale({scale_factor}, -{scale_factor})">'
                 f'<path d="{path2}" fill="{color2}" fill-opacity="{opacity2}" />'
                 f'</g>'
@@ -157,6 +174,7 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
                 "font_id": font_id,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
+                "selected_offsets": selected_offsets,
                 "best_font_id": font_eval["best_font_id"],
                 "best_font_name": font_eval["best_font_name"],
                 "font_scores": font_eval["font_scores"],

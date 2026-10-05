@@ -23,6 +23,12 @@ interface EngineCompareProps {
   onDiffBlendChange: (val: number) => void;
   preBold?: number;
   onPreBoldChange?: (val: number) => void;
+  brushStyle?: "calligraphic" | "uniform";
+  onBrushStyleChange?: (val: "calligraphic" | "uniform") => void;
+  strokeModulation?: boolean;
+  onStrokeModulationChange?: (val: boolean) => void;
+  enableSnap?: boolean;
+  onEnableSnapChange?: (val: boolean) => void;
   blendRatio: number;
   onBlendRatioChange: (val: number) => void;
   blendWeight: number;
@@ -51,6 +57,12 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onDiffBlendChange,
   preBold = 4,
   onPreBoldChange,
+  brushStyle = "calligraphic",
+  onBrushStyleChange,
+  strokeModulation = true,
+  onStrokeModulationChange,
+  enableSnap = true,
+  onEnableSnapChange,
   blendRatio,
   onBlendRatioChange,
   blendWeight,
@@ -207,6 +219,17 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
             </div>
+
+            {onEnableSnapChange && (
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.4rem" }}>
+                <input
+                  type="checkbox"
+                  checked={enableSnap}
+                  onChange={(e) => onEnableSnapChange(e.target.checked)}
+                />
+                <span>近接ストローク吸引スナップ (Issue #1, #2 対策)</span>
+              </label>
+            )}
           </>
         )}
 
@@ -262,6 +285,53 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
             </div>
+
+            {/* 先行研究: 筆文字スタイル & 太さ変調 (井上・高橋 2020 §5 / 野村 2018) */}
+            {onBrushStyleChange && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
+                <span style={{ fontSize: "0.74rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                  ブラシ描画スタイル (井上・高橋 §5)
+                </span>
+                <div className="swiss-segmented" style={{ display: "flex", width: "100%" }}>
+                  <button
+                    className={`swiss-segmented-btn ${brushStyle === "calligraphic" ? "active" : ""}`}
+                    onClick={() => onBrushStyleChange("calligraphic")}
+                    style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
+                  >
+                    毛筆・楕円筆 (45°)
+                  </button>
+                  <button
+                    className={`swiss-segmented-btn ${brushStyle === "uniform" ? "active" : ""}`}
+                    onClick={() => onBrushStyleChange("uniform")}
+                    style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
+                  >
+                    均一丸ペン
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {onStrokeModulationChange && (
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.4rem" }}>
+                <input
+                  type="checkbox"
+                  checked={strokeModulation}
+                  onChange={(e) => onStrokeModulationChange(e.target.checked)}
+                />
+                <span>ストローク太さ変調 (共通核強調・固有部細線化)</span>
+              </label>
+            )}
+
+            {onEnableSnapChange && (
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.2rem" }}>
+                <input
+                  type="checkbox"
+                  checked={enableSnap}
+                  onChange={(e) => onEnableSnapChange(e.target.checked)}
+                />
+                <span>近接ストローク吸引スナップ (Issue #1, #2 対策)</span>
+              </label>
+            )}
           </>
         )}
 

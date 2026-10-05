@@ -326,6 +326,7 @@ def generate_ambigram(req: GenerateRequest):
             stroke_width=req.stroke_width or 0.0,
             highlight_mode=req.highlight_mode or False,
             font_id=font_id,
+            custom_offsets=req.custom_offsets,
         )
         logger.info(f"  [原案: ベクター合成] 完了 ({time.time() - te:.3f}s)")
 

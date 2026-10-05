@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import type { WordItem, EngineResult, FontMeta } from "./services/api";
+import type { WordItem, EngineResult, FontMeta, ReadabilityResponse } from "./services/api";
 import {
   searchWordsStream,
   evaluateWord,
   generateAmbigram,
   getAvailableFonts,
   evaluateOffsets,
+  evaluateReadability,
 } from "./services/api";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
@@ -58,6 +59,12 @@ export const App: React.FC = () => {
   // 手法A/B 共通 (異文字固有パーツ保持・事前太らせ)
   const [diffBlend, setDiffBlend] = useState<number>(0.35);
   const [preBold, setPreBold] = useState<number>(4); // 近接縦棒の結合力強化 (Pre-Bold)
+  // 井上・高橋(2020) & 魏・山口(2023) 先行研究パラメータ
+  const [brushStyle, setBrushStyle] = useState<"calligraphic" | "uniform">("calligraphic");
+  const [strokeModulation, setStrokeModulation] = useState<boolean>(true);
+  const [enableSnap, setEnableSnap] = useState<boolean>(true); // 近接ストローク吸引 (Issue #1, #2)
+  const [readabilityData, setReadabilityData] = useState<ReadabilityResponse | null>(null);
+  const [isReadabilityLoading, setIsReadabilityLoading] = useState<boolean>(false);
   // ビットマップパラメータ
   const [blendWeight, setBlendWeight] = useState<number>(0.65);
   const [smoothness, setSmoothness] = useState<number>(7);
@@ -190,6 +197,9 @@ export const App: React.FC = () => {
           highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
           dilationSize,
           strokeThickness,
+          brushStyle,
+          strokeModulation,
+          enableSnap,
           diffBlend,
           preBold,
           blendWeight,
@@ -217,6 +227,9 @@ export const App: React.FC = () => {
       highlightMode,
       dilationSize,
       strokeThickness,
+      brushStyle,
+      strokeModulation,
+      enableSnap,
       diffBlend,
       preBold,
       blendWeight,
@@ -225,6 +238,28 @@ export const App: React.FC = () => {
       apiKey,
       stylePrompt,
     ]
+  );
+
+  // 客観的文字認識・可読性評価の更新
+  const updateReadability = useCallback(
+    async (wordToEval: WordItem | null, fontId?: string, offsets?: [number, number][]) => {
+      if (!wordToEval) return;
+      const targetText = wordToEval.target_text || wordToEval.primary_display || wordToEval.word || wordToEval.reading;
+      setIsReadabilityLoading(true);
+      try {
+        const res = await evaluateReadability(
+          targetText,
+          fontId || selectedFont,
+          offsets || customOffsets || undefined
+        );
+        setReadabilityData(res);
+      } catch (err) {
+        console.error("可読性評価取得エラー:", err);
+      } finally {
+        setIsReadabilityLoading(false);
+      }
+    },
+    [selectedFont, customOffsets]
   );
 
   // 手動XYシフト変更ハンドラ（即座に一致率を再計算）
@@ -269,6 +304,7 @@ export const App: React.FC = () => {
 
     const timer = setTimeout(() => {
       triggerGenerate(selectedWord);
+      updateReadability(selectedWord, selectedFont, customOffsets || undefined);
     }, 150);
 
     return () => clearTimeout(timer);
@@ -279,6 +315,9 @@ export const App: React.FC = () => {
     customOffsets,
     dilationSize,
     strokeThickness,
+    brushStyle,
+    strokeModulation,
+    enableSnap,
     preBold,
     diffBlend,
     blendRatio,
@@ -287,6 +326,7 @@ export const App: React.FC = () => {
     thresholdVal,
     stylePrompt,
     triggerGenerate,
+    updateReadability,
   ]);
 
   const handleToggleHighlightMode = () => {
@@ -364,6 +404,8 @@ export const App: React.FC = () => {
             onEngineChange={(engine) => setActiveEngine(engine)}
             highlightMode={highlightMode}
             onToggleHighlightMode={handleToggleHighlightMode}
+            readabilityData={readabilityData}
+            isReadabilityLoading={isReadabilityLoading}
           />
         </section>
 
@@ -403,6 +445,12 @@ export const App: React.FC = () => {
             onDiffBlendChange={setDiffBlend}
             preBold={preBold}
             onPreBoldChange={setPreBold}
+            brushStyle={brushStyle}
+            onBrushStyleChange={setBrushStyle}
+            strokeModulation={strokeModulation}
+            onStrokeModulationChange={setStrokeModulation}
+            enableSnap={enableSnap}
+            onEnableSnapChange={setEnableSnap}
             blendWeight={blendWeight}
             onBlendWeightChange={setBlendWeight}
             smoothness={smoothness}

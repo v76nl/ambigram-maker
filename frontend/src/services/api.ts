@@ -79,6 +79,9 @@ export interface GenerateParams {
   highlightMode?: boolean;
   dilationSize?: number;
   strokeThickness?: number;
+  brushStyle?: "calligraphic" | "uniform";
+  strokeModulation?: boolean;
+  enableSnap?: boolean;
   diffBlend?: number;
   preBold?: number;
   blendWeight?: number;
@@ -86,6 +89,28 @@ export interface GenerateParams {
   thresholdVal?: number;
   apiKey?: string;
   stylePrompt?: string;
+}
+
+export interface ReadabilitySlot {
+  slot_index: number;
+  char1: string;
+  char2: string;
+  prob1: number;
+  prob2: number;
+  harmonic_readability: number;
+  status: "perfect" | "partial" | "poor";
+  top1_pred: string;
+  top2_pred: string;
+  predictions_normal: { char: string; similarity: number; probability: number }[];
+  predictions_inverted: { char: string; similarity: number; probability: number }[];
+}
+
+export interface ReadabilityResponse {
+  word: string;
+  target_text: string;
+  font_id: string;
+  overall_readability: number;
+  slots: ReadabilitySlot[];
 }
 
 export interface EvalOffsetsResponse {
@@ -239,6 +264,9 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       highlight_mode: params.highlightMode,
       dilation_size: params.dilationSize,
       stroke_thickness: params.strokeThickness,
+      brush_style: params.brushStyle,
+      stroke_modulation: params.strokeModulation,
+      enable_snap: params.enableSnap,
       diff_blend: params.diffBlend,
       pre_bold: params.preBold,
       blend_weight: params.blendWeight,
@@ -305,4 +333,25 @@ export async function evaluateWordFonts(word: string): Promise<WordFontsEval> {
   const elapsed = Math.round(performance.now() - t0);
   console.log(`[Ambigram API] ✅ フォント評価完了: 最適='${data.best_font_name}' (${elapsed}ms)`, data);
   return data;
+}
+
+export async function evaluateReadability(
+  word: string,
+  font: string = "zen_maru",
+  customOffsets?: [number, number][]
+): Promise<ReadabilityResponse> {
+  console.log(`[Ambigram API] 👁️ 客観的文字認識・可読性評価リクエスト: '${word}', font='${font}'`);
+  const res = await fetch(`${API_BASE_URL}/evaluate-readability`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      word,
+      font,
+      custom_offsets: customOffsets,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`可読性評価エラー: ${res.statusText}`);
+  }
+  return res.json();
 }
