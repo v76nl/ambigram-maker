@@ -4,6 +4,7 @@ import logging
 import sys
 import time
 from typing import Any, Optional
+import numpy as np
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -25,6 +26,7 @@ from generators.gemini_engine import GeminiAmbigramEngine
 from generators.morphology_engine import MorphologyAmbigramEngine
 from generators.skeleton_engine import SkeletonAmbigramEngine
 from generators.font_manager import font_manager
+from evaluation.recognizer import char_recognizer
 
 app = FastAPI(
     title="Ambigram Maker API",
@@ -56,6 +58,12 @@ class EvalOffsetsRequest(BaseModel):
     word: str
     font: Optional[str] = "zen_maru"
     offsets: list[list[int]]
+
+class ReadabilityRequest(BaseModel):
+    word: str
+    font: Optional[str] = "zen_maru"
+    custom_offsets: Optional[list[list[int]]] = None
+    engine: Optional[str] = "skeleton"
 
 class GenerateRequest(BaseModel):
     word: str
@@ -118,6 +126,55 @@ def evaluate_word_fonts(word: str = Query(...)):
         "best_font_id": font_eval["best_font_id"],
         "best_font_name": font_eval["best_font_name"],
         "font_scores": font_eval["font_scores"],
+    }
+
+@app.post("/api/evaluate-readability")
+def evaluate_readability(req: ReadabilityRequest):
+    """
+    魏・山口 (2023) および 井上・高橋 (2020) に基づく客観的文字認識・可読性評価
+    各文字スロットについて正反両方向の認識確率と調和平均スコアを算出
+    """
+    word = req.word.strip()
+    if not word:
+        raise HTTPException(status_code=400, detail="単語を指定してください")
+    
+    eval_res = finder.evaluate_word(word)
+    target_word = eval_res.get("target_text") or word
+    n = len(target_word)
+    if n == 0:
+        return {"word": word, "overall_readability": 0.0, "slots": []}
+
+    half_len = (n + 1) // 2
+    font_id = req.font or "zen_maru"
+    font_path = font_manager.get_font_path(font_id)
+    offsets = req.custom_offsets or [[0, 0]] * half_len
+
+    slot_evaluations = []
+    harmonic_scores = []
+
+    for i in range(half_len):
+        c1 = target_word[i]
+        c2 = target_word[n - 1 - i]
+        shift = tuple(offsets[i]) if i < len(offsets) else (0, 0)
+
+        # 骨格平均化スロット画像を生成して認識器に入力
+        slot_img = skeleton_engine.generate_slot(
+            c1, c2, size=256, font_path=font_path, shift=shift,
+            brush_style="calligraphic", stroke_modulation=True, enable_snap=True
+        )
+        eval_slot = char_recognizer.evaluate_ambigram_slot(slot_img, c1, c2)
+        eval_slot["slot_index"] = i
+        slot_evaluations.append(eval_slot)
+        harmonic_scores.append(eval_slot["harmonic_readability"])
+
+    overall_readability = float(np.mean(harmonic_scores)) if harmonic_scores else 0.0
+
+    return {
+        "word": word,
+        "target_text": target_word,
+        "font_id": font_id,
+        "overall_readability": round(overall_readability, 4),
+        "slots": slot_evaluations,
     }
 
 @app.get("/api/words/stream")
