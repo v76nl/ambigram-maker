@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   RotateCw,
   GitCompare,
@@ -6,6 +6,7 @@ import {
   Eye,
   Undo2,
   RefreshCw,
+  Pin,
 } from "lucide-react";
 import type { WordItem, EngineResult, ReadabilityResponse, PipelineStep } from "../services/api";
 import { usePixelDiff } from "../hooks/usePixelDiff";
@@ -23,6 +24,8 @@ interface AmbigramViewerProps {
   readabilityData?: ReadabilityResponse | null;
   isReadabilityLoading?: boolean;
   isGenerating?: boolean;
+  onPinResult?: () => void;
+  isCurrentResultPinned?: boolean;
 }
 
 export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
@@ -35,10 +38,33 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   readabilityData,
   isReadabilityLoading = false,
   isGenerating = false,
+  onPinResult,
+  isCurrentResultPinned = false,
 }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [showDiffView, setShowDiffView] = useState<boolean>(true);
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
+
+  // 画面スクロール監視: メインキャンバスが画面外へ行ったかを判定
+  const canvasCardRef = useRef<HTMLDivElement>(null);
+  const [isCompactSticky, setIsCompactSticky] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!canvasCardRef.current) return;
+      const rect = canvasCardRef.current.getBoundingClientRect();
+      // キャンバスカードの下端が画面上部付近（80px未満）に達したらコンパクト固定バーを表示
+      setIsCompactSticky(rect.bottom < 80);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
 
   // 手法や結果が変わった場合はステッププレビュー選択を同期リセット (React公式: state adjustment during render)
   const [prevDataKey, setPrevDataKey] = useState<string>("");
@@ -132,8 +158,24 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
   return (
     <section className="viewer-container">
+      {/* 画面外スクロール時の中央上スティッキープレビュー (画像のみ・ペイン幅1/2) */}
+      <div
+        className={`sticky-ambigram-float ${isCompactSticky ? "visible" : ""}`}
+        onClick={toggleRotation}
+        title="クリックで180°反転"
+      >
+        <div
+          className="sticky-ambigram-inner"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+          }}
+        >
+          {renderGraphicContent(false)}
+        </div>
+      </div>
+
       {/* メインビューワーカード */}
-      <div className="canvas-card">
+      <div className="canvas-card" ref={canvasCardRef}>
         {/* 再生成中ローディングオーバーレイ */}
         {isGenerating && (
           <div className="canvas-generating-overlay">
@@ -276,6 +318,18 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
               >
                 <Palette size={14} />
                 <span>色分け</span>
+              </button>
+            )}
+
+            {onPinResult && (
+              <button
+                className={`swiss-btn ${isCurrentResultPinned ? "swiss-btn-accent" : "swiss-btn-outline"}`}
+                onClick={onPinResult}
+                disabled={!activeResult || activeResult.type === "error" || isGenerating}
+                title={isCurrentResultPinned ? "この結果は固定済みです (クリックで解除)" : "現在の文字・フォントでの結果を固定（比較トレイに追加）"}
+              >
+                <Pin size={14} className={isCurrentResultPinned ? "pinned-icon-active" : ""} />
+                <span>{isCurrentResultPinned ? "固定中" : "この結果を固定"}</span>
               </button>
             )}
           </div>

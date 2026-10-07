@@ -16,6 +16,8 @@ import { SymmetryCard } from "./components/SymmetryCard";
 import { FontSelector } from "./components/FontSelector";
 import { EngineCompare } from "./components/EngineCompare";
 import { ExportBar } from "./components/ExportBar";
+import { PinnedGallery } from "./components/PinnedGallery";
+import type { PinnedAmbigram } from "./types/pinned";
 
 export const App: React.FC = () => {
   // 単語探索カスタムフック
@@ -317,6 +319,111 @@ export const App: React.FC = () => {
 
   const currentResult = results[activeEngine as keyof typeof results] || null;
 
+  // 固定（ピン留め）アンビグラム一覧 (localStorage永続化)
+  const [pinnedList, setPinnedList] = useState<PinnedAmbigram[]>(() => {
+    try {
+      const saved = localStorage.getItem("ambigram_pinned_results");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("ambigram_pinned_results", JSON.stringify(pinnedList));
+    } catch (e) {
+      console.warn("ピン留め結果の保存に失敗しました:", e);
+    }
+  }, [pinnedList]);
+
+  const currentWordText =
+    selectedWord?.target_text ||
+    selectedWord?.primary_display ||
+    selectedWord?.word ||
+    selectedWord?.reading ||
+    "";
+
+  // 現在の結果が固定されているか判定
+  const isCurrentResultPinned = pinnedList.some(
+    (p) =>
+      p.word === currentWordText &&
+      p.fontId === selectedFont &&
+      p.engine === activeEngine
+  );
+
+  const handleTogglePinResult = useCallback(() => {
+    if (!selectedWord || !currentResult || currentResult.type === "error") return;
+
+    if (isCurrentResultPinned) {
+      // ピン解除
+      setPinnedList((prev) =>
+        prev.filter(
+          (p) =>
+            !(
+              p.word === currentWordText &&
+              p.fontId === selectedFont &&
+              p.engine === activeEngine
+            )
+        )
+      );
+      setImportToast(`固定を解除しました: 「${currentWordText}」`);
+      setTimeout(() => setImportToast(null), 3000);
+    } else {
+      // ピン留め追加
+      const fontMeta = availableFonts.find((f) => f.id === selectedFont);
+      const fontName = fontMeta?.name || selectedFont;
+      const newItem: PinnedAmbigram = {
+        id: `pin-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        word: currentWordText,
+        wordItem: selectedWord,
+        fontId: selectedFont,
+        fontName,
+        engine: activeEngine,
+        result: currentResult,
+        score: recalculatedScore ?? selectedWord.score,
+        createdAt: Date.now(),
+      };
+      setPinnedList((prev) => [newItem, ...prev]);
+      setImportToast(`結果を固定しました: 「${currentWordText}」(${fontName})`);
+      setTimeout(() => setImportToast(null), 3000);
+    }
+  }, [
+    selectedWord,
+    currentResult,
+    isCurrentResultPinned,
+    currentWordText,
+    selectedFont,
+    activeEngine,
+    availableFonts,
+    recalculatedScore,
+  ]);
+
+  const handleRemovePinned = useCallback((id: string) => {
+    setPinnedList((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const handleClearAllPinned = useCallback(() => {
+    if (window.confirm("固定した比較結果をすべて解除しますか？")) {
+      setPinnedList([]);
+    }
+  }, []);
+
+  const handleApplyPinned = useCallback(
+    (item: PinnedAmbigram) => {
+      setSelectedWord(item.wordItem);
+      setSelectedFont(item.fontId);
+      setActiveEngine(item.engine);
+      setResults((prev) => ({
+        ...prev,
+        [item.engine]: item.result,
+      }));
+      setImportToast(`固定結果を適用しました: 「${item.word}」(${item.fontName})`);
+      setTimeout(() => setImportToast(null), 3000);
+    },
+    [setSelectedWord]
+  );
+
   return (
     <div className="app-container">
       {/* Main Layout (3ペイン) */}
@@ -354,7 +461,7 @@ export const App: React.FC = () => {
           />
         </aside>
 
-        {/* 中央ペイン: ビューワー・反転・比較 */}
+        {/* 中央ペイン: ビューワー・反転・比較 & 固定ギャラリー */}
         <section className="pane-center">
           <AmbigramViewer
             wordItem={selectedWord}
@@ -366,6 +473,16 @@ export const App: React.FC = () => {
             readabilityData={readabilityData}
             isReadabilityLoading={isReadabilityLoading}
             isGenerating={isGenerating}
+            onPinResult={handleTogglePinResult}
+            isCurrentResultPinned={isCurrentResultPinned}
+          />
+
+          {/* 複数フォント・単語の比較用 固定結果トレイ */}
+          <PinnedGallery
+            pinnedList={pinnedList}
+            onRemovePinned={handleRemovePinned}
+            onClearAll={handleClearAllPinned}
+            onApplyPinned={handleApplyPinned}
           />
         </section>
 
