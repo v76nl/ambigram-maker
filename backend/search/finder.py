@@ -1,6 +1,7 @@
 from collections import defaultdict
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any, Generator
 
@@ -323,6 +324,12 @@ class AmbigramFinder:
         q_clean = query.strip()
         q_h = katakana_to_hiragana(q_clean) if q_clean else ""
         q_k = hiragana_to_katakana(q_clean) if q_clean else ""
+        q_regex = None
+        if q_clean:
+            try:
+                q_regex = re.compile(q_clean)
+            except re.error:
+                q_regex = None
 
         effective_min_score = min(min_score, 0.2) if q_clean else min_score
         seen_targets = set()
@@ -353,27 +360,51 @@ class AmbigramFinder:
                 if script_type == "katakana" and not include_katakana:
                     continue
 
-                # クエリマッチ判定
+                # クエリマッチ判定 (通常部分一致 + 正規表現)
                 if q_clean:
                     kanji_list = item.get("kanji", [])
                     katakana_list = item.get("katakana", [])
                     display = item.get("display", "")
                     
-                    is_exact = (
-                        target_text == q_clean or
-                        display == q_clean or
-                        q_h == reading or
-                        any(k == q_clean for k in kanji_list) or
-                        any(kat == q_clean for kat in katakana_list)
-                    )
-                    is_partial = (
-                        q_clean in target_text or
-                        (q_h and q_h in reading) or
-                        (q_k and any(q_k in kat for kat in katakana_list)) or
-                        any(q_clean in k for k in kanji_list) or
-                        q_clean in display or
-                        (q_k and q_k in display)
-                    )
+                    is_exact = False
+                    is_partial = False
+
+                    # 正規表現による探索 (例: ".+の.+", ".*桜.*")
+                    has_regex_syntax = any(ch in q_clean for ch in [".", "*", "+", "?", "^", "$", "[", "]", "(", ")", "{", "}", "|"])
+                    if q_regex and has_regex_syntax:
+                        primary_targets = [target_text, display]
+                        if any(t and q_regex.search(t) for t in primary_targets):
+                            is_partial = True
+                            if any(t and q_regex.fullmatch(t) for t in primary_targets):
+                                is_exact = True
+                        elif script_type == "hiragana" and reading and q_regex.search(reading):
+                            is_partial = True
+                            if q_regex.fullmatch(reading):
+                                is_exact = True
+                    else:
+                        is_exact = (
+                            target_text == q_clean or
+                            display == q_clean or
+                            q_h == reading or
+                            any(k == q_clean for k in kanji_list) or
+                            any(kat == q_clean for kat in katakana_list)
+                        )
+                        is_partial = (
+                            q_clean in target_text or
+                            (q_h and q_h in reading) or
+                            (q_k and any(q_k in kat for kat in katakana_list)) or
+                            any(q_clean in k for k in kanji_list) or
+                            q_clean in display or
+                            (q_k and q_k in display)
+                        )
+                        if q_regex:
+                            targets_to_check = [target_text, display, reading]
+                            for t in targets_to_check:
+                                if t and q_regex.search(t):
+                                    is_partial = True
+                                if t and q_regex.fullmatch(t):
+                                    is_exact = True
+
                     if not (is_exact or is_partial):
                         continue
 
@@ -445,16 +476,28 @@ class AmbigramFinder:
             # クエリ判定
             if q_clean:
                 match = False
-                if q_clean in target_script_text:
-                    match = True
-                elif q_h and q_h in reading:
-                    match = True
-                elif q_k and any(q_k in kat for kat in katakana_list):
-                    match = True
-                elif any(q_clean in k for k in kanji_list):
-                    match = True
-                elif q_clean in display or (q_k and q_k in display):
-                    match = True
+                has_regex_syntax = any(ch in q_clean for ch in [".", "*", "+", "?", "^", "$", "[", "]", "(", ")", "{", "}", "|"])
+                if q_regex and has_regex_syntax:
+                    primary_targets = [target_script_text, display]
+                    if any(t and q_regex.search(t) for t in primary_targets):
+                        match = True
+                    elif is_pure_hg and reading and q_regex.search(reading):
+                        match = True
+                else:
+                    if q_clean in target_script_text:
+                        match = True
+                    elif q_h and q_h in reading:
+                        match = True
+                    elif q_k and any(q_k in kat for kat in katakana_list):
+                        match = True
+                    elif any(q_clean in k for k in kanji_list):
+                        match = True
+                    elif q_clean in display or (q_k and q_k in display):
+                        match = True
+                    elif q_regex:
+                        targets_to_check = [target_script_text, display, reading]
+                        if any(t and q_regex.search(t) for t in targets_to_check):
+                            match = True
                 if not match:
                     continue
 
@@ -486,6 +529,10 @@ class AmbigramFinder:
                     is_exact = True
                 elif any(k == q_clean for k in kanji_list) or any(kat == q_clean for kat in katakana_list):
                     is_exact = True
+                elif q_regex:
+                    targets_to_check = [target_script_text, display, reading] + kanji_list + katakana_list
+                    if any(t and q_regex.fullmatch(t) for t in targets_to_check):
+                        is_exact = True
 
             if is_exact or eval_res["score"] >= effective_min_score:
                 seen_targets.add(target_script_text)
@@ -523,8 +570,14 @@ class AmbigramFinder:
 
         q_clean = query.strip()
         q_h = katakana_to_hiragana(q_clean) if q_clean else ""
+        q_regex = None
+        if q_clean:
+            try:
+                q_regex = re.compile(q_clean)
+            except re.error:
+                q_regex = None
 
-        # スコア降順ソート（完全一致・代表表記一致を最優先）
+        # スコア降順ソート（完全一致・代表表記一致・正規表現完全マッチを最優先）
         def sort_key(x: dict[str, Any]):
             exact_match = 0
             if q_clean:
@@ -532,6 +585,12 @@ class AmbigramFinder:
                     exact_match = 2
                 elif any(k == q_clean for k in x.get("kanji", [])) or any(kat == q_clean for kat in x.get("katakana", [])):
                     exact_match = 1
+                elif q_regex:
+                    targets_to_check = [x.get("display", ""), x.get("target_text", ""), x.get("word", ""), x.get("reading", "")] + x.get("kanji", [])
+                    if any(t and q_regex.fullmatch(t) for t in targets_to_check):
+                        exact_match = 2
+                    elif any(t and q_regex.search(t) for t in targets_to_check):
+                        exact_match = 1
             return (exact_match, x["score"], x.get("common", False), -x["length"])
 
         results.sort(key=sort_key, reverse=True)
