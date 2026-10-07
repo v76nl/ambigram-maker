@@ -9,6 +9,7 @@ JMdict辞書から抽出した20万語以上の日本語単語から正規表現
 ---
 
 ## 目次
+
 - [特徴](#特徴)
 - [システム構成・ファイル構造](#システム構成ファイル構造)
 - [セットアップと実行方法](#セットアップと実行方法)
@@ -17,16 +18,17 @@ JMdict辞書から抽出した20万語以上の日本語単語から正規表現
 - [適性判定アルゴリズム](#適性判定アルゴリズム)
 - [中間工程パイプラインと再現可能性](#中間工程パイプラインと再現可能性)
 - [同梱フォントのライセンスとクレジット](#同梱フォントのライセンスとクレジット)
-- [改善課題 (Issues) の解決状況](#改善課題-issues-の解決状況)
+- [関連ドキュメント](#関連ドキュメント)
 
 ---
 
 ## 特徴
+
 - **正規表現対応の高速単語探索**: 単なる部分一致検索だけでなく、正規表現（例: `.+の.+` や `^.の.$`, `.*桜.*` 等）による柔軟な単語パターン探索に対応。
 - **真の文字表記によるアンビグラム判別・生成**: 漢字語（「頼む」等）やカタカナ語（「アイス」等）をひらがなに強制変換せず、本来の文字ペア（「頼」↔「む」、「ア」↔「ス」）で幾何対称性を判別し、本物のアンビグラムグラフィックを描画。漢字表記語では冗長な読み仮名を排した端正なタイポグラフィ表示。
 - **先行研究エビデンスに基づく適性評価**: 査読論文（井上・高橋 2020、魏・山口 2023）の実証実験データ（可読率100%ペア／不可読0%ペア）および調和平均 (Harmonic Mean) による双方向成立度判定（`0.xxx` 形式の厳密な小数スコア表示）。
 - **文脈認知補完数理モデル (井上・高橋 2020 §6.2 表5)**: 幾何平均と単語長・常用語フラグから、ボトルネック文字の引き下げ重みを動的に緩和するトップダウン認知補完数理モデルを実装。
-- **近接ストローク引力スナップ & 局所非剛体変形 (Issue #1, #2 解決)**: 剛体回転の限界を突破するベクトル引力場と距離変換ワープにより、「の」の中央縦棒など近接した非対称ストロークを中間対称軸へ滑らかに磁石スナップ・一本化。
+- **近接ストローク引力スナップ & 局所非剛体変形**: 剛体回転の限界を突破するベクトル引力場と距離変換ワープにより、「の」の中央縦棒など近接した非対称ストロークを中間対称軸へ滑らかに磁石スナップ・一本化（数理設計は `docs/ISSUES.md` 参照）。
 - **筆文字可変幅ストローク & 太さ抑揚変調 (井上・高橋 §5 / 野村 2018)**: 手法B（スケルトン平均化）に毛筆45度楕円ブラシおよび共通対称核強調・固有パーツ細線化の太さ変調を搭載。
 - **生成工程パイプライン (Processing Pipeline Steps) の可視化**: 各生成エンジンが内部で実行している中間処理ステップ（元画像描画、距離場計算、骨格抽出、近接吸引、輪郭復元等）をサムネイル一覧で提示し、ワンクリックでメイン画面に拡大プレビュー可能。
 - **研究・制作の再現可能性 (Reproducibility) を担保するエクスポート & インポート復元**: ベクターSVG・PNG画像に加え、使用フォント、文字ペア別XYシフト量、生成パラメータ、可読性評価数値をまとめた設定JSONを同時書き出し可能。また、保存したJSONを読み込むことで作業状態（単語・手法・フォント・XYずらし・全パラメータ）を完全再現可能。
@@ -121,12 +123,14 @@ run.bat
 ### 個別起動
 
 #### 1. バックエンドのみ起動 (Python / uv)
+
 ```bash
 cd backend
 uv run uvicorn app:app --port 8000 --reload
 ```
 
 #### 2. フロントエンドのみ起動 (Node.js / pnpm)
+
 ```bash
 cd frontend
 pnpm install
@@ -137,17 +141,17 @@ pnpm dev
 
 ## 主要コマンド一覧
 
-| 操作内容 | ディレクトリ | コマンド |
-| :--- | :--- | :--- |
-| **フロント ＆ バック一括起動** | ルート | `pnpm dev` または `python run.py` / `run.bat` |
-| バックエンド依存関係インストール | `backend/` | `uv sync` |
-| 辞書データの再構築 | `backend/` | `uv run python dictionary/parser.py` |
-| 事前スコアインデックスの作成 | `backend/` | `uv run python dictionary/build_scored_index.py` |
-| 適性マトリクスの再計算 | `backend/` | `uv run python scoring/matrix.py` |
-| 探索エンジンの単体テスト (正規表現含む) | `backend/` | `uv run python search/finder.py` |
-| フロントエンド依存関係インストール | `frontend/` | `pnpm install` |
-| フロントエンド開発サーバー単体起動 | `frontend/` | `pnpm dev` |
-| フロントエンドビルド・型チェック | `frontend/` | `pnpm run build` |
+| 操作内容                                | ディレクトリ | コマンド                                         |
+| :-------------------------------------- | :----------- | :----------------------------------------------- |
+| **フロント ＆ バック一括起動**          | ルート       | `pnpm dev` または `python run.py` / `run.bat`    |
+| バックエンド依存関係インストール        | `backend/`   | `uv sync`                                        |
+| 辞書データの再構築                      | `backend/`   | `uv run python dictionary/parser.py`             |
+| 事前スコアインデックスの作成            | `backend/`   | `uv run python dictionary/build_scored_index.py` |
+| 適性マトリクスの再計算                  | `backend/`   | `uv run python scoring/matrix.py`                |
+| 探索エンジンの単体テスト (正規表現含む) | `backend/`   | `uv run python search/finder.py`                 |
+| フロントエンド依存関係インストール      | `frontend/`  | `pnpm install`                                   |
+| フロントエンド開発サーバー単体起動      | `frontend/`  | `pnpm dev`                                       |
+| フロントエンドビルド・型チェック        | `frontend/`  | `pnpm run build`                                 |
 
 ---
 
@@ -176,6 +180,7 @@ pnpm dev
 ## 適性判定アルゴリズム
 
 各文字ペア $(c_1, c_2)$ の回転適性スコアは以下を組み合わせて算出されます：
+
 - **幾何学的類似度 (調和平均)**: 魏・山口 (2023) §2.2 に従い、正位置と180度反転位置のカバー率の調和平均 (Harmonic Mean) を採用。片方しか読めない非対称ペアを排除。
 - **4層幾何類似度エンジン**: 極太見出し書体（Dela Gothic等）での過大評価を防ぐ「適応的Pre-Bold」「骨格スケルトン交差率」「負の空間（穴・ふところ）一致度」「偶然重なり期待値補正（Chance-Adjusted IoU）」の統合評価。
 - **先行研究実証ペア反映**: 井上・高橋 (2020) の被験者可読性実験（1,081ペア）で実証された可読率1.0のペア（「あ」↔「ま」、「せ」↔「ぬ」等）を高スコアにシードし、不可読ペア（「と」↔「の」、「ん」↔「ん」等）にペナルティを付与。
@@ -187,12 +192,15 @@ pnpm dev
 ## 中間工程パイプラインと再現可能性
 
 ### 1. 中間工程パイプライン (Processing Pipeline Steps)
+
 各手法がどのような手順的変形を経て完成形に至るかを可視化します：
+
 - **手法A**: 正反グリフ描画 $\rightarrow$ 重心アライメント $\rightarrow$ 近接ストローク吸引 $\rightarrow$ 論理積 (AND) 対称核抽出 $\rightarrow$ モルフォロジー膨張 & 輪郭平滑化
 - **手法B**: 正反グリフ描画 $\rightarrow$ ユークリッド距離場算出 $\rightarrow$ 調和平均ポテンシャル場 $\rightarrow$ 中心骨格線抽出 $\rightarrow$ 筆文字ブラシ描画 & 太さ変調
 - **原案 (Vector)**: ベクターパス抽出 $\rightarrow$ 正位置・反転配置 $\rightarrow$ 固有・共通パーツ色分け $\rightarrow$ パスマージ
 
 ### 2. 再現可能性 (Reproducibility) パラメータのエクスポート & インポート復元
+
 - **エクスポート**: エクスポートバーから「パラメータ付き保存 (PNG + JSON / SVG + JSON)」または「設定 (JSON)」を実行することで、画像ファイルとともに以下の構成を含む JSON ファイルが保存されます。
 - **インポート (復元)**: エクスポートされた `ambigram_..._parameters.json` ファイルを画面下の「設定復元 (Import)」または初期画面の「保存した設定 (JSON) を読み込む」から選択するだけで、**対象単語・手法エンジン・フォント・文字ペア別XY重心オフセット・全微調整パラメータが即座に復元され、アンビグラムが完全再現**されます。
 
@@ -208,7 +216,10 @@ pnpm dev
     "diffBlend": 0.2,
     "preBold": 4,
     "enableSnap": true,
-    "customOffsets": [[0, 0], [0, 0]]
+    "customOffsets": [
+      [0, 0],
+      [0, 0]
+    ]
   },
   "scores": {
     "compatibilityScore": 0.963,
@@ -223,27 +234,19 @@ pnpm dev
 
 本システムの `backend/fonts/` ディレクトリに同梱されているフォントファイルは、すべて **SIL Open Font License 1.1 (OFL-1.1)** に基づいて配布されているオープンソースフォントです。
 
-| フォント名 | スタイル | 著作権表示 (Copyright) | プロジェクト / 配布元 | ライセンス |
-| :--- | :--- | :--- | :--- | :--- |
-| **Zen Maru Gothic** | 丸ゴシック (標準) | Copyright 2021 The Zen Maru Gothic Project Authors | [googlefonts/zen-marugothic](https://github.com/googlefonts/zen-marugothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Dela Gothic One** | 極太フラット | Copyright 2020 The Dela Gothic Project Authors | [syakuzen/DelaGothic](https://github.com/syakuzen/DelaGothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **M PLUS 1p** (Bold) | 幾何角ゴシック | Copyright 2020 The M+ FONT PROJECT Authors | [coz-m/MPLUS_FONTS](https://github.com/coz-m/MPLUS_FONTS) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Klee One** (SemiBold) | 硬筆ペン字 | Copyright 2020 The Klee Project Authors (Fontworks Inc.) | [fontworks-fonts/Klee](https://github.com/fontworks-fonts/Klee) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Shippori Mincho** (Bold) | 明朝体 | Copyright 2020 The Shippori Mincho Project Authors (FONTDASU) | [fontdasu/ShipporiMincho](https://github.com/fontdasu/ShipporiMincho) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| フォント名                 | スタイル          | 著作権表示 (Copyright)                                        | プロジェクト / 配布元                                                       | ライセンス                                 |
+| :------------------------- | :---------------- | :------------------------------------------------------------ | :-------------------------------------------------------------------------- | :----------------------------------------- |
+| **Zen Maru Gothic**        | 丸ゴシック (標準) | Copyright 2021 The Zen Maru Gothic Project Authors            | [googlefonts/zen-marugothic](https://github.com/googlefonts/zen-marugothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Dela Gothic One**        | 極太フラット      | Copyright 2020 The Dela Gothic Project Authors                | [syakuzen/DelaGothic](https://github.com/syakuzen/DelaGothic)               | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **M PLUS 1p** (Bold)       | 幾何角ゴシック    | Copyright 2020 The M+ FONT PROJECT Authors                    | [coz-m/MPLUS_FONTS](https://github.com/coz-m/MPLUS_FONTS)                   | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Klee One** (SemiBold)    | 硬筆ペン字        | Copyright 2020 The Klee Project Authors (Fontworks Inc.)      | [fontworks-fonts/Klee](https://github.com/fontworks-fonts/Klee)             | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Shippori Mincho** (Bold) | 明朝体            | Copyright 2020 The Shippori Mincho Project Authors (FONTDASU) | [fontdasu/ShipporiMincho](https://github.com/fontdasu/ShipporiMincho)       | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
 
 ライセンス条文全文は [`backend/fonts/OFL.txt`](backend/fonts/OFL.txt) に収録されています。
 
 ---
 
-## 改善課題 (Issues) の解決状況
+## 関連ドキュメント
 
-剛体回転の限界を克服するため策定されていた以下の高度アルゴリズム課題は、すべて実装・解決されました。
-
-1. **Issue #1: 近接ストローク吸引・スナップアルゴリズム (Skeleton Attraction)**
-   - **状態: 実装完了 (`backend/generators/snap_warper.py`)**
-   - 魏・山口 (2023) に着想を得た骨格引力スナップ。近接領域のベクトル引力場生成と空間平滑化により、平行ストローク同士を中間の回転対称軸へ滑らかに吸着・完全一本化。
-2. **Issue #2: 非剛体ワープ・局所自由変形エンジン (Non-rigid Morphing / Thin Plate Spline)**
-   - **状態: 実装完了 (`backend/generators/snap_warper.py`)**
-   - 石崎ほか (2024)「ひらがな~る」に着想を得た局所変形アプローチ。外周形状を固定したまま、中央棒などオフセットした内部ストロークのみを中心対称軸へ引き寄せる非剛体ワープを実現。
-
-詳細な技術仕様・アルゴリズム設計は [`docs/ISSUES.md`](docs/ISSUES.md) を参照してください。
+- [`docs/ISSUES.md`](docs/ISSUES.md): 剛体回転の幾何的限界（「の」などの内部オフセット問題）に対する数理解析と、近接ストローク吸引スナップ・非剛体局所変形（TPS）による解決アルゴリズムの詳細。
+- [`docs/OPTIMIZATION_PIPELINE.md`](docs/OPTIMIZATION_PIPELINE.md): 画像処理・幾何最適化パイプラインの数理的詳細設計。
