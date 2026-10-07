@@ -1,8 +1,6 @@
-from pathlib import Path
 from typing import Any, Optional
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
 
 try:
     from generators.font_manager import font_manager

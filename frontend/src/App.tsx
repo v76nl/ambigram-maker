@@ -1,14 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { WordItem, EngineResult, FontMeta, ReadabilityResponse } from "./services/api";
 import {
-  searchWordsStream,
   evaluateWord,
   generateAmbigram,
   getAvailableFonts,
   evaluateOffsets,
   evaluateReadability,
 } from "./services/api";
+import { useWordSearch } from "./hooks/useWordSearch";
+import { parseAmbigramConfig } from "./utils/configParser";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
 import { SymmetryCard } from "./components/SymmetryCard";
@@ -17,20 +18,34 @@ import { EngineCompare } from "./components/EngineCompare";
 import { ExportBar } from "./components/ExportBar";
 
 export const App: React.FC = () => {
-  // 単語探索・選択ステート
-  const [words, setWords] = useState<WordItem[]>([]);
-  const [selectedWord, setSelectedWord] = useState<WordItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [minLength, setMinLength] = useState<number>(2);
-  const [maxLength, setMaxLength] = useState<number>(5);
-  const [commonOnly, setCommonOnly] = useState<boolean>(true);
-  const [includeHiragana, setIncludeHiragana] = useState<boolean>(true);
-  const [includeKanji, setIncludeKanji] = useState<boolean>(true);
-  const [includeKatakana, setIncludeKatakana] = useState<boolean>(true);
-  const [minScore, setMinScore] = useState<number>(0.75); // デフォルト0.75 (高品質) に引き上げ
-  const [wordLimit, setWordLimit] = useState<number>(100); // デフォルト100件 (真のトップ100) に拡大
-  const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // 単語探索カスタムフック
+  const {
+    words,
+    selectedWord,
+    setSelectedWord,
+    searchQuery,
+    setSearchQuery,
+    minLength,
+    maxLength,
+    setMinLength,
+    setMaxLength,
+    commonOnly,
+    setCommonOnly,
+    includeHiragana,
+    includeKanji,
+    includeKatakana,
+    handleToggleHiragana,
+    handleToggleKanji,
+    handleToggleKatakana,
+    minScore,
+    setMinScore,
+    wordLimit,
+    setWordLimit,
+    isLoadingWords,
+    loadError,
+    loadWords,
+    handleCustomWord,
+  } = useWordSearch();
 
   // フォント最適化ステート
   const [selectedFont, setSelectedFont] = useState<string>("auto");
@@ -40,7 +55,7 @@ export const App: React.FC = () => {
   const [recalculatedScore, setRecalculatedScore] = useState<number | null>(null);
 
   // グラフィック生成ステート
-  const [activeEngine, setActiveEngine] = useState<string>("morphology"); // 手法Aをデフォルトにして二重線を解消
+  const [activeEngine, setActiveEngine] = useState<string>("morphology");
   const [results, setResults] = useState<{
     vector?: EngineResult;
     morphology?: EngineResult;
@@ -59,11 +74,11 @@ export const App: React.FC = () => {
   const [strokeThickness, setStrokeThickness] = useState<number>(15);
   // 手法A/B 共通 (異文字固有パーツ保持・事前太らせ)
   const [diffBlend, setDiffBlend] = useState<number>(0.35);
-  const [preBold, setPreBold] = useState<number>(4); // 近接縦棒の結合力強化 (Pre-Bold)
-  // 井上・高橋(2020) & 魏・山口(2023) 先行研究パラメータ
+  const [preBold, setPreBold] = useState<number>(4);
+  // 先行研究パラメータ
   const [brushStyle, setBrushStyle] = useState<"calligraphic" | "uniform">("calligraphic");
   const [strokeModulation, setStrokeModulation] = useState<boolean>(true);
-  const [enableSnap, setEnableSnap] = useState<boolean>(true); // 近接ストローク吸引 (Issue #1, #2)
+  const [enableSnap, setEnableSnap] = useState<boolean>(true);
   const [readabilityData, setReadabilityData] = useState<ReadabilityResponse | null>(null);
   const [isReadabilityLoading, setIsReadabilityLoading] = useState<boolean>(false);
   // ビットマップパラメータ
@@ -76,103 +91,11 @@ export const App: React.FC = () => {
   );
   const [importToast, setImportToast] = useState<string | null>(null);
 
-  // トグル制御 (すべてOFFになるのを防ぐ)
-  const handleToggleHiragana = useCallback(() => {
-    setIncludeHiragana((prev) => {
-      if (prev && !includeKanji && !includeKatakana) return prev; // 最後の1つはOFFにしない
-      return !prev;
-    });
-  }, [includeKanji, includeKatakana]);
-
-  const handleToggleKanji = useCallback(() => {
-    setIncludeKanji((prev) => {
-      if (prev && !includeHiragana && !includeKatakana) return prev;
-      return !prev;
-    });
-  }, [includeHiragana, includeKatakana]);
-
-  const handleToggleKatakana = useCallback(() => {
-    setIncludeKatakana((prev) => {
-      if (prev && !includeHiragana && !includeKanji) return prev;
-      return !prev;
-    });
-  }, [includeHiragana, includeKanji]);
-
   // フォント一覧の取得
   useEffect(() => {
     getAvailableFonts()
       .then(setAvailableFonts)
       .catch((err) => console.error("フォント一覧取得エラー:", err));
-  }, []);
-
-  // 単語一覧の読み込み（リアルタイムSSEストリーミング対応）
-  const streamCancelRef = useRef<(() => void) | null>(null);
-
-  const loadWords = useCallback(() => {
-    // 既存の通信があれば即座に中断
-    if (streamCancelRef.current) {
-      streamCancelRef.current();
-      streamCancelRef.current = null;
-    }
-
-    setIsLoadingWords(true);
-    setLoadError(null);
-    setWords([]); // 新しい検索開始時にクリアし、届いた順に埋めていく
-
-    const cancel = searchWordsStream(
-      {
-        minLength,
-        maxLength,
-        commonOnly: searchQuery.trim() ? false : commonOnly,
-        minScore: searchQuery.trim() ? 0.2 : minScore,
-        query: searchQuery.trim() || undefined,
-        limit: wordLimit,
-        includeKanji,
-        includeKatakana,
-        includeHiragana,
-      },
-      (newWord) => {
-        // 単語が1件見つかるごとにリアルタイムに追加・スコア降順ソート
-        setWords((prev) => {
-          const key = newWord.target_text || newWord.reading;
-          if (prev.some((w) => (w.target_text || w.reading) === key)) {
-            return prev;
-          }
-          const next = [...prev, newWord];
-          next.sort((a, b) => b.score - a.score);
-          return next;
-        });
-
-        // 最初の1件が届いた時点で初期選択
-        setSelectedWord((prev) => prev || newWord);
-      },
-      () => {
-        setIsLoadingWords(false);
-      },
-      (err) => {
-        console.error("単語読み込みエラー:", err);
-        setLoadError("バックエンドAPI (http://127.0.0.1:8000) への接続に失敗しました。サーバーが起動しているか確認してください。");
-        setIsLoadingWords(false);
-      }
-    );
-
-    streamCancelRef.current = cancel;
-  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, minScore, wordLimit]);
-
-  useEffect(() => {
-    // 検索クエリ入力時のデバウンス
-    const timer = setTimeout(() => {
-      loadWords();
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [loadWords]);
-
-  useEffect(() => {
-    return () => {
-      if (streamCancelRef.current) {
-        streamCancelRef.current();
-      }
-    };
   }, []);
 
   // アンビグラム生成
@@ -346,131 +269,50 @@ export const App: React.FC = () => {
     setRecalculatedScore(null);
   };
 
-  // 自由入力単語ハンドラ
-  const handleCustomWord = async (inputWord: string) => {
-    try {
-      const evaluated = await evaluateWord(inputWord);
-      setSelectedWord(evaluated);
-      setCustomOffsets(null);
-      setRecalculatedScore(null);
-    } catch (err) {
-      console.error("単語評価エラー:", err);
-    }
-  };
-
-  // エクスポート設定JSONのインポート復元ハンドラ
+  // 設定インポート (parameters.json) ハンドラ
   const handleImportConfig = useCallback(
     async (importedData: any) => {
       try {
-        if (!importedData || typeof importedData !== "object") {
-          throw new Error("無効な設定データ形式です。");
-        }
+        const config = parseAmbigramConfig(importedData);
 
-        // 1. 対象単語の取得
-        const wordStr = (
-          importedData.reproducibility?.target?.word ||
-          importedData.reproduction_api_payload?.word ||
-          importedData.target?.word ||
-          importedData.word ||
-          ""
-        ).trim();
+        // 各種パラメータの適用
+        if (config.parameters.dilationSize !== undefined) setDilationSize(config.parameters.dilationSize);
+        if (config.parameters.strokeThickness !== undefined) setStrokeThickness(config.parameters.strokeThickness);
+        if (config.parameters.diffBlend !== undefined) setDiffBlend(config.parameters.diffBlend);
+        if (config.parameters.preBold !== undefined) setPreBold(config.parameters.preBold);
+        if (config.parameters.brushStyle) setBrushStyle(config.parameters.brushStyle);
+        if (config.parameters.strokeModulation !== undefined) setStrokeModulation(config.parameters.strokeModulation);
+        if (config.parameters.enableSnap !== undefined) setEnableSnap(config.parameters.enableSnap);
+        if (config.parameters.blendRatio !== undefined) setBlendRatio(config.parameters.blendRatio);
+        if (config.parameters.highlightMode !== undefined) setHighlightMode(config.parameters.highlightMode);
+        if (config.parameters.blendWeight !== undefined) setBlendWeight(config.parameters.blendWeight);
+        if (config.parameters.smoothness !== undefined) setSmoothness(config.parameters.smoothness);
+        if (config.parameters.thresholdVal !== undefined) setThresholdVal(config.parameters.thresholdVal);
+        if (config.parameters.stylePrompt !== undefined) setStylePrompt(config.parameters.stylePrompt);
 
-        if (!wordStr) {
-          throw new Error("JSON内に有効な単語 (word) が見つかりませんでした。");
-        }
-
-        // 2. エンジン・フォント・オフセットの取得
-        const engineStr =
-          importedData.reproducibility?.engine?.id ||
-          importedData.reproduction_api_payload?.engine ||
-          importedData.engine?.id ||
-          importedData.engine ||
-          "morphology";
-
-        const fontStr =
-          importedData.reproducibility?.font?.id ||
-          importedData.reproduction_api_payload?.font ||
-          importedData.font?.id ||
-          importedData.font ||
-          "auto";
-
-        const offsets =
-          importedData.reproducibility?.alignment?.offsets ||
-          importedData.reproduction_api_payload?.customOffsets ||
-          importedData.customOffsets ||
-          importedData.offsets ||
-          null;
-
-        const rawParams =
-          importedData.reproducibility?.parameters ||
-          importedData.reproduction_api_payload ||
-          importedData.parameters ||
-          importedData;
-
-        // 3. 各種パラメータの復元
-        if (rawParams.dilation_size !== undefined || rawParams.dilationSize !== undefined) {
-          setDilationSize(Number(rawParams.dilation_size ?? rawParams.dilationSize));
-        }
-        if (rawParams.stroke_thickness !== undefined || rawParams.strokeThickness !== undefined) {
-          setStrokeThickness(Number(rawParams.stroke_thickness ?? rawParams.strokeThickness));
-        }
-        if (rawParams.diff_blend !== undefined || rawParams.diffBlend !== undefined) {
-          setDiffBlend(Number(rawParams.diff_blend ?? rawParams.diffBlend));
-        }
-        if (rawParams.pre_bold !== undefined || rawParams.preBold !== undefined) {
-          setPreBold(Number(rawParams.pre_bold ?? rawParams.preBold));
-        }
-        if (rawParams.brush_style || rawParams.brushStyle) {
-          setBrushStyle((rawParams.brush_style ?? rawParams.brushStyle) as "calligraphic" | "uniform");
-        }
-        if (rawParams.stroke_modulation !== undefined || rawParams.strokeModulation !== undefined) {
-          setStrokeModulation(Boolean(rawParams.stroke_modulation ?? rawParams.strokeModulation));
-        }
-        if (rawParams.enable_snap !== undefined || rawParams.enableSnap !== undefined) {
-          setEnableSnap(Boolean(rawParams.enable_snap ?? rawParams.enableSnap));
-        }
-        if (rawParams.blend_ratio !== undefined || rawParams.blendRatio !== undefined) {
-          setBlendRatio(Number(rawParams.blend_ratio ?? rawParams.blendRatio));
-        }
-        if (rawParams.highlight_mode !== undefined || rawParams.highlightMode !== undefined) {
-          setHighlightMode(Boolean(rawParams.highlight_mode ?? rawParams.highlightMode));
-        }
-        if (rawParams.blend_weight !== undefined || rawParams.blendWeight !== undefined) {
-          setBlendWeight(Number(rawParams.blend_weight ?? rawParams.blendWeight));
-        }
-        if (rawParams.smoothness !== undefined) {
-          setSmoothness(Number(rawParams.smoothness));
-        }
-        if (rawParams.threshold_val !== undefined || rawParams.thresholdVal !== undefined) {
-          setThresholdVal(Number(rawParams.threshold_val ?? rawParams.thresholdVal));
-        }
-        if (rawParams.style_prompt !== undefined || rawParams.stylePrompt !== undefined) {
-          setStylePrompt(String(rawParams.style_prompt ?? rawParams.stylePrompt));
-        }
-
-        setActiveEngine(engineStr);
-        setSelectedFont(fontStr);
-        setCustomOffsets(Array.isArray(offsets) ? offsets : null);
+        setActiveEngine(config.engine);
+        setSelectedFont(config.font);
+        setCustomOffsets(config.offsets);
         setRecalculatedScore(null);
 
-        // 4. 単語アイテムの解決
+        // 単語アイテムの解決
         let targetWordItem = words.find(
-          (w) => (w.target_text || w.primary_display || w.word || w.reading) === wordStr
+          (w) => (w.target_text || w.primary_display || w.word || w.reading) === config.word
         );
         if (!targetWordItem) {
-          targetWordItem = await evaluateWord(wordStr);
+          targetWordItem = await evaluateWord(config.word);
         }
         setSelectedWord(targetWordItem);
 
         // 成功フィードバック
-        setImportToast(`設定を復元しました: 「${wordStr}」(${engineStr})`);
+        setImportToast(`設定を復元しました: 「${config.word}」(${config.engine})`);
         setTimeout(() => setImportToast(null), 4000);
       } catch (err: any) {
         console.error("設定インポートエラー:", err);
         alert(`設定ファイルのインポートに失敗しました: ${err.message || err}`);
       }
     },
-    [words]
+    [words, setSelectedWord]
   );
 
   const currentResult = results[activeEngine as keyof typeof results] || null;
@@ -527,12 +369,12 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* 右ペイン: 対称ペア解析 ＋ フォント選定 ＋ パラメータ調整 ＋ エクスポート */}
+        {/* 右ペイン: 評価詳細・フォント・エンジン比較・微調整 */}
         <aside className="pane-right">
-          {/* 対称文字ペア解析 */}
+          {/* 先行研究スコア詳細 */}
           <SymmetryCard wordItem={selectedWord} />
 
-          {/* フォント選定 (垂直リスト & XYシフト調整) */}
+          {/* フォント最適化 & 重心位置手動オフセット */}
           <FontSelector
             selectedFont={selectedFont}
             onFontChange={handleFontChange}
@@ -541,7 +383,12 @@ export const App: React.FC = () => {
             customOffsets={customOffsets}
             onCustomOffsetsChange={handleCustomOffsetsChange}
             onResetOffsets={handleResetOffsets}
-            targetWord={selectedWord?.target_text || selectedWord?.primary_display || selectedWord?.word || selectedWord?.reading}
+            targetWord={
+              selectedWord?.target_text ||
+              selectedWord?.primary_display ||
+              selectedWord?.word ||
+              selectedWord?.reading
+            }
             recalculatedScore={recalculatedScore}
           />
 
@@ -591,8 +438,6 @@ export const App: React.FC = () => {
             selectedFont={selectedFont}
             customOffsets={customOffsets}
             readabilityData={readabilityData}
-            blendRatio={blendRatio}
-            highlightMode={highlightMode}
             dilationSize={dilationSize}
             strokeThickness={strokeThickness}
             diffBlend={diffBlend}
@@ -600,6 +445,7 @@ export const App: React.FC = () => {
             brushStyle={brushStyle}
             strokeModulation={strokeModulation}
             enableSnap={enableSnap}
+            blendRatio={blendRatio}
             blendWeight={blendWeight}
             smoothness={smoothness}
             thresholdVal={thresholdVal}

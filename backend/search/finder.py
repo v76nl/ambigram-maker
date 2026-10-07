@@ -9,6 +9,8 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
 DATA_DIR = Path(__file__).parent.parent
+if str(DATA_DIR) not in sys.path:
+    sys.path.insert(0, str(DATA_DIR))
 WORDS_PATH = DATA_DIR / "dictionary" / "hiragana_words.json"
 MATRIX_PATH = DATA_DIR / "scoring" / "compatibility.json"
 SCORED_WORDS_PATH = DATA_DIR / "dictionary" / "scored_words.json"
@@ -601,5 +603,6 @@ if __name__ == "__main__":
     print("\n--- 上位の自己対称アンビグラム単語 (常用語, 2〜6文字) ---")
     top_words = finder.search(min_length=2, max_length=6, common_only=True, min_score=0.6, limit=20)
     for w in top_words:
-        kanji_str = f" ({', '.join(w['kanji'])})" if w['kanji'] else ""
-        print(f"[{w['score']:.3f}] {w['reading']}{kanji_str} - ペア: {[(p['char1'], p['char2'], p['score']) for p in w['pairs']]}")
+        kanji_list = w.get("kanji", [])
+        kanji_str = f" ({', '.join(kanji_list)})" if kanji_list else ""
+        print(f"[{w['score']:.3f}] {w.get('reading', '')}{kanji_str} - ペア: {[(p['char1'], p['char2'], p['score']) for p in w['pairs']]}")
