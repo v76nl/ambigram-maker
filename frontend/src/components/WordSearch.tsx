@@ -160,20 +160,63 @@ export const WordSearch: React.FC<WordSearchProps> = ({
           </div>
         </div>
 
-        {/* 単語長スライダー */}
+        {/* 文字長範囲デュアルスライダー (1つのUIで最小・最大を同時指定) */}
         <div className="swiss-slider-group">
           <div className="swiss-slider-header">
-            <span>文字長</span>
-            <span className="swiss-slider-val">{minLength} 〜 {maxLength} 字</span>
+            <span>文字長範囲</span>
+            <span className="swiss-slider-val">
+              {minLength === maxLength ? `${minLength} 字固定` : `${minLength} 〜 ${maxLength} 字`}
+            </span>
           </div>
-          <input
-            type="range"
-            className="swiss-slider"
-            min="2"
-            max="6"
-            value={maxLength}
-            onChange={(e) => onLengthChange(2, parseInt(e.target.value, 10))}
-          />
+          <div className="dual-range-slider">
+            <div className="dual-range-track" />
+            <div
+              className="dual-range-highlight"
+              style={{
+                left: `${((minLength - 1) / (7 - 1)) * 100}%`,
+                width: `${((maxLength - minLength) / (7 - 1)) * 100}%`,
+              }}
+            />
+            {/* 最小文字数つまみ */}
+            <input
+              type="range"
+              className="dual-range-input"
+              min="1"
+              max="7"
+              value={minLength}
+              aria-label="最小文字数"
+              style={{ zIndex: minLength >= 4 ? 4 : 3 }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (val > maxLength) {
+                  onLengthChange(val, val);
+                } else {
+                  onLengthChange(val, maxLength);
+                }
+              }}
+            />
+            {/* 最大文字数つまみ */}
+            <input
+              type="range"
+              className="dual-range-input"
+              min="1"
+              max="7"
+              value={maxLength}
+              aria-label="最大文字数"
+              style={{ zIndex: minLength >= 4 ? 3 : 4 }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (val < minLength) {
+                  onLengthChange(val, val);
+                } else {
+                  onLengthChange(minLength, val);
+                }
+              }}
+            />
+          </div>
+          <span className="swiss-slider-hint">
+            左右のつまみで検索対象の文字数範囲（1〜7字）を絞り込み
+          </span>
         </div>
 
         {/* 最小スコア (品質基準) スライダー */}
