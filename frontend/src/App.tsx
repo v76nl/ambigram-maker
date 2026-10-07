@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { CheckCircle2 } from "lucide-react";
 import type { WordItem, EngineResult, FontMeta, ReadabilityResponse } from "./services/api";
 import {
   searchWordsStream,
@@ -73,6 +74,7 @@ export const App: React.FC = () => {
   const [stylePrompt, setStylePrompt] = useState<string>(
     "minimalist black calligraphy on pure white background, sharp vector aesthetic"
   );
+  const [importToast, setImportToast] = useState<string | null>(null);
 
   // トグル制御 (すべてOFFになるのを防ぐ)
   const handleToggleHiragana = useCallback(() => {
@@ -356,6 +358,121 @@ export const App: React.FC = () => {
     }
   };
 
+  // エクスポート設定JSONのインポート復元ハンドラ
+  const handleImportConfig = useCallback(
+    async (importedData: any) => {
+      try {
+        if (!importedData || typeof importedData !== "object") {
+          throw new Error("無効な設定データ形式です。");
+        }
+
+        // 1. 対象単語の取得
+        const wordStr = (
+          importedData.reproducibility?.target?.word ||
+          importedData.reproduction_api_payload?.word ||
+          importedData.target?.word ||
+          importedData.word ||
+          ""
+        ).trim();
+
+        if (!wordStr) {
+          throw new Error("JSON内に有効な単語 (word) が見つかりませんでした。");
+        }
+
+        // 2. エンジン・フォント・オフセットの取得
+        const engineStr =
+          importedData.reproducibility?.engine?.id ||
+          importedData.reproduction_api_payload?.engine ||
+          importedData.engine?.id ||
+          importedData.engine ||
+          "morphology";
+
+        const fontStr =
+          importedData.reproducibility?.font?.id ||
+          importedData.reproduction_api_payload?.font ||
+          importedData.font?.id ||
+          importedData.font ||
+          "auto";
+
+        const offsets =
+          importedData.reproducibility?.alignment?.offsets ||
+          importedData.reproduction_api_payload?.customOffsets ||
+          importedData.customOffsets ||
+          importedData.offsets ||
+          null;
+
+        const rawParams =
+          importedData.reproducibility?.parameters ||
+          importedData.reproduction_api_payload ||
+          importedData.parameters ||
+          importedData;
+
+        // 3. 各種パラメータの復元
+        if (rawParams.dilation_size !== undefined || rawParams.dilationSize !== undefined) {
+          setDilationSize(Number(rawParams.dilation_size ?? rawParams.dilationSize));
+        }
+        if (rawParams.stroke_thickness !== undefined || rawParams.strokeThickness !== undefined) {
+          setStrokeThickness(Number(rawParams.stroke_thickness ?? rawParams.strokeThickness));
+        }
+        if (rawParams.diff_blend !== undefined || rawParams.diffBlend !== undefined) {
+          setDiffBlend(Number(rawParams.diff_blend ?? rawParams.diffBlend));
+        }
+        if (rawParams.pre_bold !== undefined || rawParams.preBold !== undefined) {
+          setPreBold(Number(rawParams.pre_bold ?? rawParams.preBold));
+        }
+        if (rawParams.brush_style || rawParams.brushStyle) {
+          setBrushStyle((rawParams.brush_style ?? rawParams.brushStyle) as "calligraphic" | "uniform");
+        }
+        if (rawParams.stroke_modulation !== undefined || rawParams.strokeModulation !== undefined) {
+          setStrokeModulation(Boolean(rawParams.stroke_modulation ?? rawParams.strokeModulation));
+        }
+        if (rawParams.enable_snap !== undefined || rawParams.enableSnap !== undefined) {
+          setEnableSnap(Boolean(rawParams.enable_snap ?? rawParams.enableSnap));
+        }
+        if (rawParams.blend_ratio !== undefined || rawParams.blendRatio !== undefined) {
+          setBlendRatio(Number(rawParams.blend_ratio ?? rawParams.blendRatio));
+        }
+        if (rawParams.highlight_mode !== undefined || rawParams.highlightMode !== undefined) {
+          setHighlightMode(Boolean(rawParams.highlight_mode ?? rawParams.highlightMode));
+        }
+        if (rawParams.blend_weight !== undefined || rawParams.blendWeight !== undefined) {
+          setBlendWeight(Number(rawParams.blend_weight ?? rawParams.blendWeight));
+        }
+        if (rawParams.smoothness !== undefined) {
+          setSmoothness(Number(rawParams.smoothness));
+        }
+        if (rawParams.threshold_val !== undefined || rawParams.thresholdVal !== undefined) {
+          setThresholdVal(Number(rawParams.threshold_val ?? rawParams.thresholdVal));
+        }
+        if (rawParams.style_prompt !== undefined || rawParams.stylePrompt !== undefined) {
+          setStylePrompt(String(rawParams.style_prompt ?? rawParams.stylePrompt));
+        }
+
+        setActiveEngine(engineStr);
+        setSelectedFont(fontStr);
+        setCustomOffsets(Array.isArray(offsets) ? offsets : null);
+        setRecalculatedScore(null);
+
+        // 4. 単語アイテムの解決
+        let targetWordItem = words.find(
+          (w) => (w.target_text || w.primary_display || w.word || w.reading) === wordStr
+        );
+        if (!targetWordItem) {
+          targetWordItem = await evaluateWord(wordStr);
+        }
+        setSelectedWord(targetWordItem);
+
+        // 成功フィードバック
+        setImportToast(`設定を復元しました: 「${wordStr}」(${engineStr})`);
+        setTimeout(() => setImportToast(null), 4000);
+      } catch (err: any) {
+        console.error("設定インポートエラー:", err);
+        alert(`設定ファイルのインポートに失敗しました: ${err.message || err}`);
+      }
+    },
+    [words]
+  );
+
   const currentResult = results[activeEngine as keyof typeof results] || null;
 
   return (
@@ -406,6 +523,7 @@ export const App: React.FC = () => {
             onToggleHighlightMode={handleToggleHighlightMode}
             readabilityData={readabilityData}
             isReadabilityLoading={isReadabilityLoading}
+            isGenerating={isGenerating}
           />
         </section>
 
@@ -465,7 +583,7 @@ export const App: React.FC = () => {
             isGenerating={isGenerating}
           />
 
-          {/* エクスポートバー */}
+          {/* エクスポートバー & 設定インポート */}
           <ExportBar
             wordItem={selectedWord}
             activeResult={currentResult}
@@ -486,9 +604,18 @@ export const App: React.FC = () => {
             smoothness={smoothness}
             thresholdVal={thresholdVal}
             stylePrompt={stylePrompt}
+            onImportConfig={handleImportConfig}
           />
         </aside>
       </main>
+
+      {/* インポート完了通知トースト */}
+      {importToast && (
+        <div className="import-toast-banner">
+          <CheckCircle2 size={16} color="var(--accent)" />
+          <span>{importToast}</span>
+        </div>
+      )}
     </div>
   );
 };

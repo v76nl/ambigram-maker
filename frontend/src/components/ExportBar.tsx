@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Download, FileCode, FileImage, FileJson, CheckSquare, Square, Info } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Download, FileCode, FileImage, FileJson, CheckSquare, Square, Info, Upload } from "lucide-react";
 import type { WordItem, EngineResult, ReadabilityResponse } from "../services/api";
 
 interface ExportBarProps {
@@ -23,6 +23,7 @@ interface ExportBarProps {
   smoothness?: number;
   thresholdVal?: number;
   stylePrompt?: string;
+  onImportConfig?: (configData: any) => void;
 }
 
 export const ExportBar: React.FC<ExportBarProps> = ({
@@ -46,10 +47,57 @@ export const ExportBar: React.FC<ExportBarProps> = ({
   smoothness = 7,
   thresholdVal = 110,
   stylePrompt = "",
+  onImportConfig,
 }) => {
   const [includeParams, setIncludeParams] = useState<boolean>(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        if (onImportConfig) {
+          onImportConfig(parsed);
+        }
+      } catch (err: any) {
+        alert(`JSONファイルの読み込みに失敗しました: ${err.message || err}`);
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  };
 
   if (!wordItem || !activeResult || activeResult.type === "error") {
+    if (onImportConfig) {
+      return (
+        <div className="swiss-card" style={{ padding: "0.85rem 1.25rem", alignItems: "center" }}>
+          <button
+            className="swiss-btn swiss-btn-outline"
+            style={{ width: "100%", justifyContent: "center" }}
+            onClick={() => fileInputRef.current?.click()}
+            title="保存した parameters.json 設定ファイルを読み込んで再現"
+          >
+            <Upload size={14} />
+            <span>保存した設定 (JSON) を読み込む</span>
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept=".json,application/json"
+            onChange={handleFileInputChange}
+          />
+        </div>
+      );
+    }
     return null;
   }
 
@@ -302,6 +350,26 @@ export const ExportBar: React.FC<ExportBarProps> = ({
             <FileJson size={14} />
             <span>設定 (JSON)</span>
           </button>
+
+          {onImportConfig && (
+            <>
+              <button
+                className="swiss-btn swiss-btn-outline"
+                onClick={() => fileInputRef.current?.click()}
+                title="保存した parameters.json 設定ファイルを読み込んで再現"
+              >
+                <Upload size={14} />
+                <span>設定復元 (Import)</span>
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept=".json,application/json"
+                onChange={handleFileInputChange}
+              />
+            </>
+          )}
         </div>
       </div>
 
