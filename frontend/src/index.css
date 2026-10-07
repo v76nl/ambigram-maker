@@ -647,7 +647,8 @@ body {
   background: var(--bg-surface);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--ease-fast);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--ease-fast), border-color var(--ease-fast);
+  will-change: transform;
   gap: 0.5rem;
   min-height: 2.2rem;
   user-select: none;
@@ -662,6 +663,22 @@ body {
   background: var(--text-primary);
   color: var(--text-inverse);
   border-color: var(--text-primary);
+}
+
+.font-item-rank {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 1.15rem;
+  margin-right: 0.35rem;
+  letter-spacing: -0.02em;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.font-item-vertical.active .font-item-rank {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .font-item-name {

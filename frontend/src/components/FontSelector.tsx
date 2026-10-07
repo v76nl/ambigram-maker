@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Sparkles, Type, Maximize2, RotateCcw } from "lucide-react";
+import React, { useCallback, useMemo, useRef, useLayoutEffect } from "react";
+import { Sparkles, Type, RotateCcw, Maximize2 } from "lucide-react";
 import type { FontMeta, EngineResult, FontScoreItem } from "../services/api";
 
 interface FontSelectorProps {
@@ -32,14 +32,66 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
   const preBold = details?.pre_bold as number | undefined;
 
-
   // 各フォントのスコア辞書
-  const scoreMap = new Map<string, FontScoreItem>();
-  if (fontScores) {
-    for (const fs of fontScores) {
-      scoreMap.set(fs.id, fs);
+  const scoreMap = useMemo(() => {
+    const map = new Map<string, FontScoreItem>();
+    if (fontScores) {
+      for (const fs of fontScores) {
+        map.set(fs.id, fs);
+      }
     }
-  }
+    return map;
+  }, [fontScores]);
+
+  // 解析完了時にスコア降順（高い順）にソート
+  const sortedFonts = useMemo(() => {
+    if (!fontScores || fontScores.length === 0) {
+      return availableFonts;
+    }
+    return [...availableFonts].sort((a, b) => {
+      const scoreA = scoreMap.get(a.id)?.score ?? -1;
+      const scoreB = scoreMap.get(b.id)?.score ?? -1;
+      return scoreB - scoreA;
+    });
+  }, [availableFonts, fontScores, scoreMap]);
+
+  // 並び替え時のスムーズなFLIPアニメーション
+  const listRef = useRef<HTMLDivElement>(null);
+  const prevPositionsRef = useRef<Map<string, number>>(new Map());
+
+  useLayoutEffect(() => {
+    if (!listRef.current) return;
+    const container = listRef.current;
+    const items = container.querySelectorAll<HTMLElement>("[data-font-id]");
+
+    items.forEach((item) => {
+      const id = item.dataset.fontId;
+      if (!id) return;
+      const prevTop = prevPositionsRef.current.get(id);
+      const currentTop = item.getBoundingClientRect().top;
+
+      if (prevTop !== undefined && Math.abs(prevTop - currentTop) > 0.5) {
+        const deltaY = prevTop - currentTop;
+        item.style.transform = `translateY(${deltaY}px)`;
+        item.style.transition = "none";
+
+        requestAnimationFrame(() => {
+          item.style.transition =
+            "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease";
+          item.style.transform = "";
+        });
+      }
+    });
+
+    const nextPositions = new Map<string, number>();
+    items.forEach((item) => {
+      const id = item.dataset.fontId;
+      if (id) {
+        nextPositions.set(id, item.getBoundingClientRect().top);
+      }
+    });
+    prevPositionsRef.current = nextPositions;
+  }, [sortedFonts]);
 
   const isAuto = selectedFont === "auto";
   const currentFid = isAuto ? (bestFontId || "zen_maru") : selectedFont;
@@ -119,8 +171,8 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
         )}
       </div>
 
-      {/* 垂直フォントリスト */}
-      <div className="font-list-vertical">
+      {/* 垂直フォントリスト (解析完了時にスコア降順ソート & FLIPアニメーション) */}
+      <div className="font-list-vertical" ref={listRef}>
         {/* 最適フォント (Auto) */}
         <div
           className={`font-item-vertical ${isAuto ? "active" : ""}`}
@@ -154,8 +206,8 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
           )}
         </div>
 
-        {/* 各フォントを縦（垂直）に並べる */}
-        {availableFonts.map((font) => {
+        {/* 各フォントをスコア高い順に並べる */}
+        {sortedFonts.map((font, idx) => {
           const isSelected = selectedFont === font.id;
           const scoreItem = scoreMap.get(font.id);
           const isBest = font.id === bestFontId;
@@ -165,10 +217,12 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
           return (
             <div
               key={font.id}
+              data-font-id={font.id}
               className={`font-item-vertical ${isSelected ? "active" : ""}`}
               onClick={() => onFontChange(font.id)}
             >
               <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                <span className="font-item-rank">#{idx + 1}</span>
                 <span
                   className={`font-item-name font-family-${font.id}`}
                   style={{ fontFamily: getFontFamily(font.id) }}
