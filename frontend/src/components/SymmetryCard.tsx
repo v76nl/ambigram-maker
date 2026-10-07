@@ -22,7 +22,7 @@ export const SymmetryCard: React.FC<SymmetryCardProps> = ({ wordItem }) => {
               {p.char1} {p.is_center ? "(自己反転)" : `↔ ${p.char2}`}
             </span>
             <span className="pair-score">
-              {Math.round(p.score * 100)}%
+              {p.score.toFixed(3)}
             </span>
           </div>
         ))}

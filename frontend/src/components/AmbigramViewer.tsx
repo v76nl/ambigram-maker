@@ -10,6 +10,7 @@ import {
   Layers,
   Eye,
   Undo2,
+  RefreshCw,
 } from "lucide-react";
 import type { WordItem, EngineResult, ReadabilityResponse, PipelineStep } from "../services/api";
 
@@ -22,6 +23,7 @@ interface AmbigramViewerProps {
   onToggleHighlightMode?: () => void;
   readabilityData?: ReadabilityResponse | null;
   isReadabilityLoading?: boolean;
+  isGenerating?: boolean;
 }
 
 export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
@@ -33,6 +35,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   onToggleHighlightMode,
   readabilityData,
   isReadabilityLoading = false,
+  isGenerating = false,
 }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [showDiffView, setShowDiffView] = useState<boolean>(true);
@@ -265,6 +268,16 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     <section className="viewer-container">
       {/* メインビューワーカード */}
       <div className="canvas-card">
+        {/* 再生成中ローディングオーバーレイ */}
+        {isGenerating && (
+          <div className="canvas-generating-overlay">
+            <div className="canvas-generating-indicator">
+              <RefreshCw size={15} className="spin" />
+              <span>生成中……</span>
+            </div>
+          </div>
+        )}
+
         {/* 手法切り替えセグメント (Subtractive: 余計な注釈を排し、端正に配置) */}
         {onEngineChange && (
           <div className="engine-bar">
@@ -480,10 +493,10 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
             {diffStats && (
               <div className="diff-stats">
                 <span className="diff-stat-badge diff-stat-match">
-                  対称一致率 {diffStats.overlapRatio}%
+                  対称一致率 {(diffStats.overlapRatio / 100).toFixed(3)}
                 </span>
                 <span className="diff-stat-badge diff-stat-diff">
-                  非対称差分 {diffStats.diffRatio}%
+                  非対称差分 {(diffStats.diffRatio / 100).toFixed(3)}
                 </span>
               </div>
             )}
@@ -559,7 +572,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
                   fontWeight: 600,
                 }}
               >
-                総合双方向可読率 {Math.round(readabilityData.overall_readability * 100)}%
+                総合双方向可読率 {readabilityData.overall_readability.toFixed(3)}
               </span>
             </div>
           </div>
@@ -618,11 +631,11 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem" }}>
                       <span style={{ color: "var(--text-muted)" }}>正: {slot.char1} 認識率</span>
-                      <span style={{ fontWeight: 600 }}>{Math.round(slot.prob1 * 100)}%</span>
+                      <span style={{ fontWeight: 600 }}>{slot.prob1.toFixed(3)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem" }}>
                       <span style={{ color: "var(--text-muted)" }}>反: {slot.char2} 認識率</span>
-                      <span style={{ fontWeight: 600 }}>{Math.round(slot.prob2 * 100)}%</span>
+                      <span style={{ fontWeight: 600 }}>{slot.prob2.toFixed(3)}</span>
                     </div>
 
                     <div

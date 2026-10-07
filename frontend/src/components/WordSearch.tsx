@@ -90,7 +90,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
             type="text"
             className="swiss-input"
             style={{ paddingLeft: "1.9rem" }}
-            placeholder="リスト内を検索..."
+            placeholder="検索 (正規表現対応: 例 .+の.+)"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
           />
@@ -184,7 +184,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               最小スコア
             </span>
             <span className="swiss-slider-val">
-              {(minScore * 100).toFixed(0)}%
+              {minScore.toFixed(3)}
               <span style={{ fontSize: "0.68rem", color: minScore >= 0.8 ? "var(--accent)" : "var(--text-muted)", marginLeft: "0.3rem" }}>
                 {minScore >= 0.85 ? "厳選" : minScore >= 0.75 ? "高品質" : "標準"}
               </span>
@@ -268,7 +268,9 @@ export const WordSearch: React.FC<WordSearchProps> = ({
             const mainText = w.target_text || w.primary_display || w.reading;
             const currentSelectedText = selectedWord?.target_text || selectedWord?.primary_display || selectedWord?.reading;
             const isSelected = currentSelectedText === mainText;
+            const hasKanji = /[\u4e00-\u9faf]/.test(mainText) || Boolean(w.has_kanji);
             const hasSub = mainText !== w.reading;
+            const showSub = hasSub && !hasKanji;
 
             return (
               <div
@@ -278,10 +280,10 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               >
                 <div style={{ display: "flex", alignItems: "baseline", gap: "0.45rem", minWidth: 0 }}>
                   <span className="word-main">{mainText}</span>
-                  {hasSub && <span className="word-reading-sub">{w.reading}</span>}
+                  {showSub && <span className="word-reading-sub">{w.reading}</span>}
                 </div>
                 <div className="word-score">
-                  {Math.round(w.score * 100)}%
+                  {w.score.toFixed(3)}
                 </div>
               </div>
             );

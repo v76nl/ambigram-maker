@@ -1,5 +1,5 @@
 import React from "react";
-import { Disc, GitFork, Code, Image as ImageIcon, Sparkles, RefreshCw, Download } from "lucide-react";
+import { Disc, GitFork, Code, Image as ImageIcon, Sparkles, RefreshCw } from "lucide-react";
 import type { EngineResult, FontMeta } from "../services/api";
 
 interface EngineCompareProps {
@@ -48,7 +48,6 @@ interface EngineCompareProps {
 export const EngineCompare: React.FC<EngineCompareProps> = ({
   activeEngine,
   onEngineChange,
-  results,
   dilationSize,
   onDilationSizeChange,
   strokeThickness,
@@ -78,22 +77,6 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onRegenerate,
   isGenerating,
 }) => {
-  const currentResult = results[activeEngine as keyof typeof results];
-
-  const handleDownload = () => {
-    if (!currentResult) return;
-    const link = document.createElement("a");
-    if (currentResult.type === "svg") {
-      const blob = new Blob([currentResult.data], { type: "image/svg+xml" });
-      link.href = URL.createObjectURL(blob);
-      link.download = `ambigram_${activeEngine}.svg`;
-    } else {
-      link.href = currentResult.data;
-      link.download = `ambigram_${activeEngine}.png`;
-    }
-    link.click();
-  };
-
   return (
     <section className="swiss-card">
       {/* 手法切り替えセグメント (3ペイン対応・コンパクト) */}
@@ -141,7 +124,7 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
         <button
           className={`swiss-segmented-btn ${activeEngine === "gemini" ? "active" : ""}`}
           onClick={() => onEngineChange("gemini")}
-          title="手法3: Gemini AI"
+          title="生成AI: Gemini 2.5 Flash"
           style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
           <Sparkles size={12} />
@@ -168,6 +151,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={dilationSize}
                 onChange={(e) => onDilationSizeChange(parseInt(e.target.value, 10))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 線が細く読みにくいとき / ▼減: 線が潰れて黒く詰まるとき
+              </span>
             </div>
 
             <div className="swiss-slider-group">
@@ -184,6 +170,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={smoothness}
                 onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: ジャギーや微小ノイズを消したいとき / ▼減: 漢字の角や払いを残したいとき
+              </span>
             </div>
 
             {onPreBoldChange && (
@@ -201,6 +190,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                   value={preBold}
                   onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
                 />
+                <span className="swiss-slider-hint">
+                  ▲増: 細字フォントで線が消えるのを防ぐ / ▼減: 太字で骨格同士が近接しすぎるとき
+                </span>
               </div>
             )}
 
@@ -218,6 +210,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={diffBlend}
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき
+              </span>
             </div>
 
             {onEnableSnapChange && (
@@ -250,6 +245,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={strokeThickness}
                 onChange={(e) => onStrokeThicknessChange(parseInt(e.target.value, 10))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 線が細く読みにくいとき / ▼減: 線が潰れて黒く詰まるとき
+              </span>
             </div>
 
             {onPreBoldChange && (
@@ -267,6 +265,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                   value={preBold}
                   onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
                 />
+                <span className="swiss-slider-hint">
+                  ▲増: 細字フォントで線が消えるのを防ぐ / ▼減: 太字で骨格同士が近接しすぎるとき
+                </span>
               </div>
             )}
 
@@ -284,6 +285,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={diffBlend}
                 onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき
+              </span>
             </div>
 
             {/* 先行研究: 筆文字スタイル & 太さ変調 (井上・高橋 2020 §5 / 野村 2018) */}
@@ -351,6 +355,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
               value={blendRatio}
               onChange={(e) => onBlendRatioChange(parseFloat(e.target.value))}
             />
+            <span className="swiss-slider-hint">
+              ▲増: 180°反転文字を強く / ▼減: 正位置文字を強く
+            </span>
           </div>
         )}
 
@@ -371,6 +378,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={blendWeight}
                 onChange={(e) => onBlendWeightChange(parseFloat(e.target.value))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 180°反転文字を強く / ▼減: 正位置文字を強く
+              </span>
             </div>
 
             <div className="swiss-slider-group">
@@ -387,6 +397,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={smoothness}
                 onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: エッジを丸く滑らかにしたいとき / ▼減: 輪郭をシャープに保ちたいとき
+              </span>
             </div>
 
             <div className="swiss-slider-group">
@@ -403,6 +416,9 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={thresholdVal}
                 onChange={(e) => onThresholdValChange(parseInt(e.target.value, 10))}
               />
+              <span className="swiss-slider-hint">
+                ▲増: 線を細く絞り込むとき / ▼減: かすれた線を拾って太くするとき
+              </span>
             </div>
           </>
         )}
@@ -453,13 +469,6 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
             </span>
           )}
         </div>
-
-        {currentResult && currentResult.type !== "error" && (
-          <button className="swiss-btn swiss-btn-outline" onClick={handleDownload}>
-            <Download size={13} />
-            <span>{currentResult.type.toUpperCase()} を保存</span>
-          </button>
-        )}
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import { Sparkles, Type, Maximize2, RotateCcw } from "lucide-react";
 import type { FontMeta, EngineResult, FontScoreItem } from "../services/api";
 
@@ -32,7 +32,6 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
   const preBold = details?.pre_bold as number | undefined;
 
-  const [activePairIdx, setActivePairIdx] = useState<number>(0);
 
   // 各フォントのスコア辞書
   const scoreMap = new Map<string, FontScoreItem>();
@@ -83,26 +82,19 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 
   const baseOffsets = selectedOffsets || Array.from({ length: halfLen }, () => [0, 0] as [number, number]);
   const currentOffsets = customOffsets || baseOffsets;
-  const safePairIdx = activePairIdx < halfLen ? activePairIdx : 0;
-  const currentPairOffset = currentOffsets[safePairIdx] || [0, 0];
-  const dx = currentPairOffset[0];
-  const dy = currentPairOffset[1];
-
   const isCustomized = customOffsets !== null && customOffsets !== undefined;
 
   // 現在の一致率スコア
   const baseScore = scoreMap.get(currentFid)?.score ?? 0;
   const currentScore = recalculatedScore !== null && recalculatedScore !== undefined ? recalculatedScore : baseScore;
-  const scorePercent = Math.round(currentScore * 100);
-  const baseScorePercent = Math.round(baseScore * 100);
 
-  const handleOffsetChange = useCallback(
-    (axis: "x" | "y", val: number) => {
+  const handlePairOffsetChange = useCallback(
+    (pairIdx: number, axis: "x" | "y", val: number) => {
       const clamped = Math.max(-15, Math.min(15, val));
       const next: [number, number][] = [];
       for (let i = 0; i < halfLen; i++) {
         const orig = currentOffsets[i] || [0, 0];
-        if (i === safePairIdx) {
+        if (i === pairIdx) {
           next.push(axis === "x" ? [clamped, orig[1]] : [orig[0], clamped]);
         } else {
           next.push(orig);
@@ -110,40 +102,8 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
       }
       onCustomOffsetsChange?.(next);
     },
-    [halfLen, currentOffsets, safePairIdx, onCustomOffsetsChange]
+    [halfLen, currentOffsets, onCustomOffsetsChange]
   );
-
-  const rowXRef = useRef<HTMLDivElement>(null);
-  const rowYRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const elX = rowXRef.current;
-    const elY = rowYRef.current;
-
-    const onWheelX = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY !== 0 ? (e.deltaY < 0 ? 1 : -1) : (e.deltaX > 0 ? 1 : -1);
-      handleOffsetChange("x", dx + delta);
-    };
-
-    const onWheelY = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY !== 0 ? (e.deltaY < 0 ? 1 : -1) : (e.deltaX > 0 ? 1 : -1);
-      handleOffsetChange("y", dy + delta);
-    };
-
-    if (elX) {
-      elX.addEventListener("wheel", onWheelX, { passive: false });
-    }
-    if (elY) {
-      elY.addEventListener("wheel", onWheelY, { passive: false });
-    }
-
-    return () => {
-      if (elX) elX.removeEventListener("wheel", onWheelX);
-      if (elY) elY.removeEventListener("wheel", onWheelY);
-    };
-  }, [dx, dy, handleOffsetChange]);
 
   return (
     <div className="font-selector-card">
@@ -188,7 +148,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
             <div style={{ display: "inline-flex", alignItems: "center" }}>
               <span className="font-badge-best-sm">BEST</span>
               <span className="font-item-score">
-                {isAuto && isCustomized ? scorePercent : Math.round((scoreMap.get(bestFontId)?.score || 0) * 100)}%
+                {(isAuto && isCustomized ? currentScore : (scoreMap.get(bestFontId)?.score || 0)).toFixed(3)}
               </span>
             </div>
           )}
@@ -200,7 +160,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
           const scoreItem = scoreMap.get(font.id);
           const isBest = font.id === bestFontId;
           const offsets = isSelected && isCustomized ? currentOffsets : scoreItem?.offsets;
-          const fontScoreVal = isSelected && isCustomized ? scorePercent : (scoreItem ? Math.round(scoreItem.score * 100) : null);
+          const fontScoreVal = isSelected && isCustomized ? currentScore : (scoreItem ? scoreItem.score : null);
 
           return (
             <div
@@ -226,7 +186,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
                 )}
                 {fontScoreVal !== null && (
                   <span className="font-item-score">
-                    {fontScoreVal}%
+                    {fontScoreVal.toFixed(3)}
                   </span>
                 )}
               </div>
@@ -235,79 +195,88 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
         })}
       </div>
 
-      {/* XY微小シフト調整コントローラー */}
+      {/* XY微小シフト調整コントローラー (対応文字ペアごとに並べて調整可能) */}
       <div className="shift-controller-box">
-        {/* 複数ペア切替タブ */}
-        {halfLen > 1 && (
-          <div className="shift-pair-tabs">
-            {pairsInfo.map((p, idx) => (
-              <button
-                key={idx}
-                className={`shift-pair-tab ${safePairIdx === idx ? "active" : ""}`}
-                onClick={() => setActivePairIdx(idx)}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* X方向スライダー */}
-        <div className="shift-control-row" ref={rowXRef} title="ホイールスクロールで微調整可能">
-          <span className="shift-axis-label">x</span>
-          <input
-            type="range"
-            min={-15}
-            max={15}
-            step={1}
-            value={dx}
-            onChange={(e) => handleOffsetChange("x", parseInt(e.target.value, 10))}
-            className="shift-slider"
-          />
-          <div className="shift-val-stepper">
-            <button className="shift-btn" onClick={() => handleOffsetChange("x", dx - 1)}>-</button>
-            <span className="shift-val-display">{dx > 0 ? `+${dx}` : dx}</span>
-            <button className="shift-btn" onClick={() => handleOffsetChange("x", dx + 1)}>+</button>
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: "0.74rem", fontWeight: 600, color: "var(--text-secondary)" }}>
+            文字ペア別 重心位置微調整 (XYずらし)
+          </span>
+          {isCustomized && (
+            <button
+              className="shift-reset-btn"
+              onClick={onResetOffsets}
+              title="自動最適化された初期オフセット値に戻す"
+            >
+              <RotateCcw size={9} style={{ marginRight: "0.15rem", display: "inline-block", verticalAlign: "middle" }} />
+              リセット ({baseScore.toFixed(3)})
+            </button>
+          )}
         </div>
 
-        {/* Y方向スライダー */}
-        <div className="shift-control-row" ref={rowYRef} title="ホイールスクロールで微調整可能">
-          <span className="shift-axis-label">y</span>
-          <input
-            type="range"
-            min={-15}
-            max={15}
-            step={1}
-            value={dy}
-            onChange={(e) => handleOffsetChange("y", parseInt(e.target.value, 10))}
-            className="shift-slider"
-          />
-          <div className="shift-val-stepper">
-            <button className="shift-btn" onClick={() => handleOffsetChange("y", dy - 1)}>-</button>
-            <span className="shift-val-display">{dy > 0 ? `+${dy}` : dy}</span>
-            <button className="shift-btn" onClick={() => handleOffsetChange("y", dy + 1)}>+</button>
-          </div>
+        <div className="shift-pairs-list">
+          {pairsInfo.map((p) => {
+            const pOffset = currentOffsets[p.index] || [0, 0];
+            const pDx = pOffset[0];
+            const pDy = pOffset[1];
+
+            return (
+              <div key={p.index} className="shift-pair-card">
+                <div className="shift-pair-header">
+                  <span>{p.label}</span>
+                  <span className="shift-pair-summary">
+                    ({pDx > 0 ? `+${pDx}` : pDx}, {pDy > 0 ? `+${pDy}` : pDy})
+                  </span>
+                </div>
+
+                {/* X方向スライダー */}
+                <div className="shift-control-row">
+                  <span className="shift-axis-label">x</span>
+                  <input
+                    type="range"
+                    min={-15}
+                    max={15}
+                    step={1}
+                    value={pDx}
+                    onChange={(e) => handlePairOffsetChange(p.index, "x", parseInt(e.target.value, 10))}
+                    className="shift-slider"
+                  />
+                  <div className="shift-val-stepper">
+                    <button className="shift-btn" onClick={() => handlePairOffsetChange(p.index, "x", pDx - 1)}>-</button>
+                    <span className="shift-val-display">{pDx > 0 ? `+${pDx}` : pDx}</span>
+                    <button className="shift-btn" onClick={() => handlePairOffsetChange(p.index, "x", pDx + 1)}>+</button>
+                  </div>
+                </div>
+
+                {/* Y方向スライダー */}
+                <div className="shift-control-row">
+                  <span className="shift-axis-label">y</span>
+                  <input
+                    type="range"
+                    min={-15}
+                    max={15}
+                    step={1}
+                    value={pDy}
+                    onChange={(e) => handlePairOffsetChange(p.index, "y", parseInt(e.target.value, 10))}
+                    className="shift-slider"
+                  />
+                  <div className="shift-val-stepper">
+                    <button className="shift-btn" onClick={() => handlePairOffsetChange(p.index, "y", pDy - 1)}>-</button>
+                    <span className="shift-val-display">{pDy > 0 ? `+${pDy}` : pDy}</span>
+                    <button className="shift-btn" onClick={() => handlePairOffsetChange(p.index, "y", pDy + 1)}>+</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* 一致率再計算リアルタイムバナー */}
         <div className="shift-recalc-banner">
           <span style={{ color: "var(--text-secondary)" }}>
-            一致率:
-            {isCustomized && (
-              <button
-                className="shift-reset-btn"
-                style={{ marginLeft: "0.4rem" }}
-                onClick={onResetOffsets}
-                title="自動最適化された初期オフセット値に戻す"
-              >
-                <RotateCcw size={9} style={{ marginRight: "0.15rem", display: "inline-block", verticalAlign: "middle" }} />
-                リセット ({baseScorePercent}%)
-              </button>
-            )}
+            補正後一致率:
           </span>
           <span className="shift-recalc-score">
-            {scorePercent}%
+            {currentScore.toFixed(3)}
           </span>
         </div>
       </div>
