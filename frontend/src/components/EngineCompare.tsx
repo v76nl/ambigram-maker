@@ -1,6 +1,7 @@
 import React from "react";
 import { Disc, GitFork, Code, Image as ImageIcon, Sparkles, RefreshCw } from "lucide-react";
 import type { EngineResult, FontMeta } from "../services/api";
+import { PARAM_LABELS } from "../constants/labels";
 
 interface EngineCompareProps {
   activeEngine: string;
@@ -134,216 +135,170 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
 
       {/* パラメータ調整グリッド */}
       <div className="tuning-grid">
-        {/* 手法Aのパラメータ */}
-        {activeEngine === "morphology" && (
-          <>
-            <div className="swiss-slider-group">
-              <div className="swiss-slider-header">
-                <span>ストローク太さ (Dilation)</span>
-                <span className="swiss-slider-val">{dilationSize}px</span>
-              </div>
-              <input
-                type="range"
-                className="swiss-slider"
-                min="3"
-                max="25"
-                step="2"
-                value={dilationSize}
-                onChange={(e) => onDilationSizeChange(parseInt(e.target.value, 10))}
-              />
-              <span className="swiss-slider-hint">
-                ▲増: 線が細く読みにくいとき / ▼減: 線が潰れて黒く詰まるとき
-              </span>
-            </div>
+        {/* 手法A/B 共通のストローク補正コントロール (呼称・コンポーネントを一元化) */}
+        {(() => {
+          const renderCommonStrokeControls = () => (
+            <>
+              {onPreBoldChange && (
+                <div className="swiss-slider-group">
+                  <div className="swiss-slider-header">
+                    <span>{PARAM_LABELS.preBold.title}</span>
+                    <span className="swiss-slider-val">{preBold}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="swiss-slider"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value={preBold}
+                    onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
+                  />
+                  <span className="swiss-slider-hint">{PARAM_LABELS.preBold.hint}</span>
+                </div>
+              )}
 
-            <div className="swiss-slider-group">
-              <div className="swiss-slider-header">
-                <span>輪郭の滑らかさ (Smoothing)</span>
-                <span className="swiss-slider-val">{smoothness}px</span>
-              </div>
-              <input
-                type="range"
-                className="swiss-slider"
-                min="0"
-                max="15"
-                step="2"
-                value={smoothness}
-                onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
-              />
-              <span className="swiss-slider-hint">
-                ▲増: ジャギーや微小ノイズを消したいとき / ▼減: 漢字の角や払いを残したいとき
-              </span>
-            </div>
-
-            {onPreBoldChange && (
               <div className="swiss-slider-group">
                 <div className="swiss-slider-header">
-                  <span>事前太らせ (Pre-Bold)</span>
-                  <span className="swiss-slider-val">{preBold}px</span>
+                  <span>{PARAM_LABELS.diffBlend.title}</span>
+                  <span className="swiss-slider-val">{Math.round(diffBlend * 100)}%</span>
                 </div>
                 <input
                   type="range"
                   className="swiss-slider"
                   min="0"
-                  max="10"
-                  step="1"
-                  value={preBold}
-                  onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
+                  max="0.8"
+                  step="0.05"
+                  value={diffBlend}
+                  onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
                 />
-                <span className="swiss-slider-hint">
-                  ▲増: 細字フォントで線が消えるのを防ぐ / ▼減: 太字で骨格同士が近接しすぎるとき
-                </span>
+                <span className="swiss-slider-hint">{PARAM_LABELS.diffBlend.hint}</span>
               </div>
-            )}
 
-            <div className="swiss-slider-group">
-              <div className="swiss-slider-header">
-                <span>異文字パーツ保持 (Diff Blend)</span>
-                <span className="swiss-slider-val">{Math.round(diffBlend * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                className="swiss-slider"
-                min="0"
-                max="0.8"
-                step="0.05"
-                value={diffBlend}
-                onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
-              />
-              <span className="swiss-slider-hint">
-                ▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき
-              </span>
-            </div>
+              {onEnableSnapChange && (
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.2rem" }}>
+                  <input
+                    type="checkbox"
+                    checked={enableSnap}
+                    onChange={(e) => onEnableSnapChange(e.target.checked)}
+                  />
+                  <span>{PARAM_LABELS.enableSnap.title}</span>
+                </label>
+              )}
+            </>
+          );
 
-            {onEnableSnapChange && (
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.4rem" }}>
-                <input
-                  type="checkbox"
-                  checked={enableSnap}
-                  onChange={(e) => onEnableSnapChange(e.target.checked)}
-                />
-                <span>近接ストローク吸引スナップ (Issue #1, #2 対策)</span>
-              </label>
-            )}
-          </>
-        )}
+          return (
+            <>
+              {/* 手法Aのパラメータ */}
+              {activeEngine === "morphology" && (
+                <>
+                  <div className="swiss-slider-group">
+                    <div className="swiss-slider-header">
+                      <span>{PARAM_LABELS.dilationSize.title}</span>
+                      <span className="swiss-slider-val">{dilationSize}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      className="swiss-slider"
+                      min="3"
+                      max="25"
+                      step="2"
+                      value={dilationSize}
+                      onChange={(e) => onDilationSizeChange(parseInt(e.target.value, 10))}
+                    />
+                    <span className="swiss-slider-hint">{PARAM_LABELS.dilationSize.hint}</span>
+                  </div>
 
-        {/* 手法Bのパラメータ */}
-        {activeEngine === "skeleton" && (
-          <>
-            <div className="swiss-slider-group">
-              <div className="swiss-slider-header">
-                <span>骨格線幅 (Stroke Width)</span>
-                <span className="swiss-slider-val">{strokeThickness}px</span>
-              </div>
-              <input
-                type="range"
-                className="swiss-slider"
-                min="5"
-                max="35"
-                step="2"
-                value={strokeThickness}
-                onChange={(e) => onStrokeThicknessChange(parseInt(e.target.value, 10))}
-              />
-              <span className="swiss-slider-hint">
-                ▲増: 線が細く読みにくいとき / ▼減: 線が潰れて黒く詰まるとき
-              </span>
-            </div>
+                  <div className="swiss-slider-group">
+                    <div className="swiss-slider-header">
+                      <span>{PARAM_LABELS.smoothness.title}</span>
+                      <span className="swiss-slider-val">{smoothness}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      className="swiss-slider"
+                      min="0"
+                      max="15"
+                      step="2"
+                      value={smoothness}
+                      onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
+                    />
+                    <span className="swiss-slider-hint">{PARAM_LABELS.smoothness.hint}</span>
+                  </div>
 
-            {onPreBoldChange && (
-              <div className="swiss-slider-group">
-                <div className="swiss-slider-header">
-                  <span>事前太らせ (Pre-Bold)</span>
-                  <span className="swiss-slider-val">{preBold}px</span>
-                </div>
-                <input
-                  type="range"
-                  className="swiss-slider"
-                  min="0"
-                  max="10"
-                  step="1"
-                  value={preBold}
-                  onChange={(e) => onPreBoldChange(parseInt(e.target.value, 10))}
-                />
-                <span className="swiss-slider-hint">
-                  ▲増: 細字フォントで線が消えるのを防ぐ / ▼減: 太字で骨格同士が近接しすぎるとき
-                </span>
-              </div>
-            )}
+                  {renderCommonStrokeControls()}
+                </>
+              )}
 
-            <div className="swiss-slider-group">
-              <div className="swiss-slider-header">
-                <span>異文字パーツ保持 (Diff Blend)</span>
-                <span className="swiss-slider-val">{Math.round(diffBlend * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                className="swiss-slider"
-                min="0"
-                max="0.8"
-                step="0.05"
-                value={diffBlend}
-                onChange={(e) => onDiffBlendChange(parseFloat(e.target.value))}
-              />
-              <span className="swiss-slider-hint">
-                ▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき
-              </span>
-            </div>
+              {/* 手法Bのパラメータ */}
+              {activeEngine === "skeleton" && (
+                <>
+                  <div className="swiss-slider-group">
+                    <div className="swiss-slider-header">
+                      <span>{PARAM_LABELS.strokeThickness.title}</span>
+                      <span className="swiss-slider-val">{strokeThickness}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      className="swiss-slider"
+                      min="5"
+                      max="35"
+                      step="2"
+                      value={strokeThickness}
+                      onChange={(e) => onStrokeThicknessChange(parseInt(e.target.value, 10))}
+                    />
+                    <span className="swiss-slider-hint">{PARAM_LABELS.strokeThickness.hint}</span>
+                  </div>
 
-            {/* 先行研究: 筆文字スタイル & 太さ変調 (井上・高橋 2020 §5 / 野村 2018) */}
-            {onBrushStyleChange && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
-                <span style={{ fontSize: "0.74rem", fontWeight: 500, color: "var(--text-secondary)" }}>
-                  ブラシ描画スタイル (井上・高橋 §5)
-                </span>
-                <div className="swiss-segmented" style={{ display: "flex", width: "100%" }}>
-                  <button
-                    className={`swiss-segmented-btn ${brushStyle === "calligraphic" ? "active" : ""}`}
-                    onClick={() => onBrushStyleChange("calligraphic")}
-                    style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
-                  >
-                    毛筆・楕円筆 (45°)
-                  </button>
-                  <button
-                    className={`swiss-segmented-btn ${brushStyle === "uniform" ? "active" : ""}`}
-                    onClick={() => onBrushStyleChange("uniform")}
-                    style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
-                  >
-                    均一丸ペン
-                  </button>
-                </div>
-              </div>
-            )}
+                  {/* 先行研究: 筆文字スタイル & 太さ変調 (井上・高橋 2020 §5 / 野村 2018) */}
+                  {onBrushStyleChange && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
+                      <span style={{ fontSize: "0.74rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                        {PARAM_LABELS.brushStyle.title}
+                      </span>
+                      <div className="swiss-segmented" style={{ display: "flex", width: "100%" }}>
+                        <button
+                          className={`swiss-segmented-btn ${brushStyle === "calligraphic" ? "active" : ""}`}
+                          onClick={() => onBrushStyleChange("calligraphic")}
+                          style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
+                        >
+                          {PARAM_LABELS.brushStyle.calligraphic}
+                        </button>
+                        <button
+                          className={`swiss-segmented-btn ${brushStyle === "uniform" ? "active" : ""}`}
+                          onClick={() => onBrushStyleChange("uniform")}
+                          style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
+                        >
+                          {PARAM_LABELS.brushStyle.uniform}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-            {onStrokeModulationChange && (
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.4rem" }}>
-                <input
-                  type="checkbox"
-                  checked={strokeModulation}
-                  onChange={(e) => onStrokeModulationChange(e.target.checked)}
-                />
-                <span>ストローク太さ変調 (共通核強調・固有部細線化)</span>
-              </label>
-            )}
+                  {onStrokeModulationChange && (
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.4rem" }}>
+                      <input
+                        type="checkbox"
+                        checked={strokeModulation}
+                        onChange={(e) => onStrokeModulationChange(e.target.checked)}
+                      />
+                      <span>{PARAM_LABELS.strokeModulation.title}</span>
+                    </label>
+                  )}
 
-            {onEnableSnapChange && (
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.2rem" }}>
-                <input
-                  type="checkbox"
-                  checked={enableSnap}
-                  onChange={(e) => onEnableSnapChange(e.target.checked)}
-                />
-                <span>近接ストローク吸引スナップ (Issue #1, #2 対策)</span>
-              </label>
-            )}
-          </>
-        )}
+                  {renderCommonStrokeControls()}
+                </>
+              )}
+            </>
+          );
+        })()}
 
         {/* ベクター合成パラメータ */}
         {activeEngine === "vector" && (
           <div className="swiss-slider-group">
             <div className="swiss-slider-header">
-              <span>合成比率 (Blend Ratio)</span>
+              <span>{PARAM_LABELS.blendRatio.title}</span>
               <span className="swiss-slider-val">{Math.round(blendRatio * 100)}%</span>
             </div>
             <input
@@ -355,9 +310,7 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
               value={blendRatio}
               onChange={(e) => onBlendRatioChange(parseFloat(e.target.value))}
             />
-            <span className="swiss-slider-hint">
-              ▲増: 180°反転文字を強く / ▼減: 正位置文字を強く
-            </span>
+            <span className="swiss-slider-hint">{PARAM_LABELS.blendRatio.hint}</span>
           </div>
         )}
 
@@ -366,7 +319,7 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
           <>
             <div className="swiss-slider-group">
               <div className="swiss-slider-header">
-                <span>合成重み (Weight)</span>
+                <span>{PARAM_LABELS.blendWeight.title}</span>
                 <span className="swiss-slider-val">{Math.round(blendWeight * 100)}%</span>
               </div>
               <input
@@ -378,14 +331,12 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={blendWeight}
                 onChange={(e) => onBlendWeightChange(parseFloat(e.target.value))}
               />
-              <span className="swiss-slider-hint">
-                ▲増: 180°反転文字を強く / ▼減: 正位置文字を強く
-              </span>
+              <span className="swiss-slider-hint">{PARAM_LABELS.blendWeight.hint}</span>
             </div>
 
             <div className="swiss-slider-group">
               <div className="swiss-slider-header">
-                <span>平滑化 (Smoothness)</span>
+                <span>{PARAM_LABELS.bitmapSmoothness.title}</span>
                 <span className="swiss-slider-val">{smoothness}</span>
               </div>
               <input
@@ -397,14 +348,12 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={smoothness}
                 onChange={(e) => onSmoothnessChange(parseInt(e.target.value, 10))}
               />
-              <span className="swiss-slider-hint">
-                ▲増: エッジを丸く滑らかにしたいとき / ▼減: 輪郭をシャープに保ちたいとき
-              </span>
+              <span className="swiss-slider-hint">{PARAM_LABELS.bitmapSmoothness.hint}</span>
             </div>
 
             <div className="swiss-slider-group">
               <div className="swiss-slider-header">
-                <span>二値化閾値 (Threshold)</span>
+                <span>{PARAM_LABELS.thresholdVal.title}</span>
                 <span className="swiss-slider-val">{thresholdVal}</span>
               </div>
               <input
@@ -416,9 +365,7 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 value={thresholdVal}
                 onChange={(e) => onThresholdValChange(parseInt(e.target.value, 10))}
               />
-              <span className="swiss-slider-hint">
-                ▲増: 線を細く絞り込むとき / ▼減: かすれた線を拾って太くするとき
-              </span>
+              <span className="swiss-slider-hint">{PARAM_LABELS.thresholdVal.hint}</span>
             </div>
           </>
         )}
