@@ -30,6 +30,7 @@ export interface WordItem {
   geometric_mean: number;
   min_pair_score: number;
   pairs: CharPair[];
+  script_type?: "kanji" | "katakana" | "hiragana" | "phrase" | "compound";
 }
 
 export interface SearchWordsParams {
@@ -42,6 +43,7 @@ export interface SearchWordsParams {
   includeKanji?: boolean;
   includeKatakana?: boolean;
   includeHiragana?: boolean;
+  includePhrase?: boolean;
 }
 
 export interface FontMeta {
@@ -168,6 +170,7 @@ export function searchWordsStream(
   if (params.includeKanji !== undefined) queryParams.set("include_kanji", params.includeKanji.toString());
   if (params.includeKatakana !== undefined) queryParams.set("include_katakana", params.includeKatakana.toString());
   if (params.includeHiragana !== undefined) queryParams.set("include_hiragana", params.includeHiragana.toString());
+  if (params.includePhrase !== undefined) queryParams.set("include_phrase", params.includePhrase.toString());
 
   console.log(`[Ambigram API] 📡 リアルタイム単語ストリーミング接続開始:`, params);
   const url = `${API_BASE_URL}/words/stream?${queryParams.toString()}`;
@@ -221,6 +224,7 @@ export async function searchWords(params: SearchWordsParams = {}): Promise<WordI
   if (params.includeKanji !== undefined) queryParams.set("include_kanji", params.includeKanji.toString());
   if (params.includeKatakana !== undefined) queryParams.set("include_katakana", params.includeKatakana.toString());
   if (params.includeHiragana !== undefined) queryParams.set("include_hiragana", params.includeHiragana.toString());
+  if (params.includePhrase !== undefined) queryParams.set("include_phrase", params.includePhrase.toString());
 
   console.log(`[Ambigram API] 🔍 単語検索リクエスト送信:`, params);
   const t0 = performance.now();

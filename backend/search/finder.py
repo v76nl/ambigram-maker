@@ -11,7 +11,8 @@ if sys.platform == "win32":
 DATA_DIR = Path(__file__).parent.parent
 if str(DATA_DIR) not in sys.path:
     sys.path.insert(0, str(DATA_DIR))
-WORDS_PATH = DATA_DIR / "dictionary" / "hiragana_words.json"
+CATALOG_PATH = DATA_DIR / "dictionary" / "words_catalog.json"
+WORDS_PATH = CATALOG_PATH if CATALOG_PATH.exists() else DATA_DIR / "dictionary" / "hiragana_words.json"
 MATRIX_PATH = DATA_DIR / "scoring" / "compatibility.json"
 SCORED_WORDS_PATH = DATA_DIR / "dictionary" / "scored_words.json"
 
@@ -97,7 +98,7 @@ def classify_script_types(reading: str, kanji_list: list[str], katakana_list: li
 
 class AmbigramFinder:
     def __init__(self, words_path: Path = WORDS_PATH, matrix_path: Path = MATRIX_PATH):
-        print("探索エンジン初期化中...")
+        print(f"探索エンジン初期化中... (辞書: {words_path.name})")
         with open(words_path, "r", encoding="utf-8") as f:
             self.words: list[dict[str, Any]] = json.load(f)
             
@@ -115,31 +116,55 @@ class AmbigramFinder:
         self.words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)
         self.common_words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)
 
-        for w in self.words:
-            reading = w.get("reading", "")
-            is_common = w.get("common", False)
-            kanji_list = w.get("kanji", [])
-            katakana_list = w.get("katakana", [])
+        is_flat_catalog = bool(self.words and "word" in self.words[0])
 
-            # 長さ別インデックス登録
-            w_len = len(reading)
-            self.words_by_len[w_len].append(w)
-            if is_common:
-                self.common_words_by_len[w_len].append(w)
+        if is_flat_catalog:
+            # 新形式 (words_catalog.json): 単語・表記ベースのフラット辞書
+            for w in self.words:
+                w_str = w.get("word", "")
+                reading = w.get("reading", "")
+                w_type = w.get("type", "kanji")
+                is_common = w.get("common", True)
+                w_len = w.get("length", len(w_str))
 
-            for k in kanji_list:
-                if k not in self.kanji_to_word:
-                    self.kanji_to_word[k] = w
-                else:
-                    curr = self.kanji_to_word[k]
-                    curr_rank = (1 if curr.get("display") == k else 0, 1 if curr.get("common") else 0, -curr.get("kanji", []).index(k) if k in curr.get("kanji", []) else -99)
-                    new_rank = (1 if w.get("display") == k else 0, 1 if w.get("common") else 0, -w.get("kanji", []).index(k) if k in w.get("kanji", []) else -99)
-                    if new_rank > curr_rank:
+                self.words_by_len[w_len].append(w)
+                if is_common:
+                    self.common_words_by_len[w_len].append(w)
+
+                if w_type == "kanji" or w_type == "phrase":
+                    self.kanji_to_word[w_str] = w
+                elif w_type == "katakana":
+                    self.katakana_to_word[w_str] = w
+                
+                # 読みからも引けるように補助登録
+                if reading and reading not in self.kanji_to_word:
+                    self.kanji_to_word[reading] = w
+        else:
+            # 旧形式 (hiragana_words.json): 読みベースの入れ子辞書
+            for w in self.words:
+                reading = w.get("reading", "")
+                is_common = w.get("common", False)
+                kanji_list = w.get("kanji", [])
+                katakana_list = w.get("katakana", [])
+
+                w_len = len(reading)
+                self.words_by_len[w_len].append(w)
+                if is_common:
+                    self.common_words_by_len[w_len].append(w)
+
+                for k in kanji_list:
+                    if k not in self.kanji_to_word:
                         self.kanji_to_word[k] = w
+                    else:
+                        curr = self.kanji_to_word[k]
+                        curr_rank = (1 if curr.get("display") == k else 0, 1 if curr.get("common") else 0, -curr.get("kanji", []).index(k) if k in curr.get("kanji", []) else -99)
+                        new_rank = (1 if w.get("display") == k else 0, 1 if w.get("common") else 0, -w.get("kanji", []).index(k) if k in w.get("kanji", []) else -99)
+                        if new_rank > curr_rank:
+                            self.kanji_to_word[k] = w
 
-            for kat in katakana_list:
-                if kat not in self.katakana_to_word or (is_common and not self.katakana_to_word[kat].get("common")):
-                    self.katakana_to_word[kat] = w
+                for kat in katakana_list:
+                    if kat not in self.katakana_to_word or (is_common and not self.katakana_to_word[kat].get("common")):
+                        self.katakana_to_word[kat] = w
 
         # 事前スコアインデックス（真のスコア降順ランキング用）のロード
         self.scored_words: list[dict[str, Any]] = []
@@ -316,6 +341,7 @@ class AmbigramFinder:
         include_kanji: bool = True,
         include_katakana: bool = True,
         include_hiragana: bool = True,
+        include_phrase: bool = True,
     ) -> Generator[dict[str, Any], None, None]:
         """
         条件に合致する自己対称アンビグラム適性単語を真のスコア降順で探索・ストリーミング配信する。
@@ -360,6 +386,8 @@ class AmbigramFinder:
                 if script_type == "kanji" and not include_kanji:
                     continue
                 if script_type == "katakana" and not include_katakana:
+                    continue
+                if (script_type == "phrase" or script_type == "compound") and not include_phrase:
                     continue
 
                 # クエリマッチ判定 (通常部分一致 + 正規表現)

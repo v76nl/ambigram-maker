@@ -188,6 +188,7 @@ async def stream_words(
     include_kanji: bool = Query(True),
     include_katakana: bool = Query(True),
     include_hiragana: bool = Query(True),
+    include_phrase: bool = Query(True),
 ):
     """
     自己対称アンビグラム適性単語をリアルタイムにSSEストリーミング配信
@@ -196,7 +197,7 @@ async def stream_words(
     t0 = time.time()
     logger.info(
         f"単語ストリーミング開始: query='{query}', 長さ={min_length}~{max_length}, 最小スコア={min_score}, 件数上限={limit}, "
-        f"常用語={common_only}, 漢字={include_kanji}, カタカナ={include_katakana}, ひらがな={include_hiragana}"
+        f"常用語={common_only}, 漢字={include_kanji}, カタカナ={include_katakana}, ひらがな={include_hiragana}, フレーズ={include_phrase}"
     )
 
     async def event_generator():
@@ -212,6 +213,7 @@ async def stream_words(
                 include_kanji=include_kanji,
                 include_katakana=include_katakana,
                 include_hiragana=include_hiragana,
+                include_phrase=include_phrase,
             ):
                 count += 1
                 yield f"data: {json.dumps(word_item, ensure_ascii=False)}\n\n"

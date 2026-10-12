@@ -17,9 +17,11 @@ interface WordSearchProps {
   includeHiragana: boolean;
   includeKanji: boolean;
   includeKatakana: boolean;
+  includePhrase: boolean;
   onToggleHiragana: () => void;
   onToggleKanji: () => void;
   onToggleKatakana: () => void;
+  onTogglePhrase: () => void;
   minScore: number;
   onMinScoreChange: (val: number) => void;
   limit: number;
@@ -44,9 +46,11 @@ export const WordSearch: React.FC<WordSearchProps> = ({
   includeHiragana,
   includeKanji,
   includeKatakana,
+  includePhrase,
   onToggleHiragana,
   onToggleKanji,
   onToggleKatakana,
+  onTogglePhrase,
   minScore,
   onMinScoreChange,
   limit,
@@ -107,7 +111,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
         {/* 文字種トグル */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           <span className="swiss-field-label">文字種</span>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.35rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.35rem" }}>
             <button
               type="button"
               className={`script-toggle-btn ${includeHiragana ? "active" : ""}`}
@@ -131,6 +135,14 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               title="カタカナ表記を含む語"
             >
               カタカナ
+            </button>
+            <button
+              type="button"
+              className={`script-toggle-btn ${includePhrase ? "active" : ""}`}
+              onClick={onTogglePhrase}
+              title="「最古の文書」などの複合語・名詞句"
+            >
+              フレーズ
             </button>
           </div>
         </div>
@@ -324,6 +336,11 @@ export const WordSearch: React.FC<WordSearchProps> = ({
                 <div style={{ display: "flex", alignItems: "baseline", gap: "0.45rem", minWidth: 0 }}>
                   <span className="word-main">{mainText}</span>
                   {showSub && <span className="word-reading-sub">{w.reading}</span>}
+                  {w.script_type === "phrase" && (
+                    <span style={{ fontSize: "0.62rem", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "3px", padding: "0 3px", lineHeight: "1.2" }}>
+                      句
+                    </span>
+                  )}
                 </div>
                 <div className="word-score">
                   {w.score.toFixed(3)}

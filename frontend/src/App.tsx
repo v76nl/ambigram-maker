@@ -36,9 +36,11 @@ export const App: React.FC = () => {
     includeHiragana,
     includeKanji,
     includeKatakana,
+    includePhrase,
     handleToggleHiragana,
     handleToggleKanji,
     handleToggleKatakana,
+    handleTogglePhrase,
     minScore,
     setMinScore,
     wordLimit,
@@ -448,9 +450,11 @@ export const App: React.FC = () => {
             includeHiragana={includeHiragana}
             includeKanji={includeKanji}
             includeKatakana={includeKatakana}
+            includePhrase={includePhrase}
             onToggleHiragana={handleToggleHiragana}
             onToggleKanji={handleToggleKanji}
             onToggleKatakana={handleToggleKatakana}
+            onTogglePhrase={handleTogglePhrase}
             minScore={minScore}
             onMinScoreChange={setMinScore}
             limit={wordLimit}

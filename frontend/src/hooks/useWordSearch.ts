@@ -12,6 +12,7 @@ export function useWordSearch() {
   const [includeHiragana, setIncludeHiragana] = useState<boolean>(true);
   const [includeKanji, setIncludeKanji] = useState<boolean>(true);
   const [includeKatakana, setIncludeKatakana] = useState<boolean>(true);
+  const [includePhrase, setIncludePhrase] = useState<boolean>(true);
   const [minScore, setMinScore] = useState<number>(0.75);
   const [wordLimit, setWordLimit] = useState<number>(100);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
@@ -22,24 +23,31 @@ export function useWordSearch() {
   // トグル制御 (すべてOFFになるのを防ぐ)
   const handleToggleHiragana = useCallback(() => {
     setIncludeHiragana((prev) => {
-      if (prev && !includeKanji && !includeKatakana) return prev;
+      if (prev && !includeKanji && !includeKatakana && !includePhrase) return prev;
       return !prev;
     });
-  }, [includeKanji, includeKatakana]);
+  }, [includeKanji, includeKatakana, includePhrase]);
 
   const handleToggleKanji = useCallback(() => {
     setIncludeKanji((prev) => {
-      if (prev && !includeHiragana && !includeKatakana) return prev;
+      if (prev && !includeHiragana && !includeKatakana && !includePhrase) return prev;
       return !prev;
     });
-  }, [includeHiragana, includeKatakana]);
+  }, [includeHiragana, includeKatakana, includePhrase]);
 
   const handleToggleKatakana = useCallback(() => {
     setIncludeKatakana((prev) => {
-      if (prev && !includeHiragana && !includeKanji) return prev;
+      if (prev && !includeHiragana && !includeKanji && !includePhrase) return prev;
       return !prev;
     });
-  }, [includeHiragana, includeKanji]);
+  }, [includeHiragana, includeKanji, includePhrase]);
+
+  const handleTogglePhrase = useCallback(() => {
+    setIncludePhrase((prev) => {
+      if (prev && !includeHiragana && !includeKanji && !includeKatakana) return prev;
+      return !prev;
+    });
+  }, [includeHiragana, includeKanji, includeKatakana]);
 
   // 単語一覧の読み込み (リアルタイムSSEストリーミング)
   const loadWords = useCallback(() => {
@@ -63,6 +71,7 @@ export function useWordSearch() {
         includeKanji,
         includeKatakana,
         includeHiragana,
+        includePhrase,
       },
       (newWord) => {
         setWords((prev) => {
@@ -90,7 +99,7 @@ export function useWordSearch() {
     );
 
     streamCancelRef.current = cancel;
-  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, minScore, wordLimit]);
+  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, includePhrase, minScore, wordLimit]);
 
   // デバウンス付き自動検索
   useEffect(() => {
@@ -143,9 +152,11 @@ export function useWordSearch() {
     includeHiragana,
     includeKanji,
     includeKatakana,
+    includePhrase,
     handleToggleHiragana,
     handleToggleKanji,
     handleToggleKatakana,
+    handleTogglePhrase,
     minScore,
     setMinScore,
     wordLimit,

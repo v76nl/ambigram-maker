@@ -1,5 +1,5 @@
 """
-常用語辞書からアンビグラム適性単語の事前スコアインデックス (scored_words.json) を生成するスクリプト
+常用語・複合語辞書 (words_catalog.json) からアンビグラム適性単語の事前スコアインデックス (scored_words.json) を生成するスクリプト
 """
 import sys
 import os
@@ -7,10 +7,11 @@ from pathlib import Path
 import json
 import time
 
-sys.path.insert(0, os.path.abspath("."))
-from search.finder import AmbigramFinder, classify_script_types
-
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BACKEND_DIR))
+from search.finder import AmbigramFinder
+
+CATALOG_FILE = BACKEND_DIR / "dictionary" / "words_catalog.json"
 OUTPUT_FILE = BACKEND_DIR / "dictionary" / "scored_words.json"
 
 def is_valid_japanese_text(text: str) -> bool:
@@ -27,59 +28,44 @@ def generate_index():
     scored_words = []
     seen = set()
 
-    for l in range(2, 8):
-        pool = f.common_words_by_len.get(l, [])
-        for item in pool:
-            reading = item["reading"]
-            kanji_list = item.get("kanji", [])
-            katakana_list = item.get("katakana", [])
+    # words_catalog.json が存在する場合はそこから全件走査
+    if CATALOG_FILE.exists():
+        print(f"カタログファイルを読み込み中: {CATALOG_FILE}")
+        with open(CATALOG_FILE, "r", encoding="utf-8") as fp:
+            catalog = json.load(fp)
 
-            is_pure_hg, has_kj, has_kt, primary_disp, pk, pkt = classify_script_types(reading, kanji_list, katakana_list)
+        for item in catalog:
+            target_text = item.get("word", "")
+            reading = item.get("reading", "")
+            script_type = item.get("type", "hiragana")
 
-            targets = []
-            if is_pure_hg:
-                targets.append((reading, "hiragana"))
-            if has_kj and pk:
-                targets.append((pk, "kanji"))
-            if has_kt and pkt:
-                targets.append((pkt, "katakana"))
+            if not is_valid_japanese_text(target_text):
+                continue
+            if len(target_text) < 2 or len(target_text) > 6:
+                continue
+            if target_text in seen:
+                continue
 
-            for target_text, script_type in targets:
-                if not is_valid_japanese_text(target_text):
-                    continue
-                if len(target_text) < 2 or len(target_text) > 6:
-                    continue
-                if target_text in seen:
-                    continue
+            res = f.evaluate_word(
+                target_text,
+                is_common=item.get("common", True),
+                display=target_text,
+                force_target_text=target_text,
+            )
+            score = round(res["score"], 4)
 
-                res = f.evaluate_word(
-                    target_text,
-                    is_common=True,
-                    kanji=kanji_list,
-                    katakana=katakana_list,
-                    display=target_text,
-                    force_target_text=target_text,
-                )
-                score = round(res["score"], 4)
-
-                # UIスライダーの最小値であるスコア0.50以上のみを厳選
-                if score >= 0.50:
-                    clean_item = {
-                        "target_text": target_text,
-                        "reading": reading,
-                        "score": score,
-                        "script_type": script_type,
-                    }
-                    if kanji_list:
-                        clean_item["kanji"] = kanji_list
-                    if katakana_list:
-                        clean_item["katakana"] = katakana_list
-                    display = res.get("display", target_text)
-                    if display and display != target_text:
-                        clean_item["display"] = display
-
-                    scored_words.append(clean_item)
-                    seen.add(target_text)
+            # UIスライダーの最小値であるスコア0.50以上を厳選
+            if score >= 0.50:
+                clean_item = {
+                    "target_text": target_text,
+                    "reading": reading,
+                    "score": score,
+                    "script_type": script_type,
+                }
+                scored_words.append(clean_item)
+                seen.add(target_text)
+    else:
+        print("words_catalog.json が見つかりません。旧形式で生成します。")
 
     # スコア降順に完全ソート
     scored_words.sort(key=lambda x: x["score"], reverse=True)
