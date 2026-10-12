@@ -1,0 +1,12 @@
+{
+  "name": "ambigram-maker-slides",
+  "version": "1.0.0",
+  "private": true,
+  "description": "研究発表スライド",
+  "scripts": {
+    "build:html": "npx -y @marp-team/marp-cli --no-stdin --allow-local-files slides.md -o slides.html",
+    "build:pdf": "npx -y @marp-team/marp-cli --no-stdin --allow-local-files --pdf slides.md -o slides.pdf",
+    "check": "python scripts/check_overflow.py slides.pdf",
+    "build": "npm run build:html && npm run build:pdf && npm run check"
+  }
+}
