@@ -58,6 +58,34 @@ style: |
     display: none;
   }
 
+  /* ページ番号: スライド右下に見切れる四角形バッジ & 白抜き文字 */
+  section::after {
+    content: attr(data-marpit-pagination);
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    min-width: 68px;
+    height: 52px;
+    padding: 0 16px;
+    background-color: #D84315;
+    color: #FFFFFF !important;
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    z-index: 10;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  section:not([data-marpit-pagination])::after,
+  section.title-slide::after {
+    display: none !important;
+  }
+
   /* 一般スライドの見出し (進捗インジケーター付き区切り線) */
   h1 {
     font-size: 38px;
@@ -89,13 +117,12 @@ style: |
     );
   }
 
-  /* スライドごとの進捗率 (全6ページ構成) */
-  section:nth-of-type(1), section[id="1"] { --progress: 16.6%; }
-  section:nth-of-type(2), section[id="2"] { --progress: 33.3%; }
-  section:nth-of-type(3), section[id="3"] { --progress: 50.0%; }
-  section:nth-of-type(4), section[id="4"] { --progress: 66.6%; }
-  section:nth-of-type(5), section[id="5"] { --progress: 83.3%; }
-  section:nth-of-type(6), section[id="6"] { --progress: 100.0%; }
+  /* スライドごとの進捗率 (全5ページ構成) */
+  section:nth-of-type(1), section[id="1"] { --progress: 20.0%; }
+  section:nth-of-type(2), section[id="2"] { --progress: 40.0%; }
+  section:nth-of-type(3), section[id="3"] { --progress: 60.0%; }
+  section:nth-of-type(4), section[id="4"] { --progress: 80.0%; }
+  section:nth-of-type(5), section[id="5"] { --progress: 100.0%; }
 
   /* 2カラムレイアウト (縦中央揃え) */
   .slide-grid {
@@ -290,31 +317,6 @@ style: |
     margin-right: 6px;
   }
 
-  /* 参考文献リスト */
-  ul.ref-list {
-    margin: 0;
-    padding-left: 20px;
-    list-style-type: none;
-  }
-
-  ul.ref-list > li {
-    font-size: 19px;
-    line-height: 1.5;
-    letter-spacing: 0.01em;
-    margin-bottom: 12px;
-    color: #334155;
-    text-indent: -34px;
-    padding-left: 34px;
-  }
-
-  ul.ref-list > li:last-child {
-    margin-bottom: 0;
-  }
-
-  ul.ref-list > li strong {
-    color: #1A1A1A;
-  }
-
   footer {
     font-size: 16px;
     color: #A0AEC0;
@@ -361,11 +363,6 @@ style: |
       <span class="toc-text"><span class="toc-num">3.</span><strong>まとめと今後の展望（仮）</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">5</span>
-    </div>
-    <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">4.</span><strong>参考文献（仮）</strong></span>
-      <span class="toc-leader"></span>
-      <span class="toc-page">6</span>
     </div>
   </div>
 </div>
@@ -447,24 +444,6 @@ style: |
     <li>
       <strong>今後の課題と発展（仮）</strong><br>
       現時点での制約事項や、今後取り組むべき拡張方針について述べます。
-    </li>
-  </ul>
-</div>
-
----
-
-# 参考文献（仮）
-
-<div class="main-col">
-  <ul class="ref-list">
-    <li>
-      [1] 著者名 (2025). 論文・文献タイトルプレースホルダー. <em>掲載誌・会議名</em>, Vol. 10, No. 2, pp. 100-110.
-    </li>
-    <li>
-      [2] 著者名 (2024). 書籍・文献タイトルプレースホルダー. 出版社名.
-    </li>
-    <li>
-      [3] 著者名 (2026). Webリソース・資料タイトルプレースホルダー. https://example.com/reference
     </li>
   </ul>
 </div>
