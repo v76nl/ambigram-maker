@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const mode = process.argv[2] || 'html'; // 'html', 'pdf', 'all'
+const mode = process.argv[2] || 'html'; // 'html', 'pdf', 'pptx', 'all'
 const slidesDir = path.resolve(__dirname, '..');
 const sourceFile = path.join(slidesDir, 'slides.md');
 const tmpFile = path.join(slidesDir, '_slides.built.md');
@@ -103,6 +103,15 @@ function build() {
     if (mode === 'pdf' || mode === 'all') {
       console.log('[build.js] Converting markdown to PDF...');
       execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pdf "_slides.built.md" -o slides.pdf`, {
+        cwd: slidesDir,
+        stdio: 'inherit',
+        shell: true,
+      });
+    }
+
+    if (mode === 'pptx' || mode === 'all') {
+      console.log('[build.js] Converting markdown to PPTX...');
+      execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pptx "_slides.built.md" -o slides.pptx`, {
         cwd: slidesDir,
         stdio: 'inherit',
         shell: true,

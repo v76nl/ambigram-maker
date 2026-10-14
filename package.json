@@ -7,6 +7,7 @@
     "dev:frontend": "pnpm --prefix frontend dev",
     "build": "pnpm --prefix frontend build",
     "slides:build": "npm --prefix slides run build",
+    "slides:build:pptx": "npm --prefix slides run build:pptx",
     "slides:check": "npm --prefix slides run check"
   },
   "devDependencies": {
