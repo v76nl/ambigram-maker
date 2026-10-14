@@ -331,9 +331,9 @@ style: |
 <div class="accent-bar"></div>
 
 <div class="meta-info">
-所属組織名 / 専攻名<br>
-氏名（学籍番号）<br>
-2026年XX月XX日
+{{AFFILIATION}}<br>
+{{STUDENT_NAME}}（{{STUDENT_ID}}）<br>
+{{PRESENTATION_DATE}}
 </div>
 
 ---
