@@ -117,14 +117,15 @@ style: |
     );
   }
 
-  /* スライドごとの進捗率 (全7ページ構成) */
-  section:nth-of-type(1), section[id="1"] { --progress: 14.3%; }
-  section:nth-of-type(2), section[id="2"] { --progress: 28.6%; }
-  section:nth-of-type(3), section[id="3"] { --progress: 42.9%; }
-  section:nth-of-type(4), section[id="4"] { --progress: 57.1%; }
-  section:nth-of-type(5), section[id="5"] { --progress: 71.4%; }
-  section:nth-of-type(6), section[id="6"] { --progress: 85.7%; }
-  section:nth-of-type(7), section[id="7"] { --progress: 100.0%; }
+  /* スライドごとの進捗率 (全8ページ構成) */
+  section:nth-of-type(1), section[id="1"] { --progress: 12.5%; }
+  section:nth-of-type(2), section[id="2"] { --progress: 25.0%; }
+  section:nth-of-type(3), section[id="3"] { --progress: 37.5%; }
+  section:nth-of-type(4), section[id="4"] { --progress: 50.0%; }
+  section:nth-of-type(5), section[id="5"] { --progress: 62.5%; }
+  section:nth-of-type(6), section[id="6"] { --progress: 75.0%; }
+  section:nth-of-type(7), section[id="7"] { --progress: 87.5%; }
+  section:nth-of-type(8), section[id="8"] { --progress: 100.0%; }
 
   /* 2カラムレイアウト (縦中央揃え) */
   .slide-grid {
@@ -413,6 +414,77 @@ style: |
     justify-content: flex-start !important;
   }
 
+  /* 研究の3要素カードグリッド */
+  .three-elements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    width: 100%;
+    margin-top: 14px;
+    align-items: stretch;
+    flex: 1;
+  }
+
+  .element-card {
+    background-color: #FFFFFF;
+    border: 2px solid #CBD5E1;
+    border-radius: 14px;
+    padding: 24px 20px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .element-card.accent-card {
+    border-color: #D84315;
+    background: #FFFDFB;
+  }
+
+  .element-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #F1F5F9;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+
+  .element-title {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1A1A1A;
+  }
+
+  .status-badge {
+    font-size: 19px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 6px;
+    border: 2px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #1A1A1A;
+  }
+
+  .status-badge.accent {
+    border-color: #D84315;
+    color: #D84315;
+    background: #FFF3E0;
+  }
+
+  .status-badge.warn {
+    border-color: #E53E3E;
+    color: #E53E3E;
+    background: #FFF5F5;
+  }
+
+  .element-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
   .toc-wrapper {
     flex: 1;
     display: flex;
@@ -541,9 +613,14 @@ style: |
       <span class="toc-page">6</span>
     </div>
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">4.</span><strong>まとめと今後の展望</strong></span>
+      <span class="toc-text"><span class="toc-num">4.</span><strong>研究の3要素確認</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">7</span>
+    </div>
+    <div class="toc-item">
+      <span class="toc-text"><span class="toc-num">5.</span><strong>まとめと今後の展望</strong></span>
+      <span class="toc-leader"></span>
+      <span class="toc-page">8</span>
     </div>
   </div>
 </div>
@@ -629,7 +706,61 @@ style: |
 
 ---
 
-# 4. まとめと今後の展望
+# 4. 研究の3要素確認
+
+<div class="three-elements-grid">
+  <!-- 新規性 -->
+  <div class="element-card accent-card">
+    <div class="element-header">
+      <span class="element-title">新規性</span>
+      <span class="status-badge accent">◎ あり</span>
+    </div>
+    <div class="element-content">
+      <p style="font-size: 26px; font-weight: 700; color: #D84315; margin-bottom: 14px; line-height: 1.4;">○○なのであり</p>
+      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
+        <li style="margin-bottom: 8px;">20万語の対称性探索と骨格手順変形</li>
+        <li>職人芸に依存しない制作支援手法</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 信頼性 -->
+  <div class="element-card">
+    <div class="element-header">
+      <span class="element-title">信頼性</span>
+      <span class="status-badge">◯ あり？</span>
+    </div>
+    <div class="element-content">
+      <p style="font-size: 25px; font-weight: 700; color: #1A1A1A; margin-bottom: 14px; line-height: 1.4;">実際に読めている時点であり？</p>
+      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
+        <li style="margin-bottom: 8px;">180度回転後も「最悪」と判読可能</li>
+        <li>AI判定による客観的可読性評価</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 有効性 -->
+  <div class="element-card" style="border-color: #E2E8F0;">
+    <div class="element-header">
+      <span class="element-title">有効性</span>
+      <span class="status-badge warn">△ 微妙！</span>
+    </div>
+    <div class="element-content">
+      <p style="font-size: 25px; font-weight: 700; color: #C53030; margin-bottom: 12px; line-height: 1.4;">微妙！ どう活用するかが未定</p>
+      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
+        <li style="margin-bottom: 8px;">「何のために使うのか？」「誰が喜ぶか？」</li>
+        <li>実社会・デザイン現場での価値を模索中</li>
+      </ul>
+      <div style="margin-top: 14px; background: #FFF5F5; border: 1.5px dashed #FEB2B2; border-radius: 8px; padding: 8px 12px; font-size: 18px; line-height: 1.35; color: #C53030; font-weight: 700; text-align: center;">
+        → ぜひ活用アイデアを教えてください！
+      </div>
+    </div>
+  </div>
+</div>
+
+---
+
+# 5. まとめと今後の展望
 
 <div class="slide-grid">
   <div class="main-col">
