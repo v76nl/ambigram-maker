@@ -29,7 +29,7 @@ style: |
   }
 
   section.title-slide h1 {
-    font-size: 48px;
+    font-size: 40px;
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: 0.03em;
@@ -326,7 +326,7 @@ style: |
 <!-- _class: title-slide -->
 <!-- _paginate: false -->
 
-# 研究発表のタイトル（仮）<br>サブタイトル・副題（仮）
+# フォント骨格の手順的変形に基づく<br>180度回転型日本語アンビグラム制作支援システム
 
 <div class="accent-bar"></div>
 
@@ -340,27 +340,22 @@ style: |
 
 <!-- _class: toc-slide -->
 
-# 目次（仮）
+# 目次
 
 <div class="toc-wrapper">
   <div class="toc-container">
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">1.</span><strong>第1章のタイトル（仮）</strong></span>
+      <span class="toc-text"><span class="toc-num">1.</span><strong>はじめに</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">3</span>
     </div>
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">2.</span><strong>第2章のタイトル（仮）</strong></span>
-      <span class="toc-leader"></span>
-      <span class="toc-page">4</span>
-    </div>
-    <div class="toc-sub-item">
-      <span class="toc-text"><span class="toc-accent">▶</span>サブセクションのタイトル（仮）</span>
+      <span class="toc-text"><span class="toc-num">2.</span><strong>研究背景と課題（仮）</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">4</span>
     </div>
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">3.</span><strong>まとめと今後の展望（仮）</strong></span>
+      <span class="toc-text"><span class="toc-num">3.</span><strong>提案システム・アプローチ（仮）</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">5</span>
     </div>
@@ -369,31 +364,32 @@ style: |
 
 ---
 
-# 第1章：背景と課題設定（仮）
+# 1. はじめに
 
 <div class="slide-grid">
   <div class="main-col">
     <ul class="points">
       <li>
-        <strong>項目見出し 1（仮）</strong><br>
-        本文テキストの説明文です。ここには研究の背景や問題意識などの詳細な記述が入ります。
+        <strong>11/29 HCD-Net 学会でポスター発表予定</strong><br>
+        本研究は、人間中心設計推進機構（HCD-Net）の研究発表会にてポスター発表を予定している。
       </li>
       <li>
-        <strong>項目見出し 2（仮）</strong><br>
-        本文テキストの説明文です。従来のアプローチや課題点について簡潔に記述します。
+        <strong>AIエージェントを活用した研究・開発</strong><br>
+        アルゴリズム設計や実装にAIエージェントを活用して進めたため、見落としや論理の穴があるかもしれない。
       </li>
       <li>
-        <strong>項目見出し 3（仮）</strong><br>
-        本文テキストの説明文です。本発表で提案する手法の狙いや独自性を明記します。
+        <strong>忌憚のないご意見・フィードバックを歓迎</strong><br>
+        発表の完成度を高めるため、気になった点や疑問点、改善アイデアがあればぜひ教えてほしい。
       </li>
     </ul>
   </div>
   <div class="diag-box">
-    <div class="rel-badge">要素A（仮）</div>
-    <div style="font-size: 24px; color: #D84315; font-weight: bold;">↓</div>
-    <div class="rel-badge accent">中核要素B（仮）</div>
-    <div class="placeholder-card">
-      図表・概念図<br>プレースホルダー
+    <div class="rel-badge accent">11/29 HCD-Net<br>ポスター発表</div>
+    <div style="font-size: 24px; color: #D84315; font-weight: bold;">×</div>
+    <div class="rel-badge">AIエージェント<br>共創研究</div>
+    <div class="placeholder-card" style="padding: 16px; font-size: 19px; line-height: 1.4;">
+      <strong>ご意見募集中</strong><br>
+      気になった点は<br>ぜひ教えてください！
     </div>
   </div>
 </div>
