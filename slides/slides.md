@@ -427,32 +427,14 @@ style: |
 
 # 1. はじめに
 
-<div class="slide-grid">
-  <div class="main-col">
-    <ul class="points">
-      <li>
-        <strong>11/29 HCD-Net 学会でポスター発表予定</strong><br>
-        本研究は、人間中心設計推進機構（HCD-Net）の研究発表会にてポスター発表を予定している。
-      </li>
-      <li>
-        <strong>AIエージェントを活用した研究・開発</strong><br>
-        アルゴリズム設計や実装にAIエージェントを活用して進めたため、見落としや論理の穴があるかもしれない。
-      </li>
-      <li>
-        <strong>忌憚のないご意見・フィードバックを歓迎</strong><br>
-        発表の完成度を高めるため、気になった点や疑問点、改善アイデアがあればぜひ教えてほしい。
-      </li>
-    </ul>
-  </div>
-  <div class="diag-box">
-    <div class="rel-badge accent">11/29 HCD-Net<br>ポスター発表</div>
-    <div style="font-size: 24px; color: #D84315; font-weight: bold;">×</div>
-    <div class="rel-badge">AIエージェント<br>共創研究</div>
-    <div class="placeholder-card" style="padding: 16px; font-size: 19px; line-height: 1.4;">
-      <strong>ご意見募集中</strong><br>
-      気になった点は<br>ぜひ教えてください！
-    </div>
-  </div>
+<div class="main-col" style="justify-content: center; flex: 1;">
+  <ul class="points" style="font-size: 30px; line-height: 1.6;">
+    <li>本研究は、11月29日のHCD-Net (学会) でポスター発表を予定しています</li>
+    <li>アルゴリズム設計や実装にAIエージェントを活用して進めたため、見落としや論理の穴があるかもしれません</li>
+    <li style="list-style-type: none; margin-left: -28px; margin-top: 20px;">
+      <strong style="color: #D84315;">→ 気になった点や疑問点、改善アイデアがあれば教えてください！</strong>
+    </li>
+  </ul>
 </div>
 
 ---
