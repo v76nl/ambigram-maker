@@ -232,34 +232,116 @@ style: |
     background-color: #FFFFFF !important;
   }
 
-  /* アンビグラム展示用カード & アニメーション */
-  .ambigram-card {
-    width: 100%;
-    background-color: #FFFFFF;
-    border: 2px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 16px 12px;
+  /* 中央配置レイアウト */
+  .center-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    align-items: center;
+    width: 100%;
+    text-align: center;
   }
 
-  .ambigram-card img {
-    max-width: 96%;
-    max-height: 200px;
+  .question-text {
+    font-size: 38px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 28px;
+    letter-spacing: 0.02em;
+  }
+
+  .single-ambigram-box {
+    width: 520px;
+    background-color: #FFFFFF;
+    border: 2px solid #CBD5E1;
+    border-radius: 14px;
+    padding: 24px;
+    box-sizing: border-box;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .single-ambigram-box img {
+    max-width: 100%;
+    max-height: 260px;
     object-fit: contain;
     display: block;
   }
 
-  /* 180度回転アニメーション */
-  @keyframes spinTo180 {
+  /* 分裂 & 180度回転ステージ */
+  .split-ambigram-stage {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 48px;
+    width: 100%;
+    max-width: 960px;
+    margin: 8px 0 16px 0;
+    position: relative;
+  }
+
+  .split-card {
+    flex: 1;
+    background-color: #FFFFFF;
+    border: 2px solid #CBD5E1;
+    border-radius: 14px;
+    padding: 16px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .split-card img {
+    max-width: 95%;
+    max-height: 220px;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* アニメーション: 中央から左へ移動 (ease-in-out) */
+  @keyframes slide-to-left {
+    0% {
+      transform: translateX(calc(50% + 24px));
+      z-index: 1;
+    }
+    15% {
+      transform: translateX(calc(50% + 24px));
+      z-index: 1;
+    }
+    100% {
+      transform: translateX(0);
+      z-index: 1;
+    }
+  }
+
+  /* アニメーション: 中央から右へ移動 (ease-in-out) */
+  @keyframes slide-to-right {
+    0% {
+      transform: translateX(calc(-50% - 24px));
+      z-index: 2;
+    }
+    15% {
+      transform: translateX(calc(-50% - 24px));
+      z-index: 2;
+    }
+    100% {
+      transform: translateX(0);
+      z-index: 2;
+    }
+  }
+
+  /* 画像の180度回転アニメーション (ease-in-out) */
+  @keyframes img-spin-180 {
     0% {
       transform: rotate(0deg);
     }
-    20% {
+    15% {
       transform: rotate(0deg);
     }
     100% {
@@ -267,16 +349,28 @@ style: |
     }
   }
 
-  .rotate-180-anim {
-    display: inline-block;
+  .anim-left {
+    animation: slide-to-left 1.4s ease-in-out 0.2s forwards;
+  }
+
+  .anim-right {
+    animation: slide-to-right 1.4s ease-in-out 0.2s forwards;
+  }
+
+  .anim-rotate-img {
     transform: rotate(180deg);
-    animation: spinTo180 1.5s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
+    animation: img-spin-180 1.4s ease-in-out 0.2s forwards;
     transform-origin: center center;
   }
 
+  /* 印刷・PDF時は回転した静止状態で確定 */
   @media print {
-    .rotate-180-anim {
+    .anim-left,
+    .anim-right,
+    .anim-rotate-img {
       animation: none !important;
+    }
+    .anim-rotate-img {
       transform: rotate(180deg) !important;
     }
   }
@@ -441,28 +535,10 @@ style: |
 
 # 2. アンビグラムとは？
 
-<div class="slide-grid">
-  <div class="main-col">
-    <ul class="points">
-      <li>
-        <strong>Q. この文字、何と読めますか？</strong><br>
-        少し不思議な形をしていますが、ある日本語の2文字の言葉として読むことができます。
-      </li>
-      <li>
-        <strong>パッと見の印象</strong><br>
-        「最悪……？」と読めたでしょうか。一見すると、少し崩した個性的な筆文字のようにも見えます。
-      </li>
-      <li>
-        <strong>では、この文字を逆さにしてみると……？</strong><br>
-        次のスライドで、この文字を<strong>180度ひっくり返して</strong>みます。
-      </li>
-    </ul>
-  </div>
-  <div class="diag-box">
-    <div class="ambigram-card">
-      <img src="images/ambigram_saiaku.png" alt="最悪 アンビグラム 正位置">
-    </div>
-    <div class="rel-badge">正位置（0°）</div>
+<div class="center-content">
+  <div class="question-text">この文字、何と読めますか？</div>
+  <div class="single-ambigram-box">
+    <img src="images/ambigram_saiaku.png" alt="最悪 アンビグラム">
   </div>
 </div>
 
@@ -470,28 +546,21 @@ style: |
 
 # 2. 180度回転型アンビグラム
 
-<div class="slide-grid">
-  <div class="main-col">
-    <ul class="points">
-      <li>
-        <strong>逆さにしても同じ「最悪」と読める！</strong><br>
-        180度回転させても元の単語と同じ文字列として成立するタイポグラフィ（自己対称型アンビグラム）。
-      </li>
-      <li>
-        <strong>人間の文字認識の不思議さ</strong><br>
-        完全な幾何学的対称でなくても、脳が前後の文脈や知識から「最悪」と補完（トップダウン認知）。
-      </li>
-      <li>
-        <strong>しかし、作るのが極めて難しい（工学的課題）</strong><br>
-        どの単語なら成立するか（探索）、どう骨格を変形させるか（変形）、他人に読めるか（客観評価）が職人芸に依存。
-      </li>
-    </ul>
-  </div>
-  <div class="diag-box">
-    <div class="ambigram-card">
-      <img src="images/ambigram_saiaku.png" class="rotate-180-anim" alt="最悪 アンビグラム 180度回転">
+<div class="center-content">
+  <div class="split-ambigram-stage">
+    <!-- 左：正位置（中央から左へ移動） -->
+    <div class="split-card anim-left">
+      <img src="images/ambigram_saiaku.png" alt="最悪 正位置">
+      <div class="rel-badge" style="margin-top: 14px; font-size: 22px; padding: 6px 16px;">0°（正位置）</div>
     </div>
-    <div class="rel-badge accent">180°回転（点対称）</div>
+    <!-- 右：180度回転（中央から回転しながら右へ移動） -->
+    <div class="split-card anim-right">
+      <img src="images/ambigram_saiaku.png" class="anim-rotate-img" alt="最悪 180度回転">
+      <div class="rel-badge accent" style="margin-top: 14px; font-size: 22px; padding: 6px 16px;">180°回転</div>
+    </div>
+  </div>
+  <div style="font-size: 26px; color: #2D3748; line-height: 1.5; margin-top: 10px;">
+    逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（自己対称型アンビグラム）
   </div>
 </div>
 
