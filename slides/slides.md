@@ -117,12 +117,14 @@ style: |
     );
   }
 
-  /* スライドごとの進捗率 (全5ページ構成) */
-  section:nth-of-type(1), section[id="1"] { --progress: 20.0%; }
-  section:nth-of-type(2), section[id="2"] { --progress: 40.0%; }
-  section:nth-of-type(3), section[id="3"] { --progress: 60.0%; }
-  section:nth-of-type(4), section[id="4"] { --progress: 80.0%; }
-  section:nth-of-type(5), section[id="5"] { --progress: 100.0%; }
+  /* スライドごとの進捗率 (全7ページ構成) */
+  section:nth-of-type(1), section[id="1"] { --progress: 14.3%; }
+  section:nth-of-type(2), section[id="2"] { --progress: 28.6%; }
+  section:nth-of-type(3), section[id="3"] { --progress: 42.9%; }
+  section:nth-of-type(4), section[id="4"] { --progress: 57.1%; }
+  section:nth-of-type(5), section[id="5"] { --progress: 71.4%; }
+  section:nth-of-type(6), section[id="6"] { --progress: 85.7%; }
+  section:nth-of-type(7), section[id="7"] { --progress: 100.0%; }
 
   /* 2カラムレイアウト (縦中央揃え) */
   .slide-grid {
@@ -228,6 +230,55 @@ style: |
     border-color: #D84315;
     color: #D84315;
     background-color: #FFFFFF !important;
+  }
+
+  /* アンビグラム展示用カード & アニメーション */
+  .ambigram-card {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 2px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .ambigram-card img {
+    max-width: 96%;
+    max-height: 200px;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* 180度回転アニメーション */
+  @keyframes spinTo180 {
+    0% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(180deg);
+    }
+  }
+
+  .rotate-180-anim {
+    display: inline-block;
+    transform: rotate(180deg);
+    animation: spinTo180 1.5s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
+    transform-origin: center center;
+  }
+
+  @media print {
+    .rotate-180-anim {
+      animation: none !important;
+      transform: rotate(180deg) !important;
+    }
   }
 
   /* 目次スライド */
@@ -350,14 +401,24 @@ style: |
       <span class="toc-page">3</span>
     </div>
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">2.</span><strong>研究背景と課題（仮）</strong></span>
+      <span class="toc-text"><span class="toc-num">2.</span><strong>アンビグラムとは？</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">4</span>
     </div>
-    <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">3.</span><strong>提案システム・アプローチ（仮）</strong></span>
+    <div class="toc-sub-item">
+      <span class="toc-text"><span class="toc-accent">▶</span>180度回転の驚きと制作の難しさ</span>
       <span class="toc-leader"></span>
       <span class="toc-page">5</span>
+    </div>
+    <div class="toc-item">
+      <span class="toc-text"><span class="toc-num">3.</span><strong>制作支援システムの実演</strong></span>
+      <span class="toc-leader"></span>
+      <span class="toc-page">6</span>
+    </div>
+    <div class="toc-item">
+      <span class="toc-text"><span class="toc-num">4.</span><strong>まとめと今後の展望</strong></span>
+      <span class="toc-leader"></span>
+      <span class="toc-page">7</span>
     </div>
   </div>
 </div>
@@ -396,50 +457,121 @@ style: |
 
 ---
 
-# 第2章：提案手法・アプローチ（仮）
+# 2. アンビグラムとは？
 
 <div class="slide-grid">
   <div class="main-col">
     <ul class="points">
       <li>
-        <strong>手法の全体フロー（仮）</strong><br>
-        処理の流れやアルゴリズムの主要ステップについての解説文が入ります。
+        <strong>Q. この文字、何と読めますか？</strong><br>
+        少し不思議な形をしていますが、ある日本語の2文字の言葉として読むことができます。
       </li>
       <li>
-        <strong>特徴的な仕組み（仮）</strong><br>
-        他の手法と比較したときの工夫点や優位性について記述します。
+        <strong>パッと見の印象</strong><br>
+        「最悪……？」と読めたでしょうか。一見すると、少し崩した個性的な筆文字のようにも見えます。
       </li>
       <li>
-        <strong>実装と検証方針（仮）</strong><br>
-        どのような指標・基準で評価を行うかについて説明します。
+        <strong>では、この文字を逆さにしてみると……？</strong><br>
+        次のスライドで、この文字を<strong>180度ひっくり返して</strong>みます。
       </li>
     </ul>
   </div>
   <div class="diag-box">
-    <div class="placeholder-card" style="padding: 40px 16px;">
-      システム構成図 /<br>処理フロー図<br>（配置予定）
+    <div class="ambigram-card">
+      <img src="images/ambigram_saiaku.png" alt="最悪 アンビグラム 正位置">
     </div>
-    <div class="rel-badge">出力結果（仮）</div>
+    <div class="rel-badge">正位置（0°）</div>
   </div>
 </div>
 
 ---
 
-# 第3章：まとめと今後の展望（仮）
+# 2. 180度回転型アンビグラム
 
-<div class="main-col">
-  <ul class="points">
-    <li>
-      <strong>本研究のまとめ（仮）</strong><br>
-      発表全体を通じて明らかになったことや達成された成果を箇条書きで整理します。
-    </li>
-    <li>
-      <strong>得られた示唆・貢献（仮）</strong><br>
-      提案手法がもたらす意義や実用性についての総括をここに記述します。
-    </li>
-    <li>
-      <strong>今後の課題と発展（仮）</strong><br>
-      現時点での制約事項や、今後取り組むべき拡張方針について述べます。
-    </li>
-  </ul>
+<div class="slide-grid">
+  <div class="main-col">
+    <ul class="points">
+      <li>
+        <strong>逆さにしても同じ「最悪」と読める！</strong><br>
+        180度回転させても元の単語と同じ文字列として成立するタイポグラフィ（自己対称型アンビグラム）。
+      </li>
+      <li>
+        <strong>人間の文字認識の不思議さ</strong><br>
+        完全な幾何学的対称でなくても、脳が前後の文脈や知識から「最悪」と補完（トップダウン認知）。
+      </li>
+      <li>
+        <strong>しかし、作るのが極めて難しい（工学的課題）</strong><br>
+        どの単語なら成立するか（探索）、どう骨格を変形させるか（変形）、他人に読めるか（客観評価）が職人芸に依存。
+      </li>
+    </ul>
+  </div>
+  <div class="diag-box">
+    <div class="ambigram-card">
+      <img src="images/ambigram_saiaku.png" class="rotate-180-anim" alt="最悪 アンビグラム 180度回転">
+    </div>
+    <div class="rel-badge accent">180°回転（点対称）</div>
+  </div>
+</div>
+
+---
+
+# 3. 制作支援システムの実演
+
+<div class="slide-grid">
+  <div class="main-col">
+    <ul class="points">
+      <li>
+        <strong>作り手の3つの課題を解決するシステム</strong><br>
+        直感的なWebインターフェースで、誰でもアンビグラムを探索・制作・微調整できる環境を開発。
+      </li>
+      <li>
+        <strong>実演の3大ハイライト</strong><br>
+        ① <strong>高速探索</strong>：20万語の辞書から正規表現と対称性で単語推薦<br>
+        ② <strong>骨格変形</strong>：近接ストローク吸引で自然に一本化・変形<br>
+        ③ <strong>AI可読性判定</strong>：双方向の認識確率をリアルタイム評価
+      </li>
+      <li>
+        <strong>実際のソフトウェア画面をデモ実演します</strong>
+      </li>
+    </ul>
+  </div>
+  <div class="diag-box">
+    <div class="rel-badge accent">探索 ➜ 変形 ➜ 評価</div>
+    <div class="placeholder-card" style="padding: 24px 16px;">
+      <strong>実演デモ</strong><br>
+      実際のWeb画面へ<br>切り替えます
+    </div>
+    <div class="rel-badge">リアルタイム支援</div>
+  </div>
+</div>
+
+---
+
+# 4. まとめと今後の展望
+
+<div class="slide-grid">
+  <div class="main-col">
+    <ul class="points">
+      <li>
+        <strong>本研究のまとめ</strong><br>
+        フォント骨格の手順的変形とAI可読性評価を統合し、職人芸に依存しない180度回転型アンビグラム制作支援を実現。
+      </li>
+      <li>
+        <strong>11/29 HCD-Net ポスター発表に向けた検証課題</strong><br>
+        実際のユーザーによる制作実験（難易度・作業時間の変化）や、AI可読性スコアと人間の主観評価の相関検証。
+      </li>
+      <li>
+        <strong>フィードバックのお願い</strong><br>
+        AI共創研究だからこその見落としや、実験設計へのアドバイスなど、気になった点はぜひ忌憚なく教えてください！
+      </li>
+    </ul>
+  </div>
+  <div class="diag-box">
+    <div class="rel-badge accent">11/29 HCD-Net</div>
+    <div style="font-size: 24px; color: #D84315; font-weight: bold;">↓</div>
+    <div class="rel-badge">ポスター発表へ</div>
+    <div class="placeholder-card" style="padding: 16px; font-size: 18px; line-height: 1.4;">
+      <strong>ご意見・アドバイスを<br>お待ちしています！</strong>
+    </div>
+  </div>
 </div>
