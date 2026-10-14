@@ -90,6 +90,11 @@ function build() {
   // 一時ファイルに書き込み
   fs.writeFileSync(tmpFile, content, 'utf-8');
 
+  // 静止画・印刷・PPTX用の一時ファイル（アニメーション完了・回転状態のスタイルを注入）
+  const staticTmpFile = path.join(slidesDir, '_slides.static.built.md');
+  const staticStyleOverride = `\n\n<style>\n/* PDF/PPTX静止出力用: 180度回転・左右分離・縮小完了・バッジ表示の完成状態で静止キャプチャ */\n.anim-left, .anim-right { transform: translateX(0) scale(1) !important; animation: none !important; }\n.anim-rotate-img { transform: rotate(180deg) !important; animation: none !important; }\n.split-card .rel-badge { opacity: 1 !important; transform: none !important; animation: none !important; }\n</style>\n`;
+  fs.writeFileSync(staticTmpFile, content + staticStyleOverride, 'utf-8');
+
   try {
     if (mode === 'html' || mode === 'all') {
       console.log('[build.js] Converting markdown to HTML...');
@@ -98,11 +103,74 @@ function build() {
         stdio: 'inherit',
         shell: true,
       });
+
+      // HTML 版にスライド5のアニメーション起動スクリプトを安全に注入（チラつき防止）
+      const htmlPath = path.join(slidesDir, 'slides.html');
+      if (fs.existsSync(htmlPath)) {
+        let html = fs.readFileSync(htmlPath, 'utf-8');
+        const animScript = `\n<script>
+(() => {
+  const setupAnimation = () => {
+    const sec5 = document.getElementById('5');
+    const stage = document.querySelector('.split-ambigram-stage');
+    let parentSvg = null;
+    if (stage) {
+      parentSvg = stage.closest('svg') || (sec5 ? sec5.parentElement.closest('svg') || sec5.parentElement.parentElement : null);
+    }
+    if (!stage || !parentSvg) return false;
+
+    let prevActive = false;
+    const update = () => {
+      const isActive = parentSvg.classList.contains('bespoke-marp-active');
+      if (isActive && !prevActive) {
+        stage.classList.remove('is-animated');
+        void stage.offsetWidth;
+        requestAnimationFrame(() => {
+          stage.classList.add('is-animated');
+        });
+      } else if (!isActive && prevActive) {
+        stage.classList.remove('is-animated');
+      }
+      prevActive = isActive;
+    };
+
+    const obs = new MutationObserver(update);
+    obs.observe(parentSvg, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('hashchange', update);
+    window.addEventListener('popstate', update);
+    update();
+    return true;
+  };
+
+  const tryInit = () => {
+    if (setupAnimation()) return;
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (setupAnimation() || attempts > 30) {
+        clearInterval(interval);
+      }
+    }, 50);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryInit);
+  } else {
+    tryInit();
+  }
+})();
+</script>\n`;
+        if (html.includes('</body>')) {
+          html = html.replace('</body>', `${animScript}</body>`);
+          fs.writeFileSync(htmlPath, html, 'utf-8');
+          console.log('[build.js] Injected slide 5 animation controller into slides.html');
+        }
+      }
     }
 
     if (mode === 'pdf' || mode === 'all') {
       console.log('[build.js] Converting markdown to PDF...');
-      execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pdf "_slides.built.md" -o slides.pdf`, {
+      execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pdf "_slides.static.built.md" -o slides.pdf`, {
         cwd: slidesDir,
         stdio: 'inherit',
         shell: true,
@@ -111,22 +179,35 @@ function build() {
 
     if (mode === 'pptx' || mode === 'all') {
       console.log('[build.js] Converting markdown to PPTX...');
-      execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pptx "_slides.built.md" -o slides.pptx`, {
+      execSync(`npx --yes @marp-team/marp-cli --no-stdin --allow-local-files --pptx "_slides.static.built.md" -o slides.pptx`, {
         cwd: slidesDir,
         stdio: 'inherit',
         shell: true,
       });
+
+      console.log('[build.js] Enhancing PPTX with native slide transition animation...');
+      try {
+        execSync(`python scripts/enhance_pptx.py slides.pptx`, {
+          cwd: slidesDir,
+          stdio: 'inherit',
+          shell: true,
+        });
+      } catch (e) {
+        console.warn('[build.js] 警告: enhance_pptx.py の実行中に問題が発生しました:', e.message);
+      }
     }
   } catch (err) {
     console.error('[build.js] ビルド中にエラーが発生しました:', err.message);
     process.exit(1);
   } finally {
     // 一時ファイルのクリーンアップ
-    if (fs.existsSync(tmpFile)) {
-      try {
-        fs.unlinkSync(tmpFile);
-      } catch (e) {
-        // ignore unlink error
+    for (const f of [tmpFile, staticTmpFile]) {
+      if (fs.existsSync(f)) {
+        try {
+          fs.unlinkSync(f);
+        } catch (e) {
+          // ignore unlink error
+        }
       }
     }
   }

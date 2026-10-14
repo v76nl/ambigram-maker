@@ -304,34 +304,34 @@ style: |
     display: block;
   }
 
-  /* アニメーション: 中央から左へ移動 (ease-in-out) */
+  /* アニメーション: 中央・拡大状態から左へ移動しつつ自然に縮小 (ease-in-out) */
   @keyframes slide-to-left {
     0% {
-      transform: translateX(calc(50% + 24px));
+      transform: translateX(calc(50% + 24px)) scale(1.182);
       z-index: 1;
     }
     15% {
-      transform: translateX(calc(50% + 24px));
+      transform: translateX(calc(50% + 24px)) scale(1.182);
       z-index: 1;
     }
     100% {
-      transform: translateX(0);
+      transform: translateX(0) scale(1);
       z-index: 1;
     }
   }
 
-  /* アニメーション: 中央から右へ移動 (ease-in-out) */
+  /* アニメーション: 中央・拡大状態から右へ移動しつつ自然に縮小 (ease-in-out) */
   @keyframes slide-to-right {
     0% {
-      transform: translateX(calc(-50% - 24px));
+      transform: translateX(calc(-50% - 24px)) scale(1.182);
       z-index: 2;
     }
     15% {
-      transform: translateX(calc(-50% - 24px));
+      transform: translateX(calc(-50% - 24px)) scale(1.182);
       z-index: 2;
     }
     100% {
-      transform: translateX(0);
+      transform: translateX(0) scale(1);
       z-index: 2;
     }
   }
@@ -349,30 +349,61 @@ style: |
     }
   }
 
+  /* ラベルバッジのフェードインアニメーション */
+  @keyframes badge-reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    20% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 初期状態（スライド5読み込み時・待機時）: スライド4と同等の中央・拡大・0度で待機（チラつきを100%防止） */
   .anim-left {
-    animation: slide-to-left 1.4s ease-in-out 0.2s forwards;
+    transform: translateX(calc(50% + 24px)) scale(1.182);
+    transform-origin: center center;
+    animation: none;
   }
 
   .anim-right {
-    animation: slide-to-right 1.4s ease-in-out 0.2s forwards;
+    transform: translateX(calc(-50% - 24px)) scale(1.182);
+    transform-origin: center center;
+    animation: none;
   }
 
   .anim-rotate-img {
-    transform: rotate(180deg);
-    animation: img-spin-180 1.4s ease-in-out 0.2s forwards;
+    transform: rotate(0deg);
     transform-origin: center center;
+    animation: none;
   }
 
-  /* 印刷・PDF時は回転した静止状態で確定 */
-  @media print {
-    .anim-left,
-    .anim-right,
-    .anim-rotate-img {
-      animation: none !important;
-    }
-    .anim-rotate-img {
-      transform: rotate(180deg) !important;
-    }
+  .split-card .rel-badge {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  /* .is-animated が付与された瞬間にアニメーション開始 */
+  .is-animated .anim-left {
+    animation: slide-to-left 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .is-animated .anim-right {
+    animation: slide-to-right 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .is-animated .anim-rotate-img {
+    animation: img-spin-180 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .is-animated .split-card .rel-badge {
+    animation: badge-reveal 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   /* 目次スライド */
@@ -547,7 +578,7 @@ style: |
 # 2. 180度回転型アンビグラム
 
 <div class="center-content">
-  <div class="split-ambigram-stage">
+  <div class="split-ambigram-stage" id="ambigram-stage">
     <!-- 左：正位置（中央から左へ移動） -->
     <div class="split-card anim-left">
       <img src="images/ambigram_saiaku.png" alt="最悪 正位置">
