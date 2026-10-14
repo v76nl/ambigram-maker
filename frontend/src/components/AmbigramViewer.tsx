@@ -186,46 +186,47 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           </div>
         )}
 
-        {/* 手法切り替えセグメント */}
+        {/* 手法切り替えタブ */}
         {onEngineChange && (
-          <div className="engine-bar">
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", marginRight: "0.25rem" }}>
-              手法:
-            </span>
+          <div className="engine-tabs-nav">
             <button
-              className={`engine-tab-btn ${activeEngine === "morphology" ? "active" : ""}`}
-              onClick={() => onEngineChange("morphology")}
-              title="論理積 (AND) とモルフォロジー膨張による二重線解消"
-            >
-              <span className="badge-pill">A</span>
-              <span>論理積＋膨張</span>
-            </button>
-
-            <button
-              className={`engine-tab-btn ${activeEngine === "skeleton" ? "active" : ""}`}
+              className={`engine-tab-item ${activeEngine === "skeleton" ? "active" : ""}`}
               onClick={() => onEngineChange("skeleton")}
               title="調和平均距離場による中心骨格線の抽出と単一ストローク化"
             >
-              <span className="badge-pill">B</span>
-              <span>骨格平均化</span>
+              骨格平均化
             </button>
 
             <button
-              className={`engine-tab-btn ${activeEngine === "vector" ? "active" : ""}`}
+              className={`engine-tab-item ${activeEngine === "morphology" ? "active" : ""}`}
+              onClick={() => onEngineChange("morphology")}
+              title="論理積 (AND) とモルフォロジー膨張による二重線解消"
+            >
+              論理積
+            </button>
+
+            <button
+              className={`engine-tab-item ${activeEngine === "vector" ? "active" : ""}`}
               onClick={() => onEngineChange("vector")}
               title="フォントパスの直接オーバーレイ配置"
             >
-              <span className="badge-pill">原案</span>
-              <span>ベクター合成</span>
+              ベクター合成
             </button>
 
             <button
-              className={`engine-tab-btn ${activeEngine === "bitmap" ? "active" : ""}`}
+              className={`engine-tab-item ${activeEngine === "bitmap" ? "active" : ""}`}
               onClick={() => onEngineChange("bitmap")}
               title="距離場エネルギー最適化"
             >
-              <span className="badge-pill">手法2</span>
-              <span>ビットマップ</span>
+              ビットマップ
+            </button>
+
+            <button
+              className={`engine-tab-item ${activeEngine === "gemini" ? "active" : ""}`}
+              onClick={() => onEngineChange("gemini")}
+              title="生成AI: Gemini 2.5 Flash"
+            >
+              AI
             </button>
           </div>
         )}

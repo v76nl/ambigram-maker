@@ -23,6 +23,9 @@ export const App: React.FC = () => {
   // 単語探索カスタムフック
   const {
     words,
+    totalScannedCount,
+    hasMore,
+    loadMoreWords,
     selectedWord,
     setSelectedWord,
     searchQuery,
@@ -43,8 +46,6 @@ export const App: React.FC = () => {
     handleTogglePhrase,
     minScore,
     setMinScore,
-    wordLimit,
-    setWordLimit,
     isLoadingWords,
     loadError,
     loadWords,
@@ -58,8 +59,8 @@ export const App: React.FC = () => {
   const [customOffsets, setCustomOffsets] = useState<[number, number][] | null>(null);
   const [recalculatedScore, setRecalculatedScore] = useState<number | null>(null);
 
-  // グラフィック生成ステート
-  const [activeEngine, setActiveEngine] = useState<string>("morphology");
+  // グラフィック生成ステート (デフォルト: 骨格平均化)
+  const [activeEngine, setActiveEngine] = useState<string>("skeleton");
   const [results, setResults] = useState<{
     vector?: EngineResult;
     morphology?: EngineResult;
@@ -434,6 +435,9 @@ export const App: React.FC = () => {
         <aside className="pane-left">
           <WordSearch
             words={words}
+            totalScannedCount={totalScannedCount}
+            hasMore={hasMore}
+            onLoadMore={loadMoreWords}
             selectedWord={selectedWord}
             onSelectWord={handleSelectWord}
             onCustomWordSubmit={handleCustomWord}
@@ -457,8 +461,6 @@ export const App: React.FC = () => {
             onTogglePhrase={handleTogglePhrase}
             minScore={minScore}
             onMinScoreChange={setMinScore}
-            limit={wordLimit}
-            onLimitChange={setWordLimit}
             isLoading={isLoadingWords}
             loadError={loadError}
             onRetry={loadWords}

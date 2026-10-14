@@ -1,9 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { WordItem } from "../services/api";
 import { searchWordsStream, evaluateWord } from "../services/api";
 
+const BACKGROUND_SCAN_LIMIT = 1000;
+const INITIAL_VISIBLE_COUNT = 100;
+const PAGE_SIZE = 100;
+
 export function useWordSearch() {
-  const [words, setWords] = useState<WordItem[]>([]);
+  const [allWords, setAllWords] = useState<WordItem[]>([]);
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
   const [selectedWord, setSelectedWord] = useState<WordItem | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minLength, setMinLength] = useState<number>(2);
@@ -14,7 +19,6 @@ export function useWordSearch() {
   const [includeKatakana, setIncludeKatakana] = useState<boolean>(true);
   const [includePhrase, setIncludePhrase] = useState<boolean>(true);
   const [minScore, setMinScore] = useState<number>(0.75);
-  const [wordLimit, setWordLimit] = useState<number>(100);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -49,7 +53,7 @@ export function useWordSearch() {
     });
   }, [includeHiragana, includeKanji, includeKatakana]);
 
-  // 単語一覧の読み込み (リアルタイムSSEストリーミング)
+  // 単語一覧の読み込み (バックグラウンド最大1000件スキャン)
   const loadWords = useCallback(() => {
     if (streamCancelRef.current) {
       streamCancelRef.current();
@@ -58,7 +62,8 @@ export function useWordSearch() {
 
     setIsLoadingWords(true);
     setLoadError(null);
-    setWords([]);
+    setAllWords([]);
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
 
     const cancel = searchWordsStream(
       {
@@ -67,14 +72,14 @@ export function useWordSearch() {
         commonOnly: searchQuery.trim() ? false : commonOnly,
         minScore: searchQuery.trim() ? 0.2 : minScore,
         query: searchQuery.trim() || undefined,
-        limit: wordLimit,
+        limit: BACKGROUND_SCAN_LIMIT,
         includeKanji,
         includeKatakana,
         includeHiragana,
         includePhrase,
       },
       (newWord) => {
-        setWords((prev) => {
+        setAllWords((prev) => {
           const key = newWord.target_text || newWord.reading;
           if (prev.some((w) => (w.target_text || w.reading) === key)) {
             return prev;
@@ -99,7 +104,7 @@ export function useWordSearch() {
     );
 
     streamCancelRef.current = cancel;
-  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, includePhrase, minScore, wordLimit]);
+  }, [minLength, maxLength, commonOnly, searchQuery, includeKanji, includeKatakana, includeHiragana, includePhrase, minScore]);
 
   // デバウンス付き自動検索
   useEffect(() => {
@@ -117,12 +122,27 @@ export function useWordSearch() {
     };
   }, []);
 
+  // スクロール下端でさらに100件表示
+  const loadMoreWords = useCallback(() => {
+    setVisibleCount((prev) => {
+      if (prev >= allWords.length) return prev;
+      return prev + PAGE_SIZE;
+    });
+  }, [allWords.length]);
+
+  // 画面に表示する単語（デフォルト100件、スクロールで順次拡大）
+  const words = useMemo(() => {
+    return allWords.slice(0, visibleCount);
+  }, [allWords, visibleCount]);
+
+  const hasMore = visibleCount < allWords.length;
+
   // 自由入力単語の評価・選択
   const handleCustomWord = useCallback(async (inputWord: string): Promise<WordItem | null> => {
     try {
       const res = await evaluateWord(inputWord);
       setSelectedWord(res);
-      setWords((prev) => {
+      setAllWords((prev) => {
         const key = res.target_text || res.reading;
         if (!prev.some((w) => (w.target_text || w.reading) === key)) {
           return [res, ...prev];
@@ -138,7 +158,9 @@ export function useWordSearch() {
 
   return {
     words,
-    setWords,
+    totalScannedCount: allWords.length,
+    hasMore,
+    loadMoreWords,
     selectedWord,
     setSelectedWord,
     searchQuery,
@@ -159,8 +181,6 @@ export function useWordSearch() {
     handleTogglePhrase,
     minScore,
     setMinScore,
-    wordLimit,
-    setWordLimit,
     isLoadingWords,
     loadError,
     loadWords,

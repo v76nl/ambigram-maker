@@ -482,10 +482,16 @@ body {
 
 .script-toggle-btn {
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: 0.71rem;
   font-weight: 500;
-  padding: 0.32rem 0.2rem;
+  padding: 0.35rem 0.1rem;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-medium);
   background: var(--bg-surface);
@@ -527,35 +533,34 @@ body {
   gap: 1.25rem;
 }
 
-/* Sticky Ambigram Float (画面外スクロール時の中央上・幅1/2プレビュー) */
+/* Sticky Ambigram Float (画面外スクロール時のフルサイズ・スティッキープレビュー) */
 .sticky-ambigram-float {
   position: sticky;
-  top: 0.75rem;
+  top: 0.5rem;
   z-index: 40;
   display: none;
   align-items: center;
   justify-content: center;
-  width: 50%;
-  min-width: 220px;
-  max-width: 380px;
-  height: 120px;
-  margin: 0 auto;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  min-height: 280px;
+  height: auto;
+  margin: 0 0 1rem 0;
+  padding: 2rem 1rem;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
   cursor: pointer;
   user-select: none;
-  animation: dropDownSticky 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: dropDownSticky 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   transition: border-color var(--ease-fast), box-shadow var(--ease-fast);
 }
 
 .sticky-ambigram-float:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
 }
 
 .sticky-ambigram-float.visible {
@@ -565,7 +570,7 @@ body {
 @keyframes dropDownSticky {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -575,7 +580,7 @@ body {
 
 .sticky-ambigram-inner {
   width: 100%;
-  height: 100%;
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -584,14 +589,14 @@ body {
 
 .sticky-ambigram-inner svg {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 280px;
   width: auto;
   height: auto;
 }
 
 .sticky-ambigram-inner img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 280px;
   object-fit: contain;
 }
 
@@ -638,50 +643,48 @@ body {
   letter-spacing: 0.04em;
 }
 
-/* Engine Quick Bar */
-.engine-bar {
+/* Engine Tabs Navigation (中央・右ペイン共通タブ形式UI) */
+.engine-tabs-nav {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
+  gap: 0.2rem;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding: 0;
+  margin-bottom: 0.85rem;
+  width: 100%;
+  overflow-x: auto;
 }
 
-.engine-tab-btn {
+.engine-tab-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.76rem;
   font-weight: 500;
-  background: transparent;
   color: var(--text-secondary);
-  border: 1px solid transparent;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   cursor: pointer;
   transition: all var(--ease-fast);
+  white-space: nowrap;
+  user-select: none;
 }
 
-.engine-tab-btn:hover {
-  background: var(--bg-subtle);
+.engine-tab-item:hover {
   color: var(--text-primary);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
 }
 
-.engine-tab-btn.active {
-  background: var(--text-primary);
-  color: var(--text-inverse);
+.engine-tab-item.active {
+  color: var(--text-primary);
   font-weight: 600;
-}
-
-.engine-tab-btn .badge-pill {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.05rem 0.35rem;
-  border-radius: var(--radius-xs);
-  background: var(--border-subtle);
-  color: var(--text-secondary);
+  border-bottom-color: var(--text-primary);
+  background: transparent;
 }
 
 .engine-tab-btn.active .badge-pill {

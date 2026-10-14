@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { ArrowRight, Search, AlertCircle, BookOpen, Layers, SlidersHorizontal } from "lucide-react";
+import React, { useState, type UIEvent } from "react";
+import { ArrowRight, Search, AlertCircle, BookOpen, Layers, SlidersHorizontal, Loader2 } from "lucide-react";
 import type { WordItem } from "../services/api";
 
 interface WordSearchProps {
   words: WordItem[];
+  totalScannedCount?: number;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   selectedWord: WordItem | null;
   onSelectWord: (word: WordItem) => void;
   onCustomWordSubmit: (word: string) => void;
@@ -24,8 +27,6 @@ interface WordSearchProps {
   onTogglePhrase: () => void;
   minScore: number;
   onMinScoreChange: (val: number) => void;
-  limit: number;
-  onLimitChange: (val: number) => void;
   isLoading: boolean;
   loadError?: string | null;
   onRetry?: () => void;
@@ -33,6 +34,9 @@ interface WordSearchProps {
 
 export const WordSearch: React.FC<WordSearchProps> = ({
   words,
+  totalScannedCount,
+  hasMore,
+  onLoadMore,
   selectedWord,
   onSelectWord,
   onCustomWordSubmit,
@@ -53,8 +57,6 @@ export const WordSearch: React.FC<WordSearchProps> = ({
   onTogglePhrase,
   minScore,
   onMinScoreChange,
-  limit,
-  onLimitChange,
   isLoading,
   loadError,
   onRetry,
@@ -68,9 +70,18 @@ export const WordSearch: React.FC<WordSearchProps> = ({
     }
   };
 
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 80) {
+      if (onLoadMore && hasMore) {
+        onLoadMore();
+      }
+    }
+  };
+
   return (
     <aside className="swiss-card" style={{ height: "fit-content" }}>
-      {/* 自由入力欄 (Subtractive: 冗長なラベルを排しプレースホルダーに集約) */}
+      {/* 自由入力欄 */}
       <form onSubmit={handleCustomSubmit} className="swiss-field">
         <div style={{ display: "flex", gap: "0.4rem" }}>
           <input
@@ -108,10 +119,10 @@ export const WordSearch: React.FC<WordSearchProps> = ({
 
       {/* フィルタセグメント & 文字種 & 文字数スライダー */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.75rem" }}>
-        {/* 文字種トグル */}
+        {/* 文字種トグル (1行に収まるように設定) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           <span className="swiss-field-label">文字種</span>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.35rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.25rem" }}>
             <button
               type="button"
               className={`script-toggle-btn ${includeHiragana ? "active" : ""}`}
@@ -140,9 +151,9 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               type="button"
               className={`script-toggle-btn ${includePhrase ? "active" : ""}`}
               onClick={onTogglePhrase}
-              title="「最古の文書」などの複合語・名詞句"
+              title="成句・慣用句・複合語"
             >
-              フレーズ
+              成句
             </button>
           </div>
         </div>
@@ -172,7 +183,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
           </div>
         </div>
 
-        {/* 文字長範囲デュアルスライダー (1つのUIで最小・最大を同時指定) */}
+        {/* 文字長範囲デュアルスライダー */}
         <div className="swiss-slider-group">
           <div className="swiss-slider-header">
             <span>文字長範囲</span>
@@ -226,9 +237,6 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               }}
             />
           </div>
-          <span className="swiss-slider-hint">
-            左右のつまみで検索対象の文字数範囲（1〜7字）を絞り込み
-          </span>
         </div>
 
         {/* 最小スコア (品質基準) スライダー */}
@@ -255,33 +263,20 @@ export const WordSearch: React.FC<WordSearchProps> = ({
             onChange={(e) => onMinScoreChange(parseFloat(e.target.value))}
           />
         </div>
-
-        {/* 表示上限件数 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span className="swiss-field-label">表示件数</span>
-          <div className="swiss-segmented">
-            {[50, 100, 200].map((num) => (
-              <button
-                key={num}
-                type="button"
-                className={`swiss-segmented-btn ${limit === num ? "active" : ""}`}
-                onClick={() => onLimitChange(num)}
-                style={{ padding: "0.2rem 0.5rem" }}
-              >
-                {num}件
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* 単語リスト */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.75rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-          <span style={{ fontWeight: 600 }}>候補 ({words.length})</span>
+          <span style={{ fontWeight: 600 }}>
+            候補 ({words.length}
+            {totalScannedCount !== undefined && totalScannedCount > words.length ? ` / ${totalScannedCount}` : ""}
+            )
+          </span>
           {isLoading && (
-            <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 600 }}>
-              ● リアルタイム探索中...
+            <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+              <Loader2 size={11} className="spin" />
+              リアルタイム探索中...
             </span>
           )}
         </div>
@@ -318,7 +313,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
           </div>
         )}
 
-        <div className="word-list">
+        <div className="word-list" onScroll={handleScroll}>
           {words.map((w) => {
             const mainText = w.target_text || w.primary_display || w.reading;
             const currentSelectedText = selectedWord?.target_text || selectedWord?.primary_display || selectedWord?.reading;
@@ -336,7 +331,7 @@ export const WordSearch: React.FC<WordSearchProps> = ({
                 <div style={{ display: "flex", alignItems: "baseline", gap: "0.45rem", minWidth: 0 }}>
                   <span className="word-main">{mainText}</span>
                   {showSub && <span className="word-reading-sub">{w.reading}</span>}
-                  {w.script_type === "phrase" && (
+                  {(w.script_type === "phrase" || w.script_type === "compound") && (
                     <span style={{ fontSize: "0.62rem", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "3px", padding: "0 3px", lineHeight: "1.2" }}>
                       句
                     </span>
@@ -348,6 +343,19 @@ export const WordSearch: React.FC<WordSearchProps> = ({
               </div>
             );
           })}
+
+          {hasMore && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "0.6rem 0",
+                fontSize: "0.72rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              スクロールしてさらに表示……
+            </div>
+          )}
         </div>
       </div>
     </aside>

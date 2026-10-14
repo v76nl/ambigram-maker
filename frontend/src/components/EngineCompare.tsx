@@ -1,5 +1,5 @@
 import React from "react";
-import { Disc, GitFork, Code, Image as ImageIcon, Sparkles, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import type { EngineResult, FontMeta } from "../services/api";
 import { PARAM_LABELS } from "../constants/labels";
 
@@ -80,56 +80,46 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
 }) => {
   return (
     <section className="swiss-card">
-      {/* 手法切り替えセグメント (3ペイン対応・コンパクト) */}
-      <div className="swiss-segmented" style={{ display: "flex", width: "100%", gap: "2px" }}>
+      {/* 手法切り替えタブ */}
+      <div className="engine-tabs-nav">
         <button
-          className={`swiss-segmented-btn ${activeEngine === "morphology" ? "active" : ""}`}
-          onClick={() => onEngineChange("morphology")}
-          title="手法A: 論理積＋膨張"
-          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
-        >
-          <Disc size={12} />
-          <span>手法A</span>
-        </button>
-
-        <button
-          className={`swiss-segmented-btn ${activeEngine === "skeleton" ? "active" : ""}`}
+          className={`engine-tab-item ${activeEngine === "skeleton" ? "active" : ""}`}
           onClick={() => onEngineChange("skeleton")}
-          title="手法B: 骨格平均化"
-          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
+          title="骨格平均化: 距離場スケルトン抽出と単一ストローク化"
         >
-          <GitFork size={12} />
-          <span>手法B</span>
+          骨格平均化
         </button>
 
         <button
-          className={`swiss-segmented-btn ${activeEngine === "vector" ? "active" : ""}`}
+          className={`engine-tab-item ${activeEngine === "morphology" ? "active" : ""}`}
+          onClick={() => onEngineChange("morphology")}
+          title="論理積: 論理積 (AND) ＋ モルフォロジー膨張"
+        >
+          論理積
+        </button>
+
+        <button
+          className={`engine-tab-item ${activeEngine === "vector" ? "active" : ""}`}
           onClick={() => onEngineChange("vector")}
-          title="原案: ベクター合成"
-          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
+          title="ベクター合成: フォントパスの直接オーバーレイ配置"
         >
-          <Code size={12} />
-          <span>原案</span>
+          ベクター合成
         </button>
 
         <button
-          className={`swiss-segmented-btn ${activeEngine === "bitmap" ? "active" : ""}`}
+          className={`engine-tab-item ${activeEngine === "bitmap" ? "active" : ""}`}
           onClick={() => onEngineChange("bitmap")}
-          title="手法2: ビットマップ"
-          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
+          title="ビットマップ: 距離場エネルギー最適化"
         >
-          <ImageIcon size={12} />
-          <span>手法2</span>
+          ビットマップ
         </button>
 
         <button
-          className={`swiss-segmented-btn ${activeEngine === "gemini" ? "active" : ""}`}
+          className={`engine-tab-item ${activeEngine === "gemini" ? "active" : ""}`}
           onClick={() => onEngineChange("gemini")}
           title="生成AI: Gemini 2.5 Flash"
-          style={{ flex: 1, justifyContent: "center", whiteSpace: "nowrap", padding: "0.35rem 0.2rem", fontSize: "0.74rem" }}
         >
-          <Sparkles size={12} />
-          <span>AI</span>
+          AI
         </button>
       </div>
 
