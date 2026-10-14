@@ -15,13 +15,6 @@ FONT_PRESETS = {
         "description": "曲線が滑らかで調和しやすい標準丸文字",
         "filename": "ZenMaruGothic-Medium.ttf",
     },
-    "dela_gothic": {
-        "id": "dela_gothic",
-        "name": "Dela Gothic One",
-        "style": "極太フラット",
-        "description": "ストロークが極太で重なり面積が広く二重線が消えやすい",
-        "filename": "DelaGothicOne-Regular.ttf",
-    },
     "mplus": {
         "id": "mplus",
         "name": "M PLUS 1p Bold",
@@ -42,6 +35,48 @@ FONT_PRESETS = {
         "style": "明朝体",
         "description": "太線と細線のコントラストが美しい優美な書体",
         "filename": "ShipporiMincho-Bold.ttf",
+    },
+    "biz_udpgothic": {
+        "id": "biz_udpgothic",
+        "name": "BIZ UDPGothic",
+        "style": "UD角ゴシック",
+        "description": "ふところが広く回転時も隙間が潰れない高視認性書体",
+        "filename": "BIZUDPGothic-Bold.ttf",
+    },
+    "yuji_mai": {
+        "id": "yuji_mai",
+        "name": "Yuji Mai",
+        "style": "毛筆・行書",
+        "description": "しなやかな筆致で有機的に融合する本格書道体",
+        "filename": "YujiMai-Regular.ttf",
+    },
+    "kaisei_tokumin": {
+        "id": "kaisei_tokumin",
+        "name": "Kaisei Tokumin",
+        "style": "幾何学モダン明朝",
+        "description": "端部の幾何学ドットが美しいモダン装飾明朝",
+        "filename": "KaiseiTokumin-Bold.ttf",
+    },
+    "dot_gothic": {
+        "id": "dot_gothic",
+        "name": "DotGothic16",
+        "style": "ピクセル・ドット",
+        "description": "16px格子によるレトロゲーム風ピクセル書体",
+        "filename": "DotGothic16-Regular.ttf",
+    },
+    "marumonica": {
+        "id": "marumonica",
+        "name": "MaruMonica",
+        "style": "丸ピクセル",
+        "description": "丸みと高い文字収録数を誇る12×16pxドット書体",
+        "filename": "x12y16pxMaruMonica.ttf",
+    },
+    "highway_gothic": {
+        "id": "highway_gothic",
+        "name": "公団ゴシック",
+        "style": "道路標識ゴシック",
+        "description": "遠方視認性のための直線化とパーツ省略が特徴的な標識書体 (地名・かな推奨)",
+        "filename": "GdHighwaygothicjaOtf.woff",
     },
 }
 
@@ -181,13 +216,30 @@ class FontManager:
         draw.text((x, y), char, fill=255, font=font)
         u8 = np.array(img, dtype=np.uint8)
 
+        # 未収録文字でグリフが空の場合、フォールバックフォント (mplus) で補完
+        if (u8 > 90).sum() == 0 and font_id != "mplus":
+            try:
+                fallback_path = self.get_font_path("mplus")
+                fb_font = ImageFont.truetype(str(fallback_path), int(size * 0.72))
+                img_fb = Image.new("L", (size, size), 0)
+                draw_fb = ImageDraw.Draw(img_fb)
+                fb_bbox = draw_fb.textbbox((0, 0), char, font=fb_font)
+                fb_w = fb_bbox[2] - fb_bbox[0]
+                fb_h = fb_bbox[3] - fb_bbox[1]
+                fb_x = (size - fb_w) // 2 - fb_bbox[0]
+                fb_y = (size - fb_h) // 2 - fb_bbox[1]
+                draw_fb.text((fb_x, fb_y), char, fill=255, font=fb_font)
+                u8 = np.array(img_fb, dtype=np.uint8)
+            except Exception:
+                pass
+
         # 案A: 適応的太らせ判定
         # 生の黒画素密度
         raw_binary = (u8 > 90).astype(np.uint8)
         density = float(np.mean(raw_binary))
 
-        # dela_gothic または黒画素率が 26% 以上の高密度文字は膨張をスキップ（内部空隙を保護）
-        if bold and font_id != "dela_gothic" and density <= 0.26:
+        # 黒画素率が 26% 以上の高密度文字は膨張をスキップ（内部空隙を保護）
+        if bold and density <= 0.26:
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             u8 = cv2.dilate(u8, kernel, iterations=1)
 

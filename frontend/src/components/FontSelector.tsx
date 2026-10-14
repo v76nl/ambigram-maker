@@ -100,14 +100,24 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
     switch (fontId) {
       case "zen_maru":
         return "'Zen Maru Gothic', sans-serif";
-      case "dela_gothic":
-        return "'Dela Gothic One', sans-serif";
       case "mplus":
         return "'M PLUS 1p', sans-serif";
       case "klee":
         return "'Klee One', cursive, sans-serif";
       case "shippori":
         return "'Shippori Mincho', serif";
+      case "biz_udpgothic":
+        return "'BIZ UDPGothic', sans-serif";
+      case "yuji_mai":
+        return "'Yuji Mai', serif";
+      case "kaisei_tokumin":
+        return "'Kaisei Tokumin', serif";
+      case "dot_gothic":
+        return "'DotGothic16', monospace";
+      case "marumonica":
+        return "'MaruMonica', monospace";
+      case "highway_gothic":
+        return "'GD-HighwayGothicJA', sans-serif";
       default:
         return "inherit";
     }

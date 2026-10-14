@@ -48,12 +48,17 @@ ambigram-maker/
 ├── backend/
 │   ├── pyproject.toml              # uv パッケージ管理設定
 │   ├── app.py                      # FastAPI サーバーエントリポイント (SSE・可読性・パイプラインAPI)
-│   ├── fonts/                      # SIL OFL オープンソースフォント群 (5書体同梱)
+│   ├── fonts/                      # 日本語フォント群 (全10書体)
 │   │   ├── ZenMaruGothic-Medium.ttf # 丸ゴシック
-│   │   ├── DelaGothicOne-Regular.ttf# 極太フラット
 │   │   ├── MPLUS1p-Bold.ttf        # 幾何角ゴシック
 │   │   ├── KleeOne-SemiBold.ttf    # 硬筆ペン字
 │   │   ├── ShipporiMincho-Bold.ttf # 明朝体
+│   │   ├── BIZUDPGothic-Bold.ttf   # UD角ゴシック
+│   │   ├── YujiMai-Regular.ttf     # 毛筆・行書
+│   │   ├── KaiseiTokumin-Bold.ttf  # 幾何学モダン明朝
+│   │   ├── DotGothic16-Regular.ttf # 16pxドット
+│   │   ├── x12y16pxMaruMonica.ttf  # 12x16px丸ピクセル
+│   │   └── GdHighwaygothicjaOtf.woff # 公団ゴシック
 │   │   └── OFL.txt                 # SIL Open Font License 1.1 条文 & 著作権表示
 │   ├── dictionary/
 │   │   ├── parser.py               # JMdict パーススクリプト (マルチ表記対応)
@@ -195,9 +200,11 @@ pnpm dev
 
 各手法がどのような手順的変形を経て完成形に至るかを可視化します：
 
-- **手法A**: 正反グリフ描画 $\rightarrow$ 重心アライメント $\rightarrow$ 近接ストローク吸引 $\rightarrow$ 論理積 (AND) 対称核抽出 $\rightarrow$ モルフォロジー膨張 & 輪郭平滑化
-- **手法B**: 正反グリフ描画 $\rightarrow$ ユークリッド距離場算出 $\rightarrow$ 調和平均ポテンシャル場 $\rightarrow$ 中心骨格線抽出 $\rightarrow$ 筆文字ブラシ描画 & 太さ変調
-- **原案 (Vector)**: ベクターパス抽出 $\rightarrow$ 正位置・反転配置 $\rightarrow$ 固有・共通パーツ色分け $\rightarrow$ パスマージ
+- **骨格平均化 (手法B)**: 正反グリフ描画 $\rightarrow$ ユークリッド距離場算出 $\rightarrow$ 調和平均ポテンシャル場 $\rightarrow$ 中心骨格線抽出 $\rightarrow$ 筆文字ブラシ描画 & 太さ変調
+- **論理積 (手法A)**: 正反グリフ描画 $\rightarrow$ 重心アライメント $\rightarrow$ 近接ストローク吸引 $\rightarrow$ 論理積 (AND) 対称核抽出 $\rightarrow$ モルフォロジー膨張 & 輪郭平滑化
+- **ベクター合成 (原案)**: ベクターパス抽出 $\rightarrow$ 正位置・反転配置 $\rightarrow$ 固有・共通パーツ色分け $\rightarrow$ パスマージ
+- **ビットマップ (手法2)**: ピクセル重み付け合成 $\rightarrow$ 閾値処理 $\rightarrow$ 2値画像化
+- **Gemini AI (手法3)**: マルチモーダルAIモデルによる点対称アンビグラム画像生成
 
 ### 2. 再現可能性 (Reproducibility) パラメータのエクスポート & インポート復元
 
@@ -208,14 +215,15 @@ pnpm dev
 {
   "system": "フォント骨格の手順的変形に基づく180度回転型日本語アンビグラム制作支援システム",
   "word": "日の目",
-  "engine": "morphology",
+  "engine": "skeleton",
   "font": "zen_maru",
   "parameters": {
-    "dilationSize": 7,
-    "smoothness": 5,
-    "diffBlend": 0.2,
+    "strokeThickness": 15,
+    "diffBlend": 0.35,
     "preBold": 4,
     "enableSnap": true,
+    "brushStyle": "calligraphic",
+    "strokeModulation": true,
     "customOffsets": [
       [0, 0],
       [0, 0]
@@ -232,17 +240,22 @@ pnpm dev
 
 ## 同梱フォントのライセンスとクレジット
 
-本システムの `backend/fonts/` ディレクトリに同梱されているフォントファイルは、すべて **SIL Open Font License 1.1 (OFL-1.1)** に基づいて配布されているオープンソースフォントです。
+本システムの `backend/fonts/` および `frontend/public/fonts/` に配備されているフォントファイルは、各作者様のオープンライセンス・フリーライセンスに基づいて利用されています。
 
-| フォント名                 | スタイル          | 著作権表示 (Copyright)                                        | プロジェクト / 配布元                                                       | ライセンス                                 |
-| :------------------------- | :---------------- | :------------------------------------------------------------ | :-------------------------------------------------------------------------- | :----------------------------------------- |
-| **Zen Maru Gothic**        | 丸ゴシック (標準) | Copyright 2021 The Zen Maru Gothic Project Authors            | [googlefonts/zen-marugothic](https://github.com/googlefonts/zen-marugothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Dela Gothic One**        | 極太フラット      | Copyright 2020 The Dela Gothic Project Authors                | [syakuzen/DelaGothic](https://github.com/syakuzen/DelaGothic)               | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **M PLUS 1p** (Bold)       | 幾何角ゴシック    | Copyright 2020 The M+ FONT PROJECT Authors                    | [coz-m/MPLUS_FONTS](https://github.com/coz-m/MPLUS_FONTS)                   | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Klee One** (SemiBold)    | 硬筆ペン字        | Copyright 2020 The Klee Project Authors (Fontworks Inc.)      | [fontworks-fonts/Klee](https://github.com/fontworks-fonts/Klee)             | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
-| **Shippori Mincho** (Bold) | 明朝体            | Copyright 2020 The Shippori Mincho Project Authors (FONTDASU) | [fontdasu/ShipporiMincho](https://github.com/fontdasu/ShipporiMincho)       | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| フォント名 | スタイル | 著作権表示 (Copyright) / 作者 | プロジェクト / 配布元 | ライセンス |
+| :--- | :--- | :--- | :--- | :--- |
+| **Zen Maru Gothic** | 丸ゴシック (標準) | Copyright 2021 The Zen Maru Gothic Project Authors | [googlefonts/zen-marugothic](https://github.com/googlefonts/zen-marugothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **M PLUS 1p** (Bold) | 幾何角ゴシック | Copyright 2020 The M+ FONT PROJECT Authors | [coz-m/MPLUS_FONTS](https://github.com/coz-m/MPLUS_FONTS) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Klee One** (SemiBold) | 硬筆ペン字 | Copyright 2020 The Klee Project Authors (Fontworks Inc.) | [fontworks-fonts/Klee](https://github.com/fontworks-fonts/Klee) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Shippori Mincho** (Bold) | 明朝体 | Copyright 2020 The Shippori Mincho Project Authors (FONTDASU) | [fontdasu/ShipporiMincho](https://github.com/fontdasu/ShipporiMincho) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **BIZ UDPGothic** (Bold) | UD角ゴシック | Copyright 2022 The BIZ UDGothic Project Authors (Morisawa Inc.) | [googlefonts/morisawa-biz-ud-gothic](https://github.com/googlefonts/morisawa-biz-ud-gothic) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Yuji Mai** (Regular) | 毛筆・行書 | Copyright 2020 The Yuji Project Authors (Kinuta Font Factory) | [googlefonts/yuji](https://github.com/googlefonts/yuji) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **Kaisei Tokumin** (Bold) | 幾何学モダン明朝 | Copyright 2020 The Kaisei Project Authors (FONT-KAISEI) | [googlefonts/kaisei](https://github.com/googlefonts/kaisei) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **DotGothic16** (Regular) | 16pxドット | Copyright 2020 The DotGothic16 Project Authors (Fontworks Inc.) | [fontworks-fonts/DotGothic16](https://github.com/fontworks-fonts/DotGothic16) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
+| **MaruMonica** | 12x16px丸ピクセル | 患者長ひっく (hicc / x0y0pxFreeFont) | [BOOTH: x0y0pxFreeFont](https://x0y0px.booth.pm/) | フリー (商用・埋め込み可) |
+| **公団ゴシック** | 道路標識ゴシック | ぱんかれ (pumpCurry / 5r4ce2) | [5r4ce2 [Fiber Force2]](https://542.jp/) | フリー (商用可・個人利用可) |
 
-ライセンス条文全文は [`backend/fonts/OFL.txt`](backend/fonts/OFL.txt) に収録されています。
+SIL Open Font License の条文全文は [`backend/fonts/OFL.txt`](backend/fonts/OFL.txt) に収録されています。
 
 ---
 
