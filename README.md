@@ -161,7 +161,7 @@ pnpm dev
 | 探索エンジンの単体テスト (正規表現含む) | `backend/`   | `uv run python search/finder.py`                 |
 | フロントエンド依存関係インストール      | `frontend/`  | `pnpm install`                                   |
 | フロントエンド開発サーバー単体起動      | `frontend/`  | `pnpm dev`                                       |
-| フロントエンドビルド・型チェック        | `frontend/`  | `pnpm run build`                                 |
+| **全自動テスト一括実行 (pytest ＆ Vitest)** | ルート       | `pnpm test` または `python test.py` / `test.bat` |
 | **バックエンド自動テスト (pytest)**     | `backend/`   | `uv run pytest`                                  |
 | **フロントエンド自動テスト (Vitest)**   | `frontend/`  | `pnpm test`                                      |
 
