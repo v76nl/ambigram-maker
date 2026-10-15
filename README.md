@@ -48,7 +48,7 @@ ambigram-maker/
 ├── backend/
 │   ├── pyproject.toml              # uv パッケージ管理設定
 │   ├── app.py                      # FastAPI サーバーエントリポイント (SSE・可読性・パイプラインAPI)
-│   ├── fonts/                      # 日本語フォント群 (全10書体)
+│   ├── fonts/                      # 日本語フォント群 (全9書体)
 │   │   ├── ZenMaruGothic-Medium.ttf # 丸ゴシック
 │   │   ├── MPLUS1p-Bold.ttf        # 幾何角ゴシック
 │   │   ├── KleeOne-SemiBold.ttf    # 硬筆ペン字
@@ -58,7 +58,6 @@ ambigram-maker/
 │   │   ├── KaiseiTokumin-Bold.ttf  # 幾何学モダン明朝
 │   │   ├── DotGothic16-Regular.ttf # 16pxドット
 │   │   ├── x12y16pxMaruMonica.ttf  # 12x16px丸ピクセル
-│   │   └── GdHighwaygothicjaOtf.woff # 公団ゴシック
 │   │   └── OFL.txt                 # SIL Open Font License 1.1 条文 & 著作権表示
 │   ├── dictionary/
 │   │   ├── parser.py               # JMdict パーススクリプト (マルチ表記対応)
@@ -253,7 +252,6 @@ pnpm dev
 | **Kaisei Tokumin** (Bold) | 幾何学モダン明朝 | Copyright 2020 The Kaisei Project Authors (FONT-KAISEI) | [googlefonts/kaisei](https://github.com/googlefonts/kaisei) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
 | **DotGothic16** (Regular) | 16pxドット | Copyright 2020 The DotGothic16 Project Authors (Fontworks Inc.) | [fontworks-fonts/DotGothic16](https://github.com/fontworks-fonts/DotGothic16) | [SIL OFL 1.1](https://scripts.sil.org/OFL) |
 | **MaruMonica** | 12x16px丸ピクセル | 患者長ひっく (hicc / x0y0pxFreeFont) | [BOOTH: x0y0pxFreeFont](https://x0y0px.booth.pm/) | フリー (商用・埋め込み可) |
-| **公団ゴシック** | 道路標識ゴシック | ぱんかれ (pumpCurry / 5r4ce2) | [5r4ce2 [Fiber Force2]](https://542.jp/) | フリー (商用可・個人利用可) |
 
 SIL Open Font License の条文全文は [`backend/fonts/OFL.txt`](backend/fonts/OFL.txt) に収録されています。
 

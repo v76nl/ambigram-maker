@@ -116,8 +116,6 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
         return "'DotGothic16', monospace";
       case "marumonica":
         return "'MaruMonica', monospace";
-      case "highway_gothic":
-        return "'GD-HighwayGothicJA', sans-serif";
       default:
         return "inherit";
     }

@@ -71,13 +71,6 @@ FONT_PRESETS = {
         "description": "丸みと高い文字収録数を誇る12×16pxドット書体",
         "filename": "x12y16pxMaruMonica.ttf",
     },
-    "highway_gothic": {
-        "id": "highway_gothic",
-        "name": "公団ゴシック",
-        "style": "道路標識ゴシック",
-        "description": "遠方視認性のための直線化とパーツ省略が特徴的な標識書体 (地名・かな推奨)",
-        "filename": "GdHighwaygothicjaOtf.woff",
-    },
 }
 
 def compute_word_cognitive_score(
