@@ -48,6 +48,12 @@ ambigram-maker/
 ├── backend/
 │   ├── pyproject.toml              # uv パッケージ管理設定
 │   ├── app.py                      # FastAPI サーバーエントリポイント (SSE・可読性・パイプラインAPI)
+│   ├── tests/                      # pytest 自動テストスイート (31テスト)
+│   │   ├── conftest.py             # テスト環境・パス設定
+│   │   ├── test_fonts.py           # フォント存在・文字描画・骨格抽出テスト
+│   │   ├── test_scoring.py         # 幾何類似度・認知補完数理モデルテスト
+│   │   ├── test_engines.py         # 全生成エンジンパイプライン検証
+│   │   └── test_api.py             # FastAPI エンドポイント統合テスト
 │   ├── fonts/                      # 日本語フォント群 (全9書体)
 │   │   ├── ZenMaruGothic-Medium.ttf # 丸ゴシック
 │   │   ├── MPLUS1p-Bold.ttf        # 幾何角ゴシック
@@ -156,6 +162,8 @@ pnpm dev
 | フロントエンド依存関係インストール      | `frontend/`  | `pnpm install`                                   |
 | フロントエンド開発サーバー単体起動      | `frontend/`  | `pnpm dev`                                       |
 | フロントエンドビルド・型チェック        | `frontend/`  | `pnpm run build`                                 |
+| **バックエンド自動テスト (pytest)**     | `backend/`   | `uv run pytest`                                  |
+| **フロントエンド自動テスト (Vitest)**   | `frontend/`  | `pnpm test`                                      |
 
 ---
 
