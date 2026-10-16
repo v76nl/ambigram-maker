@@ -72,11 +72,15 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   }, []);
 
 
-  // 手法や結果が変わった場合はステッププレビュー選択を同期リセット (React公式: state adjustment during render)
-  const [prevDataKey, setPrevDataKey] = useState<string>("");
-  const currentDataKey = `${activeEngine}-${activeResult?.data || ""}`;
-  if (prevDataKey !== currentDataKey) {
-    setPrevDataKey(currentDataKey);
+  // 手法や単語が変わった場合のみステッププレビュー選択を同期リセット (React公式: state adjustment during render)
+  // 同一手法・同一単語でスライダー等のパラメータを変更した再生成時はステップ選択を維持
+  const currentWordKey = wordItem ? wordItem.target_text || wordItem.word || wordItem.reading : "";
+  const [prevEngine, setPrevEngine] = useState<string>(activeEngine);
+  const [prevWordKey, setPrevWordKey] = useState<string>(currentWordKey);
+
+  if (prevEngine !== activeEngine || prevWordKey !== currentWordKey) {
+    setPrevEngine(activeEngine);
+    setPrevWordKey(currentWordKey);
     setSelectedStepIndex(null);
   }
 
@@ -84,6 +88,10 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   const { diffImageUrl, diffStats, isDiffLoading } = usePixelDiff(activeResult);
 
   const pipelineSteps: PipelineStep[] = activeResult?.steps || [];
+  // ステップ数が減るなどで選択インデックスが範囲外になった場合は安全にリセット
+  if (selectedStepIndex !== null && pipelineSteps.length > 0 && selectedStepIndex >= pipelineSteps.length) {
+    setSelectedStepIndex(null);
+  }
   const activeStep: PipelineStep | null =
     selectedStepIndex !== null && pipelineSteps[selectedStepIndex] ? pipelineSteps[selectedStepIndex] : null;
 
