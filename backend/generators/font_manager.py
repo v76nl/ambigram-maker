@@ -226,6 +226,18 @@ class FontManager:
             except Exception:
                 pass
 
+        # 実インク（非ゼロ画素）のバウンディングボックス中心による精密幾何中央揃え
+        # 「一」などの特殊アスペクト比グリフで上下にズレて回転対称性が崩れるのを防止
+        y_idx, x_idx = np.where(u8 > 30)
+        if len(y_idx) > 0:
+            cy = (y_idx.min() + y_idx.max()) / 2.0
+            cx = (x_idx.min() + x_idx.max()) / 2.0
+            shift_x = int(round(size / 2.0 - cx))
+            shift_y = int(round(size / 2.0 - cy))
+            if shift_x != 0 or shift_y != 0:
+                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+                u8 = cv2.warpAffine(u8, M, (size, size))
+
         # 案A: 適応的太らせ判定
         # 生の黒画素密度
         raw_binary = (u8 > 90).astype(np.uint8)
@@ -422,7 +434,7 @@ class FontManager:
             img_b = self.render_char_matrix(c2, fid)
             skel_a = self.render_char_skeleton(c1, fid)
             skel_b = self.render_char_skeleton(c2, fid)
-            offset = (0, 0) if is_center else (custom_offsets[i] if i < len(custom_offsets) else (0, 0))
+            offset = custom_offsets[i] if i < len(custom_offsets) else (0, 0)
             normalized_offsets.append(offset)
             score = self.calculate_pair_similarity_for_offset(
                 img_a, img_b, offset[0], offset[1], skel_a=skel_a, skel_b=skel_b
@@ -467,16 +479,9 @@ class FontManager:
                 img_b = self.render_char_matrix(c2, fid)
                 skel_a = self.render_char_skeleton(c1, fid)
                 skel_b = self.render_char_skeleton(c2, fid)
-                if is_center:
-                    # 自己回転対称文字は自己中心回転を保つためシフトを(0,0)に固定
-                    score = self.calculate_pair_similarity_for_offset(
-                        img_a, img_b, 0, 0, skel_a=skel_a, skel_b=skel_b
-                    )
-                    offset = (0, 0)
-                else:
-                    score, offset = self.calculate_pair_similarity_with_shift(
-                        img_a, img_b, skel_a=skel_a, skel_b=skel_b
-                    )
+                score, offset = self.calculate_pair_similarity_with_shift(
+                    img_a, img_b, skel_a=skel_a, skel_b=skel_b
+                )
                 pair_scores.append(score)
                 offsets.append(offset)
 

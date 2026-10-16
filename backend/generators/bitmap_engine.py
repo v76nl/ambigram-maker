@@ -35,7 +35,20 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
         y = (size - h) // 2 - bbox[1]
 
         draw.text((x, y), char, fill=255, font=font)
-        return np.array(img, dtype=np.uint8)
+        u8 = np.array(img, dtype=np.uint8)
+
+        # 実インク（非ゼロ画素）のバウンディングボックス中心による精密幾何中央揃え
+        y_idx, x_idx = np.where(u8 > 30)
+        if len(y_idx) > 0:
+            cy = (y_idx.min() + y_idx.max()) / 2.0
+            cx = (x_idx.min() + x_idx.max()) / 2.0
+            shift_x = int(round(size / 2.0 - cx))
+            shift_y = int(round(size / 2.0 - cy))
+            if shift_x != 0 or shift_y != 0:
+                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+                u8 = cv2.warpAffine(u8, M, (size, size))
+
+        return u8
 
     def optimize_slot(
         self,
@@ -46,12 +59,27 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
         smoothness: int = 7,
         threshold_val: int = 120,
         font_path: Optional[Path] = None,
+        shift: tuple[int, int] = (0, 0),
         return_intermediates: bool = False,
     ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """1文字スロットにおける2文字の融合・エネルギー最適化"""
-        img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
-        img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
-        img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
+        img1_orig = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
+        img2_orig = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
+        img2_rot_orig = cv2.rotate(img2_orig, cv2.ROTATE_180)
+
+        # 重心シフトの対称配分
+        dx, dy = shift
+        if dx != 0 or dy != 0:
+            scale_factor = size / 128.0
+            shift_x = dx * scale_factor
+            shift_y = dy * scale_factor
+            M1 = np.float32([[1, 0, -shift_x / 2.0], [0, 1, -shift_y / 2.0]])
+            M2 = np.float32([[1, 0, shift_x / 2.0], [0, 1, shift_y / 2.0]])
+            img1 = cv2.warpAffine(img1_orig, M1, (size, size))
+            img2_rot = cv2.warpAffine(img2_rot_orig, M2, (size, size))
+        else:
+            img1 = img1_orig.copy()
+            img2_rot = img2_rot_orig.copy()
 
         # 中間ステップ1: 正反配置 (バイカラー)
         step1_overlay = make_bicolor_overlay(img1, img2_rot)
@@ -146,11 +174,13 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
 
         selected_font_path = font_manager.get_font_path(font_id if font_id != "auto" else "zen_maru")
 
+        selected_offsets = params.get("custom_offsets") or []
         half_len = (n + 1) // 2
         for i in range(half_len):
             c1 = word[i]
             c2 = word[n - 1 - i]
             is_center = (i == n - 1 - i)
+            shift = tuple(selected_offsets[i]) if i < len(selected_offsets) else (0, 0)
 
             slot_img, inter = self.optimize_slot(
                 c1,
@@ -160,6 +190,7 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
                 smoothness=smoothness,
                 threshold_val=threshold_val,
                 font_path=selected_font_path,
+                shift=shift,
                 return_intermediates=True,
             )
             slots[i] = slot_img

@@ -37,7 +37,21 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         y = (size - h) // 2 - bbox[1]
 
         draw.text((x, y), char, fill=255, font=font)
-        return np.array(img, dtype=np.uint8)
+        u8 = np.array(img, dtype=np.uint8)
+
+        # 実インク（非ゼロ画素）のバウンディングボックス中心による精密幾何中央揃え
+        # 「一」などの特殊アスペクト比グリフで上下にズレて回転対称性が崩れるのを防止
+        y_idx, x_idx = np.where(u8 > 30)
+        if len(y_idx) > 0:
+            cy = (y_idx.min() + y_idx.max()) / 2.0
+            cx = (x_idx.min() + x_idx.max()) / 2.0
+            shift_x = int(round(size / 2.0 - cx))
+            shift_y = int(round(size / 2.0 - cy))
+            if shift_x != 0 or shift_y != 0:
+                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+                u8 = cv2.warpAffine(u8, M, (size, size))
+
+        return u8
 
     def generate_slot(
         self,
@@ -68,10 +82,6 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
 
         # 中間ステップ1: 正反初期配置 (バイカラー)
         step1_overlay = make_bicolor_overlay(img1_orig, img2_rot_orig)
-
-        # 自己回転対称文字 (c1 == c2) の場合は中心対称性を保つためシフトを強制ゼロ化
-        if c1 == c2:
-            shift = (0, 0)
 
         # 最適重心シフトの対称配分 (中心原点を基準に img1 に -s/2, img2_rot に +s/2)
         dx, dy = shift
@@ -233,7 +243,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             c1 = word[i]
             c2 = word[n - 1 - i]
             is_center = (i == n - 1 - i)
-            shift = (0, 0) if is_center else (selected_offsets[i] if i < len(selected_offsets) else (0, 0))
+            shift = selected_offsets[i] if i < len(selected_offsets) else (0, 0)
 
             slot_img, inter = self.generate_slot(
                 c1,

@@ -122,8 +122,7 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
 
             # 最適XYシフトの反映 (128px空間のオフセットをSVG座標系へスケール)
             pair_idx = i if i < half_len else (n - 1 - i)
-            is_center = (i == n - 1 - i)
-            dx, dy = (0, 0) if is_center else (selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0))
+            dx, dy = selected_offsets[pair_idx] if pair_idx < len(selected_offsets) else (0, 0)
             if i >= half_len:
                 dx, dy = -dx, -dy
             shift_svg_x = dx * 6.0

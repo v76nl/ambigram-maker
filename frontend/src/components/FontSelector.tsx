@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useLayoutEffect } from "react";
-import { Sparkles, Type, RotateCcw, Maximize2 } from "lucide-react";
+import { Sparkles, Type, RotateCcw } from "lucide-react";
 import type { FontMeta, EngineResult, FontScoreItem } from "../services/api";
 
 interface FontSelectorProps {
@@ -342,18 +342,6 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
           </span>
         </div>
       </div>
-
-      {/* 事前太らせ等のサマリータグ */}
-      {preBold !== undefined && preBold > 0 && (
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", borderTop: "1px solid var(--border-subtle)", paddingTop: "0.4rem" }}>
-          <div className="font-metric-tag" style={{ fontSize: "0.68rem", padding: "0.15rem 0.4rem" }} title="近接ストロークを結合強化する異方性膨張">
-            <Maximize2 size={10} color="var(--text-secondary)" />
-            <span>
-              事前太らせ: <strong style={{ fontFamily: "var(--font-mono)" }}>+{preBold}px</strong>
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
