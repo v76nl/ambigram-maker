@@ -176,6 +176,7 @@ def evaluate_readability(req: ReadabilityRequest):
         "font_id": font_id,
         "overall_readability": round(overall_readability, 4),
         "slots": slot_evaluations,
+        "model_type": char_recognizer.model_type,
     }
 
 @app.get("/api/words/stream")

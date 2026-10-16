@@ -114,6 +114,7 @@ export interface ReadabilityResponse {
   font_id: string;
   overall_readability: number;
   slots: ReadabilitySlot[];
+  model_type?: string;
 }
 
 export interface EvalOffsetsResponse {

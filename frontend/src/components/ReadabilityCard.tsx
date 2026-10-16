@@ -40,12 +40,13 @@ export const ReadabilityCard: React.FC<ReadabilityCardProps> = ({
               fontSize: "0.68rem",
               padding: "0.1rem 0.4rem",
               borderRadius: "4px",
-              background: "var(--bg-subtle, #f4f4f5)",
-              color: "var(--text-muted, #71717a)",
-              border: "1px solid var(--border-subtle, #e4e4e7)",
+              background: data.model_type === "onnx_cnn" ? "rgba(16, 185, 129, 0.12)" : "var(--bg-subtle, #f4f4f5)",
+              color: data.model_type === "onnx_cnn" ? "#059669" : "var(--text-muted, #71717a)",
+              border: `1px solid ${data.model_type === "onnx_cnn" ? "rgba(16, 185, 129, 0.25)" : "var(--border-subtle, #e4e4e7)"}`,
+              fontWeight: 500,
             }}
           >
-            魏・山口 (2023) §2.2
+            {data.model_type === "onnx_cnn" ? "ローカルCNN (3,082字/漢字対応)" : "魏・山口 (2023) §2.2"}
           </span>
         </div>
         <div className="diff-stats" style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
