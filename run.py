@@ -19,16 +19,24 @@ def main():
     print("=" * 60)
     print(f"[*] 作業ディレクトリ: {ROOT_DIR}")
 
+    # ポートの空き状況チェック (ポート8000, 5173)
+    import socket
+    for port, name in [(8000, "バックエンド (FastAPI)"), (5173, "フロントエンド (Vite)")]:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(("127.0.0.1", port)) == 0:
+                print(f"[!] 警告: ポート {port} ({name}) が既に他のプロセスで使用されています。")
+                print(f"    競合しているプロセスを停止してから再起動してください。")
+
     # バックエンド起動コマンドの決定
     venv_uvicorn_win = BACKEND_DIR / ".venv" / "Scripts" / "uvicorn.exe"
     venv_uvicorn_unix = BACKEND_DIR / ".venv" / "bin" / "uvicorn"
 
     if venv_uvicorn_win.exists():
-        backend_cmd = [str(venv_uvicorn_win), "app:app", "--port", "8000", "--reload"]
+        backend_cmd = [str(venv_uvicorn_win), "app:app", "--port", "8000", "--reload", "--reload-dir", "."]
     elif venv_uvicorn_unix.exists():
-        backend_cmd = [str(venv_uvicorn_unix), "app:app", "--port", "8000", "--reload"]
+        backend_cmd = [str(venv_uvicorn_unix), "app:app", "--port", "8000", "--reload", "--reload-dir", "."]
     else:
-        backend_cmd = ["uv", "run", "--project", "backend", "uvicorn", "app:app", "--app-dir", "backend", "--port", "8000", "--reload"]
+        backend_cmd = ["uv", "run", "--project", "backend", "uvicorn", "app:app", "--app-dir", "backend", "--port", "8000", "--reload", "--reload-dir", "backend"]
 
     # フロントエンド起動コマンド (pnpm.cmd または pnpm)
     pnpm_cmd = "pnpm.cmd" if sys.platform == "win32" else "pnpm"

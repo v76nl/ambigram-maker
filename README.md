@@ -164,6 +164,7 @@ pnpm dev
 | **全自動テスト一括実行 (pytest ＆ Vitest)** | ルート       | `pnpm test` または `python test.py` / `test.bat` |
 | **バックエンド自動テスト (pytest)**     | `backend/`   | `uv run pytest`                                  |
 | **フロントエンド自動テスト (Vitest)**   | `frontend/`  | `pnpm test`                                      |
+| **スライドローカル確認 (ポート8080)**   | ルート       | `pnpm slides:serve`                              |
 
 ---
 

@@ -19,7 +19,7 @@ describe("Frontend API Service", () => {
 
     const fonts = await getAvailableFonts();
     expect(fonts).toEqual(mockFonts);
-    expect(fetch).toHaveBeenCalledWith("http://127.0.0.1:8000/api/fonts");
+    expect(fetch).toHaveBeenCalledWith("/api/fonts");
   });
 
   it("searchWords should encode query parameters correctly", async () => {
@@ -71,7 +71,7 @@ describe("Frontend API Service", () => {
 
     const result = await evaluateWord("日の目");
     expect(result).toEqual(mockWordItem);
-    expect(fetchSpy).toHaveBeenCalledWith("http://127.0.0.1:8000/api/words/evaluate", expect.objectContaining({
+    expect(fetchSpy).toHaveBeenCalledWith("/api/words/evaluate", expect.objectContaining({
       method: "POST",
       body: JSON.stringify({ word: "日の目" }),
     }));

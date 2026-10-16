@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -k -n \"backend,frontend\" -c \"blue.bold,magenta.bold\" \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "uv run --project backend uvicorn app:app --app-dir backend --port 8000 --reload",
+    "dev:backend": "uv run --project backend uvicorn app:app --app-dir backend --port 8000 --reload --reload-dir backend",
     "dev:frontend": "pnpm --prefix frontend dev",
     "build": "pnpm --prefix frontend build",
     "test": "npm run test:backend && npm run test:frontend",
@@ -11,7 +11,8 @@
     "test:frontend": "pnpm --prefix frontend test",
     "slides:build": "npm --prefix slides run build",
     "slides:build:pptx": "npm --prefix slides run build:pptx",
-    "slides:check": "npm --prefix slides run check"
+    "slides:check": "npm --prefix slides run check",
+    "slides:serve": "npm --prefix slides run serve"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
