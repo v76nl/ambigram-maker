@@ -39,37 +39,55 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
         </div>
       </div>
 
-      <div className="pipeline-steps-grid">
+      <div className="pipeline-steps-list">
         {steps.map((step, idx) => {
           const isSelected = selectedStepIndex === idx;
           return (
             <div
               key={step.step}
-              className={`pipeline-step-card ${isSelected ? "selected" : ""}`}
+              className={`pipeline-step-row ${isSelected ? "selected" : ""}`}
               onClick={() => onSelectStep(isSelected ? null : idx)}
               title={`クリックで STEP ${step.step} をプレビュー`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectStep(isSelected ? null : idx);
+                }
+              }}
             >
-              <div className="pipeline-step-header">
-                <span className={`pipeline-step-badge ${isSelected ? "active" : ""}`}>
-                  STEP {step.step}
-                </span>
-                <span className="pipeline-step-name">{step.title}</span>
-              </div>
-
+              {/* 左側: サムネイル画像 */}
               <div className="pipeline-step-thumb-wrap">
                 <img
                   src={step.image}
                   alt={step.title}
                   className="pipeline-step-thumb"
+                  loading="lazy"
                 />
                 <div className="pipeline-step-overlay-hint">
-                  <Eye size={13} />
+                  <Eye size={14} />
                   <span>{isSelected ? "表示中" : "プレビュー"}</span>
                 </div>
               </div>
 
-              <div className="pipeline-step-desc">
-                {step.description}
+              {/* 右側: タイトル・ステップ番号・詳細説明 */}
+              <div className="pipeline-step-content">
+                <div className="pipeline-step-header">
+                  <span className={`pipeline-step-badge ${isSelected ? "active" : ""}`}>
+                    STEP {step.step}
+                  </span>
+                  <span className="pipeline-step-name">{step.title}</span>
+                  {isSelected && (
+                    <span className="pipeline-step-selected-badge">
+                      表示中
+                    </span>
+                  )}
+                </div>
+
+                <div className="pipeline-step-desc">
+                  {step.description}
+                </div>
               </div>
             </div>
           );

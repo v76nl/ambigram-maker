@@ -1012,87 +1012,63 @@ body {
   animation: fadeIn 0.2s ease;
 }
 
+.pipeline-steps-list,
 .pipeline-steps-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.65rem;
-  margin-top: 0.25rem;
-}
-
-.pipeline-step-card {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.pipeline-step-row,
+.pipeline-step-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  padding: 0.55rem;
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
+.pipeline-step-row:hover,
 .pipeline-step-card:hover {
-  border-color: var(--text-muted);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border-color: var(--border-medium);
+  background: var(--bg-hover, rgba(0, 0, 0, 0.015));
+  transform: translateX(2px);
+  box-shadow: var(--shadow-sm);
 }
 
+.pipeline-step-row.selected,
 .pipeline-step-card.selected {
   border-color: var(--accent);
-  background: rgba(225, 59, 25, 0.03);
-  box-shadow: 0 0 0 2px rgba(225, 59, 25, 0.15);
+  background: rgba(225, 59, 25, 0.035);
+  box-shadow: 0 0 0 1.5px rgba(225, 59, 25, 0.2);
 }
 
-.pipeline-step-header {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  overflow: hidden;
-}
-
-.pipeline-step-badge {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.08rem 0.3rem;
-  border-radius: 2px;
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.pipeline-step-badge.active {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.pipeline-step-name {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+/* 左側: サムネイル画像 */
 .pipeline-step-thumb-wrap {
   position: relative;
-  width: 100%;
-  height: 72px;
+  width: 120px;
+  height: 80px;
   background: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.04);
 }
 
 .pipeline-step-thumb {
-  max-width: 95%;
-  max-height: 95%;
+  max-width: 90%;
+  max-height: 90%;
   object-fit: contain;
   display: block;
 }
@@ -1100,7 +1076,7 @@ body {
 .pipeline-step-overlay-hint {
   position: absolute;
   inset: 0;
-  background: rgba(24, 24, 27, 0.65);
+  background: rgba(24, 24, 27, 0.68);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -1110,26 +1086,98 @@ body {
   font-weight: 600;
   opacity: 0;
   transition: opacity 0.15s ease;
+  backdrop-filter: blur(1px);
 }
 
+.pipeline-step-row:hover .pipeline-step-overlay-hint,
 .pipeline-step-card:hover .pipeline-step-overlay-hint {
   opacity: 1;
 }
 
+.pipeline-step-row.selected .pipeline-step-overlay-hint,
 .pipeline-step-card.selected .pipeline-step-overlay-hint {
-  opacity: 0.85;
+  opacity: 0.88;
   background: rgba(225, 59, 25, 0.75);
 }
 
-.pipeline-step-desc {
+/* 右側: 説明コンテンツ */
+.pipeline-step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.pipeline-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.pipeline-step-badge {
+  font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-  height: 2.7rem;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.pipeline-step-badge.active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.pipeline-step-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.pipeline-step-selected-badge {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(225, 59, 25, 0.08);
+  border: 1px solid rgba(225, 59, 25, 0.2);
+  border-radius: 3px;
+  padding: 0.05rem 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+.pipeline-step-desc {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* レスポンシブ対応 (狭い画面では縦並びにフォールバック) */
+@media (max-width: 520px) {
+  .pipeline-step-row,
+  .pipeline-step-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+  .pipeline-step-thumb-wrap {
+    width: 100%;
+    height: 90px;
+  }
+  .pipeline-step-selected-badge {
+    margin-left: 0;
+  }
 }
 
 @keyframes fadeIn {
