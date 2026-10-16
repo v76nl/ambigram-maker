@@ -914,6 +914,7 @@ body {
 
 /* Canvas Display Area */
 .canvas-rotating-wrapper {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -922,19 +923,62 @@ body {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Bottom Controls */
-.viewer-controls {
+/* Canvas Overlay Action Buttons (画像の右下に重なるアイコンボタン群) */
+.canvas-overlay-actions {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.85rem;
+  z-index: 10;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-subtle);
+  gap: 0.4rem;
+}
+
+.canvas-overlay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.canvas-overlay-btn:hover:not(:disabled) {
+  background: #ffffff;
+  color: var(--text-primary);
+  border-color: var(--border-strong, #a1a1aa);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.canvas-overlay-btn.pinned {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 3px 8px rgba(225, 29, 72, 0.32);
+}
+
+.canvas-overlay-btn.active {
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  border-color: var(--text-primary);
+}
+
+.canvas-overlay-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Symmetry Pixel Difference Inspector */

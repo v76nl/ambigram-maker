@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  RotateCw,
-  GitCompare,
   Palette,
   Eye,
   Undo2,
@@ -9,8 +7,6 @@ import {
   Pin,
 } from "lucide-react";
 import type { WordItem, EngineResult, ReadabilityResponse, PipelineStep } from "../services/api";
-import { usePixelDiff } from "../hooks/usePixelDiff";
-import { DiffInspector } from "./DiffInspector";
 import { PipelineViewer } from "./PipelineViewer";
 import { ReadabilityCard } from "./ReadabilityCard";
 
@@ -41,8 +37,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
   onPinResult,
   isCurrentResultPinned = false,
 }) => {
-  const [rotation, setRotation] = useState<number>(0);
-  const [showDiffView, setShowDiffView] = useState<boolean>(true);
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
 
   // 画面スクロール監視: メインキャンバスが画面外へ行ったかを判定
@@ -70,7 +64,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     };
   }, []);
 
-
   // 手法や単語が変わった場合のみステッププレビュー選択を同期リセット (React公式: state adjustment during render)
   // 同一手法・同一単語でスライダー等のパラメータを変更した再生成時はステップ選択を維持
   const currentWordKey = wordItem ? wordItem.target_text || wordItem.word || wordItem.reading : "";
@@ -82,9 +75,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     setPrevWordKey(currentWordKey);
     setSelectedStepIndex(null);
   }
-
-  // 点対称ピクセル差分計算フック
-  const { diffImageUrl, diffStats, isDiffLoading } = usePixelDiff(activeResult);
 
   const pipelineSteps: PipelineStep[] = activeResult?.steps || [];
   // ステップ数が減るなどで選択インデックスが範囲外になった場合は安全にリセット
@@ -102,11 +92,7 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     );
   }
 
-  const toggleRotation = () => {
-    setRotation((prev) => (prev === 0 ? 180 : 0));
-  };
-
-  const renderGraphicContent = (isFlipped: boolean = false) => {
+  const renderGraphicContent = () => {
     // 中間工程ステップがプレビュー選択されている場合
     if (activeStep) {
       return (
@@ -116,7 +102,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           style={{
             maxWidth: "100%",
             height: "auto",
-            transform: isFlipped ? "rotate(180deg)" : "none",
           }}
         />
       );
@@ -127,13 +112,9 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     }
 
     if (activeResult.type === "svg") {
-      let svgData = activeResult.data;
-      if (isFlipped) {
-        svgData = svgData.replace("<svg", '<svg style="transform: rotate(180deg);"');
-      }
       return (
         <div
-          dangerouslySetInnerHTML={{ __html: svgData }}
+          dangerouslySetInnerHTML={{ __html: activeResult.data }}
           style={{
             maxWidth: "100%",
             height: "auto",
@@ -152,7 +133,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           style={{
             maxWidth: "100%",
             height: "auto",
-            transform: isFlipped ? "rotate(180deg)" : "none",
           }}
         />
       );
@@ -184,13 +164,8 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
             </div>
           </div>
         )}
-        <div
-          className="sticky-ambigram-inner"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-          }}
-        >
-          {renderGraphicContent(false)}
+        <div className="sticky-ambigram-inner">
+          {renderGraphicContent()}
         </div>
       </div>
 
@@ -302,55 +277,34 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
           </div>
         )}
 
-        {/* 回転アニメーションキャンバス */}
-        <div
-          className="canvas-rotating-wrapper"
-          style={{ transform: `rotate(${rotation}deg)` }}
-        >
-          {renderGraphicContent(false)}
-        </div>
+        {/* キャンバス画像エリア (右下にアクションアイコンを重ねて配置) */}
+        <div className="canvas-rotating-wrapper">
+          {renderGraphicContent()}
 
-        {/* コントロールバー */}
-        <div className="viewer-controls">
-          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
-            <button
-              className="swiss-btn swiss-btn-primary"
-              onClick={toggleRotation}
-              title="180度回転"
-            >
-              <RotateCw size={14} />
-              <span>反転 (180°)</span>
-            </button>
-
-            <button
-              className={`swiss-btn ${showDiffView ? "swiss-btn-subtle" : "swiss-btn-outline"}`}
-              onClick={() => setShowDiffView(!showDiffView)}
-              title="点対称（180°反転）ピクセル差分解析の表示切り替え"
-            >
-              <GitCompare size={14} />
-              <span>点対称差分</span>
-            </button>
-
+          {/* 右下オーバーレイアクション: 固定ピン & ベクター色分け */}
+          <div className="canvas-overlay-actions">
             {activeEngine === "vector" && onToggleHighlightMode && (
               <button
-                className={`swiss-btn ${highlightMode ? "swiss-btn-accent" : "swiss-btn-outline"}`}
+                className={`canvas-overlay-btn ${highlightMode ? "active" : ""}`}
                 onClick={onToggleHighlightMode}
-                title="ストロークパーツの色分け表示"
+                title={highlightMode ? "通常表示に戻す" : "ストロークパーツの色分け表示"}
               >
-                <Palette size={14} />
-                <span>色分け</span>
+                <Palette size={15} />
               </button>
             )}
 
             {onPinResult && (
               <button
-                className={`swiss-btn ${isCurrentResultPinned ? "swiss-btn-accent" : "swiss-btn-outline"}`}
+                className={`canvas-overlay-btn ${isCurrentResultPinned ? "pinned" : ""}`}
                 onClick={onPinResult}
                 disabled={!activeResult || activeResult.type === "error" || isGenerating}
-                title={isCurrentResultPinned ? "この結果は固定済みです (クリックで解除)" : "現在の文字・フォントでの結果を固定（比較トレイに追加）"}
+                title={
+                  isCurrentResultPinned
+                    ? "この結果は固定済みです (クリックで解除)"
+                    : "現在の結果を固定 (比較トレイに追加)"
+                }
               >
-                <Pin size={14} className={isCurrentResultPinned ? "pinned-icon-active" : ""} />
-                <span>{isCurrentResultPinned ? "固定中" : "この結果を固定"}</span>
+                <Pin size={15} />
               </button>
             )}
           </div>
@@ -362,14 +316,6 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
         steps={pipelineSteps}
         selectedStepIndex={selectedStepIndex}
         onSelectStep={setSelectedStepIndex}
-      />
-
-      {/* 点対称ピクセル差分インスペクター (180° Symmetry Difference) */}
-      <DiffInspector
-        show={showDiffView}
-        isDiffLoading={isDiffLoading}
-        diffImageUrl={diffImageUrl}
-        diffStats={diffStats}
       />
 
       {/* AI客観文字認識率・双方向可読性評価 */}
