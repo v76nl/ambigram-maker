@@ -30,7 +30,6 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const selectedFontName = details?.selected_font_name;
   const fontScores = details?.font_scores as FontScoreItem[] | undefined;
   const selectedOffsets = details?.selected_offsets as [number, number][] | undefined;
-  const preBold = details?.pre_bold as number | undefined;
 
   // 各フォントのスコア辞書
   const scoreMap = useMemo(() => {
