@@ -1,6 +1,7 @@
 import React from "react";
 import { Layers, Eye } from "lucide-react";
 import type { PipelineStep } from "../services/api";
+import { MathText } from "./MathText";
 
 interface PipelineViewerProps {
   steps: PipelineStep[];
@@ -86,7 +87,7 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
                 </div>
 
                 <div className="pipeline-step-desc">
-                  {step.description}
+                  <MathText text={step.description} />
                 </div>
               </div>
             </div>

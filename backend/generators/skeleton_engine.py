@@ -412,14 +412,14 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             },
             {
                 "step": 5,
-                "title": "調和平均距離場",
-                "description": "両文字のユークリッド距離場から調和平均 H = 2·d1·d2/(d1+d2) のポテンシャル尾根を算出",
+                "title": "調和平均距離場 (Harmonic Mean Distance Field)",
+                "description": "正位置の文字の輪郭からの距離 $d_1$ と、180度反転した文字の輪郭からの距離 $d_2$ を各画素で測定し、調和平均 $$H = \\frac{2 \\cdot d_1 \\cdot d_2}{d_1 + d_2}$$ を算出。どちらか一方でも文字の外周（距離0）に近いと値が0になり、両方の文字のストローク中心に同時に位置する画素だけが最大値（暖色）となります。",
                 "image": array_to_png_data_uri(step5_img, color_mode="heatmap", add_padding=True),
             },
             {
                 "step": 6,
-                "title": "細線化中心骨格抽出",
-                "description": "モルフォロジー細線化アルゴリズムにより幅1pxの平均骨格中心線を抽出",
+                "title": "中心線細線化 (Morphological Thinning)",
+                "description": "調和平均が一定基準以上の領域を二値化（白黒化）し、線の連続性を保ったまま外周から1ピクセルずつ均等に削り落とすことで、両文字のちょうど真ん中を通る幅1pxの中心線を抽出します。",
                 "image": array_to_png_data_uri(step6_img, color_mode="black_on_white", add_padding=True),
             },
             {

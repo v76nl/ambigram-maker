@@ -13,6 +13,7 @@ import { usePixelDiff } from "../hooks/usePixelDiff";
 import { DiffInspector } from "./DiffInspector";
 import { PipelineViewer } from "./PipelineViewer";
 import { ReadabilityCard } from "./ReadabilityCard";
+import { MathText } from "./MathText";
 
 interface AmbigramViewerProps {
   wordItem: WordItem | null;
@@ -275,22 +276,52 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
         {/* 中間ステッププレビュー中バナー */}
         {activeStep && (
-          <div className="pipeline-preview-banner">
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Eye size={15} color="var(--accent)" />
-              <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
-                中間工程プレビュー中: STEP {activeStep.step} - {activeStep.title}
-              </span>
-            </div>
-            <button
-              className="swiss-btn swiss-btn-subtle"
-              style={{ padding: "0.2rem 0.6rem", fontSize: "0.72rem" }}
-              onClick={() => setSelectedStepIndex(null)}
-              title="完成アンビグラム表示に戻す"
+          <div
+            className="pipeline-preview-banner"
+            style={{
+              flexDirection: "column",
+              alignItems: "stretch",
+              gap: "0.45rem",
+              padding: "0.5rem 0.75rem",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "0.5rem",
+              }}
             >
-              <Undo2 size={12} />
-              <span>完成結果に戻す</span>
-            </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Eye size={15} color="var(--accent)" />
+                <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
+                  中間工程プレビュー中: STEP {activeStep.step} - {activeStep.title}
+                </span>
+              </div>
+              <button
+                className="swiss-btn swiss-btn-subtle"
+                style={{ padding: "0.2rem 0.6rem", fontSize: "0.72rem" }}
+                onClick={() => setSelectedStepIndex(null)}
+                title="完成アンビグラム表示に戻す"
+              >
+                <Undo2 size={12} />
+                <span>完成結果に戻す</span>
+              </button>
+            </div>
+            {activeStep.description && (
+              <div
+                style={{
+                  fontSize: "0.76rem",
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.5,
+                  borderTop: "1px solid var(--border-subtle)",
+                  paddingTop: "0.35rem",
+                }}
+              >
+                <MathText text={activeStep.description} />
+              </div>
+            )}
           </div>
         )}
 
