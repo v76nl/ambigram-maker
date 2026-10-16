@@ -168,6 +168,14 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
         className={`sticky-ambigram-float ${isCompactSticky ? "visible" : ""}`}
         aria-hidden={!isCompactSticky}
       >
+        {isGenerating && (
+          <div className="sticky-generating-overlay">
+            <div className="sticky-generating-indicator">
+              <RefreshCw size={13} className="spin" />
+              <span>生成中……</span>
+            </div>
+          </div>
+        )}
         <div
           className="sticky-ambigram-inner"
           style={{

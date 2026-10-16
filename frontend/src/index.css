@@ -610,6 +610,38 @@ body {
   object-fit: contain;
 }
 
+.sticky-generating-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md, 8px);
+  z-index: 30;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.sticky-generating-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  letter-spacing: 0.04em;
+}
+
 .canvas-card {
   position: relative;
   background: var(--bg-surface);
