@@ -981,7 +981,7 @@ body {
   transform: none;
 }
 
-/* Symmetry Pixel Difference Inspector */
+/* Analysis & Readability Cards (可読性・解析カード共通コンテナ) */
 .diff-view-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -1023,29 +1023,6 @@ body {
   font-weight: 600;
 }
 
-.diff-stat-match {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  border: 1px solid var(--border-medium);
-}
-
-.diff-stat-diff {
-  background: #fff1f2;
-  color: #e11d48;
-  border: 1px solid #fecdd3;
-}
-
-.diff-canvas-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  padding: 1rem;
-  min-height: 180px;
-}
-
 .diff-legend {
   display: flex;
   justify-content: center;
@@ -1054,18 +1031,6 @@ body {
   gap: 1.25rem;
   font-size: 0.72rem;
   color: var(--text-secondary);
-}
-
-.diff-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.diff-legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
 }
 
 /* Pipeline Intermediate Steps & Preview Banner */

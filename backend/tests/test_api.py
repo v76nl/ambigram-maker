@@ -55,3 +55,4 @@ def test_api_evaluate_readability():
     data = res.json()
     assert "overall_readability" in data
     assert "slots" in data
+    assert "model_type" in data
