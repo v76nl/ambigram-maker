@@ -37,100 +37,116 @@ class StrokeSnapWarper:
         self,
         img1: np.ndarray,
         img2_rot: np.ndarray,
-        max_distance: int = 18,
+        max_distance: int = 28,
         snap_strength: float = 0.5,
-        smooth_sigma: float = 9.0,
+        smooth_sigma: float = 16.0,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
         """
         正反2画像の骨格から中間対称軸への局所変位ベクトル場 (dx, dy) を算出。
         - max_distance: スナップを適用する最大近接ストローク距離 (px)
         - snap_strength: 中間軸への引き寄せ係数 (0.0: 無変形, 0.5: 中間線で完全一致)
-        - smooth_sigma: 変形場の滑らかさ (Thin Plate Spline的な平滑拡散)
+        - smooth_sigma: 変形場の滑らかさ (Thin Plate Spline弾性補間拡散)
         """
         h, w = img1.shape[:2]
 
         skel1 = extract_skeleton_u8(img1)
         skel2 = extract_skeleton_u8(img2_rot)
 
-        # 共通部分（すでに一致している外周ループ等の固定アンカー）
+        # 共通部分（すでに一致しているストローク等の固定アンカー）
         overlap = cv2.bitwise_and((img1 > 100).astype(np.uint8), (img2_rot > 100).astype(np.uint8))
-        overlap_dilated = cv2.dilate(overlap, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7)))
+        overlap_dilated = cv2.dilate(overlap, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
 
-        # 距離変換場と最近傍勾配の算出
-        d2, labels2 = cv2.distanceTransformWithLabels(
-            (skel2 == 0).astype(np.uint8), cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL
-        )
-        d1, labels1 = cv2.distanceTransformWithLabels(
-            (skel1 == 0).astype(np.uint8), cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL
-        )
+        # 距離変換場と最近傍骨格への勾配ベクトルの算出
+        d2 = cv2.distanceTransform((skel2 == 0).astype(np.uint8), cv2.DIST_L2, 5)
+        d1 = cv2.distanceTransform((skel1 == 0).astype(np.uint8), cv2.DIST_L2, 5)
 
-        # Sobelフィルタによる距離場の勾配ベクトル（最近傍骨格への向き）
         grad2_x = cv2.Sobel(d2, cv2.CV_32F, 1, 0, ksize=3)
         grad2_y = cv2.Sobel(d2, cv2.CV_32F, 0, 1, ksize=3)
-        mag2 = np.sqrt(grad2_x**2 + grad2_y**2) + 1e-6
+        mag2 = np.sqrt(grad2_x**2 + grad2_y**2) + 1e-5
         grad2_x /= mag2
         grad2_y /= mag2
 
         grad1_x = cv2.Sobel(d1, cv2.CV_32F, 1, 0, ksize=3)
         grad1_y = cv2.Sobel(d1, cv2.CV_32F, 0, 1, ksize=3)
-        mag1 = np.sqrt(grad1_x**2 + grad1_y**2) + 1e-6
+        mag1 = np.sqrt(grad1_x**2 + grad1_y**2) + 1e-5
         grad1_x /= mag1
         grad1_y /= mag1
 
-        # 変位マップの初期化
+        # 変位マップと重みマップの初期化
         vx1 = np.zeros((h, w), dtype=np.float32)
         vy1 = np.zeros((h, w), dtype=np.float32)
+        w1 = np.zeros((h, w), dtype=np.float32)
+
         vx2 = np.zeros((h, w), dtype=np.float32)
         vy2 = np.zeros((h, w), dtype=np.float32)
+        w2 = np.zeros((h, w), dtype=np.float32)
 
-        # 1. skel1 のうち、skel2 に近接しているストロークを中間点へ吸引
-        mask_snap1 = (skel1 > 0) & (d2 > 1.0) & (d2 <= max_distance) & (overlap_dilated == 0)
-        snap_count = int(np.sum(mask_snap1))
-
-        if snap_count > 0:
+        # 1. skel1 のうち、skel2 に近接しているストロークを中間対称軸へ吸引
+        mask_snap1 = (skel1 > 0) & (d2 > 1.5) & (d2 <= max_distance) & (overlap_dilated == 0)
+        snap_count1 = int(np.sum(mask_snap1))
+        if snap_count1 > 0:
             shift_amount1 = d2[mask_snap1] * snap_strength
-            # 距離勾配の逆方向（skel2に向かう方向）へ移動
             vx1[mask_snap1] = -grad2_x[mask_snap1] * shift_amount1
             vy1[mask_snap1] = -grad2_y[mask_snap1] * shift_amount1
+            w1[mask_snap1] = 1.0
 
-        # 2. skel2 のうち、skel1 に近接しているストロークを中間点へ吸引
-        mask_snap2 = (skel2 > 0) & (d1 > 1.0) & (d1 <= max_distance) & (overlap_dilated == 0)
-        if np.sum(mask_snap2) > 0:
+        # 2. skel2 のうち、skel1 に近接しているストロークを中間対称軸へ吸引
+        mask_snap2 = (skel2 > 0) & (d1 > 1.5) & (d1 <= max_distance) & (overlap_dilated == 0)
+        snap_count2 = int(np.sum(mask_snap2))
+        if snap_count2 > 0:
             shift_amount2 = d1[mask_snap2] * snap_strength
             vx2[mask_snap2] = -grad1_x[mask_snap2] * shift_amount2
             vy2[mask_snap2] = -grad1_y[mask_snap2] * shift_amount2
+            w2[mask_snap2] = 1.0
 
-        # 3. 固定アンカー領域（外周ループ等）は変位をゼロに固定
-        vx1[overlap_dilated > 0] = 0.0
-        vy1[overlap_dilated > 0] = 0.0
-        vx2[overlap_dilated > 0] = 0.0
-        vy2[overlap_dilated > 0] = 0.0
+        total_snaps = snap_count1 + snap_count2
+        if total_snaps == 0:
+            return vx1, vy1, vx2, vy2, 0
 
-        # 4. Thin Plate Spline 的な滑らかな連続変形場への拡散
+        # 3. Thin Plate Spline (薄板スプライン) 弾性変形場への正規化拡散
+        # ガウシアン畳み込みによる変位値の希釈を防ぎ、ストローク本来の移動量を保持して周囲へ滑らかに伝播
         ksize = int(round(smooth_sigma * 4)) // 2 * 2 + 1
-        if snap_count > 0:
-            vx1 = cv2.GaussianBlur(vx1, (ksize, ksize), smooth_sigma)
-            vy1 = cv2.GaussianBlur(vy1, (ksize, ksize), smooth_sigma)
-            vx2 = cv2.GaussianBlur(vx2, (ksize, ksize), smooth_sigma)
-            vy2 = cv2.GaussianBlur(vy2, (ksize, ksize), smooth_sigma)
+        vx1_b = cv2.GaussianBlur(vx1, (ksize, ksize), smooth_sigma)
+        vy1_b = cv2.GaussianBlur(vy1, (ksize, ksize), smooth_sigma)
+        w1_b = cv2.GaussianBlur(w1, (ksize, ksize), smooth_sigma)
 
-            # アンカー領域での変位ゼロを再強制
-            vx1 *= (1.0 - overlap_dilated.astype(np.float32) / 255.0)
-            vy1 *= (1.0 - overlap_dilated.astype(np.float32) / 255.0)
-            vx2 *= (1.0 - overlap_dilated.astype(np.float32) / 255.0)
-            vy2 *= (1.0 - overlap_dilated.astype(np.float32) / 255.0)
+        vx2_b = cv2.GaussianBlur(vx2, (ksize, ksize), smooth_sigma)
+        vy2_b = cv2.GaussianBlur(vy2, (ksize, ksize), smooth_sigma)
+        w2_b = cv2.GaussianBlur(w2, (ksize, ksize), smooth_sigma)
 
-        return vx1, vy1, vx2, vy2, snap_count
+        # 正規化: 疎な変位マスクによる局所平均希釈を解消
+        vld1 = w1_b > 1e-5
+        vx1_out = np.zeros_like(vx1)
+        vy1_out = np.zeros_like(vy1)
+        att1 = np.clip(w1_b[vld1] * 20.0, 0.0, 1.0)
+        vx1_out[vld1] = (vx1_b[vld1] / w1_b[vld1]) * att1
+        vy1_out[vld1] = (vy1_b[vld1] / w1_b[vld1]) * att1
+
+        vld2 = w2_b > 1e-5
+        vx2_out = np.zeros_like(vx2)
+        vy2_out = np.zeros_like(vy2)
+        att2 = np.clip(w2_b[vld2] * 20.0, 0.0, 1.0)
+        vx2_out[vld2] = (vx2_b[vld2] / w2_b[vld2]) * att2
+        vy2_out[vld2] = (vy2_b[vld2] / w2_b[vld2]) * att2
+
+        # 4. 固定アンカー領域（既に重なっている部分）の変位をゼロに制限
+        anchor_mask = overlap_dilated.astype(np.float32) / 255.0
+        vx1_out *= (1.0 - anchor_mask)
+        vy1_out *= (1.0 - anchor_mask)
+        vx2_out *= (1.0 - anchor_mask)
+        vy2_out *= (1.0 - anchor_mask)
+
+        return vx1_out, vy1_out, vx2_out, vy2_out, total_snaps
 
     def snap_and_warp(
         self,
         img1: np.ndarray,
         img2_rot: np.ndarray,
-        max_distance: int = 18,
+        max_distance: int = 28,
         snap_strength: float = 0.5,
     ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
         """
-        正位置画像と反転画像を受け取り、近接ストロークを中間対称軸へワープさせた2画像を返却
+        正位置画像と反転画像を受け取り、近接ストロークをThin Plate Spline弾性変形で中間対称軸へワープさせた2画像を返却
         """
         h, w = img1.shape[:2]
         vx1, vy1, vx2, vy2, snap_count = self.compute_snap_displacement_fields(

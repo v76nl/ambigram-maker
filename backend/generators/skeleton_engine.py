@@ -396,13 +396,13 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             {
                 "step": 3,
                 "title": "事前太らせ",
-                "description": "楕円カーネル膨張によりストロークを太らせ、交差親和性と結合力を強化",
+                "description": "楕円カーネル膨張によりストロークを太らせ、近接するストローク同士の間隙を縮小して結合準備",
                 "image": array_to_png_data_uri(step3_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 4,
-                "title": "局所TPS吸引",
-                "description": "薄板スプライン(TPS)変形により近接するストローク同士を中間対称軸へ引き寄せ",
+                "title": "Thin Plate Spline (薄板スプライン非剛体変形)",
+                "description": "薄板の弾性曲げエネルギー最小化モデル(Thin Plate Spline)により、文字輪郭を崩さず近接するストローク同士を中心対称軸へ滑らかに引き寄せて一体化",
                 "image": array_to_png_data_uri(step4_img, color_mode="raw", add_padding=True),
             },
             {

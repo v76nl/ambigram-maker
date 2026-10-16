@@ -37,8 +37,8 @@ export const PARAM_LABELS = {
     hint: "▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき",
   },
   enableSnap: {
-    title: "近接ストローク吸引スナップ",
-    hint: "平行ストローク同士を中間の回転対称軸へ滑らかに吸着・一本化",
+    title: "Thin Plate Spline 近接吸引スナップ",
+    hint: "薄板スプライン(Thin Plate Spline)弾性変形により、近接ストローク同士を中間の回転対称軸へ滑らかに吸着・一本化",
   },
 
   // ベクター合成
