@@ -547,56 +547,69 @@ body {
   gap: 1.25rem;
 }
 
-/* Sticky Ambigram Float (画面外スクロール時のフルサイズ・スティッキープレビュー) */
+/* Sticky Ambigram Float (画面外スクロール時のフローティング追従プレビュー: fixed配置で通常フローの高さ変動を防止) */
 .sticky-ambigram-float {
-  position: sticky;
-  top: 0.5rem;
-  z-index: 40;
-  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 280px;
+  width: min(520px, calc(100vw - 2.5rem));
+  min-height: 140px;
+  max-height: 190px;
   height: auto;
-  margin: 0 0 1rem 0;
-  padding: 2rem 1rem;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  margin: 0;
+  padding: 0.75rem 1.25rem 0.85rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   user-select: none;
-  animation: dropDownSticky 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
   transition:
+    opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.22s,
     border-color var(--ease-fast),
     box-shadow var(--ease-fast);
 }
 
 .sticky-ambigram-float:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
 }
 
 .sticky-ambigram-float.visible {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
 }
 
-@keyframes dropDownSticky {
-  from {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.sticky-ambigram-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.02em;
 }
 
 .sticky-ambigram-inner {
   width: 100%;
-  min-height: 240px;
+  height: 100%;
+  max-height: 145px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -605,14 +618,14 @@ body {
 
 .sticky-ambigram-inner svg {
   max-width: 100%;
-  max-height: 280px;
+  max-height: 140px;
   width: auto;
   height: auto;
 }
 
 .sticky-ambigram-inner img {
   max-width: 100%;
-  max-height: 280px;
+  max-height: 140px;
   object-fit: contain;
 }
 

@@ -53,8 +53,12 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
     const handleScroll = () => {
       if (!canvasCardRef.current) return;
       const rect = canvasCardRef.current.getBoundingClientRect();
-      // キャンバスカードの下端が画面上部付近（80px未満）に達したらコンパクト固定バーを表示
-      setIsCompactSticky(rect.bottom < 80);
+      // ヒステリシス: キャンバス下端が画面上部(40px未満)に隠れたら表示、80px以上戻ったら非表示
+      setIsCompactSticky((prev) => {
+        if (!prev && rect.bottom < 40) return true;
+        if (prev && rect.bottom > 80) return false;
+        return prev;
+      });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -158,12 +162,24 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
 
   return (
     <section className="viewer-container">
-      {/* 画面外スクロール時の中央上スティッキープレビュー (画像のみ・ペイン幅1/2) */}
+      {/* 画面外スクロール時のフローティング追従プレビュー (元の要素は保持したままfixedで浮動表示) */}
       <div
         className={`sticky-ambigram-float ${isCompactSticky ? "visible" : ""}`}
         onClick={toggleRotation}
         title="クリックで180°反転"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleRotation();
+          }
+        }}
       >
+        <div className="sticky-ambigram-badge">
+          <RotateCw size={11} />
+          <span>追従プレビュー (クリックで反転)</span>
+        </div>
         <div
           className="sticky-ambigram-inner"
           style={{
