@@ -196,13 +196,13 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
             {
                 "step": 1,
                 "title": "正位置ベクターグリフ配置",
-                "description": "TrueTypeフォントから抽出したベクター輪郭パスを正位置に配置（青）",
+                "description": "TrueTypeフォントから抽出したベクター輪郭パスを正位置に配置(青)",
                 "image": _make_svg(step1_slots),
             },
             {
                 "step": 2,
                 "title": "180度反転ベクターグリフ配置",
-                "description": "対称位置の文字パスを幾何学的に180度反転させて配置（赤）",
+                "description": "対称位置の文字パスを幾何学的に180度反転させて配置(赤)",
                 "image": _make_svg(step2_slots),
             },
             {

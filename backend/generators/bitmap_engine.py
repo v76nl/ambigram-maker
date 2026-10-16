@@ -98,6 +98,9 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
         else:
             blurred = energy_uint8
 
+        # 中間ステップ4: ガウシアン平滑化エネルギー場
+        step4_blurred = blurred.copy()
+
         # 閾値処理で輪郭を確定
         _, thresh = cv2.threshold(blurred, threshold_val, 255, cv2.THRESH_BINARY)
 
@@ -111,12 +114,13 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
             opened = cv2.bitwise_or(opened, cv2.rotate(opened, cv2.ROTATE_180))
 
         if return_intermediates:
-            step4_final = opened.copy()
+            step5_final = opened.copy()
             intermediates = {
                 "step1": step1_overlay,
                 "step2": step2_decomp,
                 "step3": step3_energy,
-                "step4": step4_final,
+                "step4": step4_blurred,
+                "step5": step5_final,
             }
             return opened, intermediates
 
@@ -164,10 +168,7 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
             if not is_center:
                 slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
                 slot_intermediates[n - 1 - i] = {
-                    "step1": cv2.rotate(inter["step1"], cv2.ROTATE_180),
-                    "step2": cv2.rotate(inter["step2"], cv2.ROTATE_180),
-                    "step3": cv2.rotate(inter["step3"], cv2.ROTATE_180),
-                    "step4": cv2.rotate(inter["step4"], cv2.ROTATE_180),
+                    k: cv2.rotate(v, cv2.ROTATE_180) for k, v in inter.items()
                 }
 
         # 単語全体の画像を水平に結合
@@ -205,18 +206,19 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
         step2_img = np.hstack([s["step2"] for s in slot_intermediates])
         step3_img = np.hstack([s["step3"] for s in slot_intermediates])
         step4_img = np.hstack([s["step4"] for s in slot_intermediates])
+        step5_img = np.hstack([s["step5"] for s in slot_intermediates])
 
         steps = [
             {
                 "step": 1,
                 "title": "正反オーバーレイ配置",
-                "description": "正位置（青）と180度反転（赤）を初期配置し、交差部分と差分領域を特定",
+                "description": "正位置(青)と180度反転(赤)を初期配置し、交差部分と差分領域を特定",
                 "image": array_to_png_data_uri(step1_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 2,
-                "title": "共通核・差分分解",
-                "description": "共通して重なる核ストローク（黒）と、正位置（青）・反転位置（赤）固有の差分ストロークに分解",
+                "title": "共通核・差分パーツ分解",
+                "description": "共通して重なる核ストローク(黒)と、正位置(青)・反転位置(赤)固有の差分ストロークに分解",
                 "image": array_to_png_data_uri(step2_img, color_mode="raw", add_padding=True),
             },
             {
@@ -227,9 +229,15 @@ class BitmapAmbigramEngine(BaseAmbigramGenerator):
             },
             {
                 "step": 4,
-                "title": "ガウシアン平滑化＆二値化輪郭",
-                "description": "ガウシアンフィルタで境界を滑らかに融合し、閾値処理およびモルフォロジー演算で最終輪郭を確定",
-                "image": array_to_png_data_uri(step4_img, color_mode="black_on_white", add_padding=True),
+                "title": "ガウシアン平滑化",
+                "description": "ガウシアンフィルタにより境界部のポテンシャル場を滑らかに相互融合",
+                "image": array_to_png_data_uri(step4_img, color_mode="heatmap", add_padding=True),
+            },
+            {
+                "step": 5,
+                "title": "二値化輪郭確定",
+                "description": "適応閾値処理およびモルフォロジー演算によりジャギーを除去し、最終輪郭を確定",
+                "image": array_to_png_data_uri(step5_img, color_mode="black_on_white", add_padding=True),
             },
         ]
 

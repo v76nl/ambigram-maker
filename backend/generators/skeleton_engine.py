@@ -84,9 +84,12 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         - return_intermediates: 中間ステップ画像（バイカラー、距離場、骨格線等）を辞書で返すか
         """
-        img1 = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
-        img2 = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
-        img2_rot = cv2.rotate(img2, cv2.ROTATE_180)
+        img1_orig = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
+        img2_orig = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
+        img2_rot_orig = cv2.rotate(img2_orig, cv2.ROTATE_180)
+
+        # 中間ステップ1: 正反初期配置 (バイカラー)
+        step1_overlay = make_bicolor_overlay(img1_orig, img2_rot_orig)
 
         # 自己回転対称文字 (c1 == c2) の場合は中心対称性を保つためシフトを強制ゼロ化
         if c1 == c2:
@@ -100,31 +103,38 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             shift_y = dy * scale_factor
             M1 = np.float32([[1, 0, -shift_x / 2.0], [0, 1, -shift_y / 2.0]])
             M2 = np.float32([[1, 0, shift_x / 2.0], [0, 1, shift_y / 2.0]])
-            img1 = cv2.warpAffine(img1, M1, (size, size))
-            img2_rot = cv2.warpAffine(img2_rot, M2, (size, size))
+            img1 = cv2.warpAffine(img1_orig, M1, (size, size))
+            img2_rot = cv2.warpAffine(img2_rot_orig, M2, (size, size))
+        else:
+            img1 = img1_orig.copy()
+            img2_rot = img2_rot_orig.copy()
 
-        # 中間ステップ1: 正反配置 (バイカラー)
-        step1_overlay = make_bicolor_overlay(img1, img2_rot)
+        # 中間ステップ2: 最適重心シフト適用後 (バイカラー)
+        step2_overlay = make_bicolor_overlay(img1, img2_rot)
 
-        # ② 事前太らせ (Pre-Bold) で距離場の交差領域・吸引力を強化
+        # 中間ステップ3: 事前太らせ (Pre-Bold) で距離場の交差領域・吸引力を強化
         if pre_bold > 0:
             kw = pre_bold * 2 + 1
             kh = max(3, (pre_bold * 2 + 1) // 2 * 2 + 1)
             pre_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kw, kh))
-            p_img1 = cv2.dilate(img1, pre_kernel)
-            p_img2_rot = cv2.dilate(img2_rot, pre_kernel)
+            p_img1_pre = cv2.dilate(img1, pre_kernel)
+            p_img2_rot_pre = cv2.dilate(img2_rot, pre_kernel)
         else:
-            p_img1 = img1
-            p_img2_rot = img2_rot
+            p_img1_pre = img1.copy()
+            p_img2_rot_pre = img2_rot.copy()
 
-        # ③ 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        step3_overlay = make_bicolor_overlay(p_img1_pre, p_img2_rot_pre)
+
+        # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         if enable_snap:
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
-                p_img1, p_img2_rot, max_distance=24, snap_strength=0.5
+                p_img1_pre, p_img2_rot_pre, max_distance=24, snap_strength=0.5
             )
+        else:
+            p_img1 = p_img1_pre
+            p_img2_rot = p_img2_rot_pre
 
-        # 中間ステップ2: 太らせ＆TPSスナップ後 (バイカラー)
-        step2_overlay = make_bicolor_overlay(p_img1, p_img2_rot)
+        step4_overlay = make_bicolor_overlay(p_img1, p_img2_rot)
 
         # 1. 各文字のL2ユークリッド距離変換
         d1 = cv2.distanceTransform((p_img1 > 0).astype(np.uint8), cv2.DIST_L2, 5)
@@ -218,13 +228,15 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             result = cv2.bitwise_or(result, cv2.rotate(result, cv2.ROTATE_180))
 
         if return_intermediates:
-            step5_render = result.copy()
+            step7_render = result.copy()
             intermediates = {
                 "step1": step1_overlay,
                 "step2": step2_overlay,
-                "step3": step3_field,
-                "step4": step4_skeleton,
-                "step5": step5_render,
+                "step3": step3_overlay,
+                "step4": step4_overlay,
+                "step5": step3_field,
+                "step6": step4_skeleton,
+                "step7": step7_render,
             }
             return result, intermediates
 
@@ -315,11 +327,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 # 自己回転対称性の厳密保証: 後半スロットは対応する前半スロットの180度回転画像
                 slots[n - 1 - i] = cv2.rotate(slot_img, cv2.ROTATE_180)
                 slot_intermediates[n - 1 - i] = {
-                    "step1": cv2.rotate(inter["step1"], cv2.ROTATE_180),
-                    "step2": cv2.rotate(inter["step2"], cv2.ROTATE_180),
-                    "step3": cv2.rotate(inter["step3"], cv2.ROTATE_180),
-                    "step4": cv2.rotate(inter["step4"], cv2.ROTATE_180),
-                    "step5": cv2.rotate(inter["step5"], cv2.ROTATE_180),
+                    k: cv2.rotate(v, cv2.ROTATE_180) for k, v in inter.items()
                 }
 
         # 水平方向に連結
@@ -359,37 +367,51 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         step3_img = np.hstack([s["step3"] for s in slot_intermediates])
         step4_img = np.hstack([s["step4"] for s in slot_intermediates])
         step5_img = np.hstack([s["step5"] for s in slot_intermediates])
+        step6_img = np.hstack([s["step6"] for s in slot_intermediates])
+        step7_img = np.hstack([s["step7"] for s in slot_intermediates])
 
         steps = [
             {
                 "step": 1,
-                "title": "正反配置＆最適シフト",
-                "description": "正位置（青）と180度反転（赤）を初期配置し、幾何学的重なりを最大化する相対シフトを配分",
+                "title": "正反配置",
+                "description": "正位置(青)と180度反転(赤)のグリフを中心位置に初期配置",
                 "image": array_to_png_data_uri(step1_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 2,
-                "title": "事前太らせ＆局所TPS吸引",
-                "description": "ストロークを太らせて交差親和性を高め、薄板スプライン(TPS)変形で近接ストロークを相互に引き寄せ",
+                "title": "最適シフト",
+                "description": "幾何学的重なりを最大化する相対重心オフセットを精密に対称配分",
                 "image": array_to_png_data_uri(step2_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 3,
-                "title": "調和平均距離場 (エネルギー場)",
-                "description": "両文字のユークリッド距離場から調和平均 H = 2·d1·d2/(d1+d2) を算出し、中心線エネルギーの尾根を形成",
-                "image": array_to_png_data_uri(step3_img, color_mode="heatmap", add_padding=True),
+                "title": "事前太らせ",
+                "description": "楕円カーネル膨張によりストロークを太らせ、交差親和性と結合力を強化",
+                "image": array_to_png_data_uri(step3_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 4,
-                "title": "細線化中心骨格抽出",
-                "description": "モルフォロジー細線化アルゴリズムにより、エネルギー場の尾根に沿った幅1pxの平均骨格中心線を抽出",
-                "image": array_to_png_data_uri(step4_img, color_mode="black_on_white", add_padding=True),
+                "title": "局所TPS吸引",
+                "description": "薄板スプライン(TPS)変形により近接するストローク同士を中間対称軸へ引き寄せ",
+                "image": array_to_png_data_uri(step4_img, color_mode="raw", add_padding=True),
             },
             {
                 "step": 5,
+                "title": "調和平均距離場",
+                "description": "両文字のユークリッド距離場から調和平均 H = 2·d1·d2/(d1+d2) のポテンシャル尾根を算出",
+                "image": array_to_png_data_uri(step5_img, color_mode="heatmap", add_padding=True),
+            },
+            {
+                "step": 6,
+                "title": "細線化中心骨格抽出",
+                "description": "モルフォロジー細線化アルゴリズムにより幅1pxの平均骨格中心線を抽出",
+                "image": array_to_png_data_uri(step6_img, color_mode="black_on_white", add_padding=True),
+            },
+            {
+                "step": 7,
                 "title": "筆文字変調再描画",
-                "description": "共通部の線幅変調・端点の筆圧減衰を適用し、角度135度の毛筆楕円ブラシで滑らかに輪郭を形成",
-                "image": array_to_png_data_uri(step5_img, color_mode="black_on_white", add_padding=True),
+                "description": "共通部の線幅変調・端点筆圧減衰を適用し、毛筆楕円ブラシで滑らかな輪郭を形成",
+                "image": array_to_png_data_uri(step7_img, color_mode="black_on_white", add_padding=True),
             },
         ]
 
