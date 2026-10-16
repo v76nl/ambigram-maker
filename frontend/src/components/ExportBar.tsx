@@ -19,6 +19,7 @@ interface ExportBarProps {
   brushStyle?: "calligraphic" | "uniform";
   strokeModulation?: boolean;
   enableSnap?: boolean;
+  snapStrength?: number;
   blendWeight?: number;
   smoothness?: number;
   thresholdVal?: number;
@@ -43,6 +44,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
   brushStyle = "calligraphic",
   strokeModulation = true,
   enableSnap = true,
+  snapStrength = 0.75,
   blendWeight = 0.65,
   smoothness = 7,
   thresholdVal = 110,
@@ -161,12 +163,14 @@ export const ExportBar: React.FC<ExportBarProps> = ({
       engineParams.brush_style = brushStyle;
       engineParams.stroke_modulation = strokeModulation;
       engineParams.enable_snap = enableSnap;
+      engineParams.snap_strength = snapStrength;
     } else if (activeEngine === "morphology") {
       engineParams.dilation_size = dilationSize;
       engineParams.smoothness = smoothness;
       engineParams.diff_blend = diffBlend;
       engineParams.pre_bold = preBold;
       engineParams.enable_snap = enableSnap;
+      engineParams.snap_strength = snapStrength;
     } else if (activeEngine === "vector") {
       engineParams.blend_ratio = blendRatio;
       engineParams.stroke_width = strokeWidth;

@@ -83,7 +83,8 @@ class GenerateRequest(BaseModel):
     # 手法A/B 共通パラメータ
     diff_blend: Optional[float] = 0.35
     pre_bold: Optional[int] = 4  # 事前太らせ量 (近接縦棒の結合力強化)
-    enable_snap: Optional[bool] = True  # 近接ストローク吸引・局所非剛体変形 (Issue #1, #2)
+    enable_snap: Optional[bool] = True  # 近接ストローク吸引・局所非剛体変形 (後方互換性用)
+    snap_strength: Optional[float] = 0.75  # Thin Plate Spline 吸引強度 (0.0〜1.0)
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -338,13 +339,18 @@ def generate_ambigram(req: GenerateRequest):
             f"  [手法A: 論理積＋膨張] 実行中 (膨張={req.dilation_size}px, 平滑={req.smoothness}px, "
             f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px, シフト={req.custom_offsets})..."
         )
+        snap_val = req.snap_strength if req.snap_strength is not None else 0.75
+        if req.enable_snap is False:
+            snap_val = 0.0
+
         results["morphology"] = morphology_engine.generate(
             target_word,
             dilation_size=req.dilation_size or 11,
             smoothness=req.smoothness or 7,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
-            enable_snap=req.enable_snap if req.enable_snap is not None else True,
+            enable_snap=(snap_val > 0.0),
+            snap_strength=snap_val,
             font_id=font_id,
             custom_offsets=req.custom_offsets,
         )
@@ -356,12 +362,17 @@ def generate_ambigram(req: GenerateRequest):
             f"  [手法B: 骨格平均化] 実行中 (線幅={req.stroke_thickness}px, "
             f"異文字保持={req.diff_blend}, 事前太らせ={req.pre_bold}px, シフト={req.custom_offsets})..."
         )
+        snap_val = req.snap_strength if req.snap_strength is not None else 0.75
+        if req.enable_snap is False:
+            snap_val = 0.0
+
         results["skeleton"] = skeleton_engine.generate(
             target_word,
             stroke_thickness=req.stroke_thickness or 15,
             diff_blend=req.diff_blend if req.diff_blend is not None else 0.35,
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
-            enable_snap=req.enable_snap if req.enable_snap is not None else True,
+            enable_snap=(snap_val > 0.0),
+            snap_strength=snap_val,
             font_id=font_id,
             brush_style=req.brush_style or "calligraphic",
             stroke_modulation=req.stroke_modulation if req.stroke_modulation is not None else True,

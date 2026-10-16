@@ -11,6 +11,7 @@ export interface ParsedAmbigramConfig {
     brushStyle?: "calligraphic" | "uniform";
     strokeModulation?: boolean;
     enableSnap?: boolean;
+    snapStrength?: number;
     blendRatio?: number;
     highlightMode?: boolean;
     blendWeight?: number;
@@ -92,6 +93,9 @@ export function parseAmbigramConfig(data: any): ParsedAmbigramConfig {
   }
   if (rawParams.enable_snap !== undefined || rawParams.enableSnap !== undefined) {
     params.enableSnap = Boolean(rawParams.enable_snap ?? rawParams.enableSnap);
+  }
+  if (rawParams.snap_strength !== undefined || rawParams.snapStrength !== undefined) {
+    params.snapStrength = Number(rawParams.snap_strength ?? rawParams.snapStrength);
   }
   if (rawParams.blend_ratio !== undefined || rawParams.blendRatio !== undefined) {
     params.blendRatio = Number(rawParams.blend_ratio ?? rawParams.blendRatio);

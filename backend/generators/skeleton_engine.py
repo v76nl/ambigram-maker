@@ -83,6 +83,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         brush_style: str = "calligraphic",
         stroke_modulation: bool = True,
         enable_snap: bool = True,
+        snap_strength: float = 0.75,
         return_intermediates: bool = False,
     ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
@@ -136,14 +137,14 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         step3_overlay = make_bicolor_overlay(p_img1_pre, p_img2_rot_pre)
 
         # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
-        if enable_snap:
+        if enable_snap and snap_strength > 0.0:
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
                 p_img1_pre,
                 p_img2_rot_pre,
                 guide_img1=img1,
                 guide_img2=img2_rot,
                 max_distance=40,
-                snap_strength=0.75,
+                snap_strength=snap_strength,
             )
         else:
             p_img1 = p_img1_pre
@@ -268,6 +269,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         brush_style: str = "calligraphic",
         stroke_modulation: bool = True,
         enable_snap: bool = True,
+        snap_strength: float = 0.75,
         **params,
     ) -> dict[str, Any]:
         """単語全体の平均骨格アンビグラム画像を生成してBase64形式で返却"""
@@ -279,6 +281,9 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         brush_style = params.get("brush_style", brush_style)
         stroke_modulation = params.get("stroke_modulation", stroke_modulation)
         enable_snap = params.get("enable_snap", enable_snap)
+        snap_strength = float(params.get("snap_strength", snap_strength))
+        if not enable_snap:
+            snap_strength = 0.0
 
         # 全フォントの幾何スコアと最適シフトを評価
         font_eval = font_manager.evaluate_word_fonts(word)
@@ -333,7 +338,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 shift=shift,
                 brush_style=brush_style,
                 stroke_modulation=stroke_modulation,
-                enable_snap=enable_snap,
+                enable_snap=(snap_strength > 0.0),
+                snap_strength=snap_strength,
                 return_intermediates=True,
             )
             slots[i] = slot_img
@@ -443,7 +449,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "pre_bold": pre_bold,
                 "brush_style": brush_style,
                 "stroke_modulation": stroke_modulation,
-                "enable_snap": enable_snap,
+                "enable_snap": (snap_strength > 0.0),
+                "snap_strength": snap_strength,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",

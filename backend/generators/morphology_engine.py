@@ -65,6 +65,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         font_path: Optional[Path] = None,
         shift: tuple[int, int] = (0, 0),
         enable_snap: bool = True,
+        snap_strength: float = 0.75,
         return_intermediates: bool = False,
     ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
@@ -114,14 +115,14 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         step3_overlay = make_bicolor_overlay(p_img1_pre, p_img2_rot_pre)
 
         # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
-        if enable_snap:
+        if enable_snap and snap_strength > 0.0:
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
                 p_img1_pre,
                 p_img2_rot_pre,
                 guide_img1=img1,
                 guide_img2=img2_rot,
                 max_distance=40,
-                snap_strength=0.75,
+                snap_strength=snap_strength,
             )
         else:
             p_img1 = p_img1_pre
@@ -199,6 +200,7 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         slot_size: int = 512,
         font_id: str = "auto",
         enable_snap: bool = True,
+        snap_strength: float = 0.75,
         **params,
     ) -> dict[str, Any]:
         """単語全体のアンビグラム画像を生成してBase64形式で返却"""
@@ -207,6 +209,9 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
             return {"engine": "morphology", "type": "png", "data": "", "details": {}}
 
         enable_snap = params.get("enable_snap", enable_snap)
+        snap_strength = float(params.get("snap_strength", snap_strength))
+        if not enable_snap:
+            snap_strength = 0.0
 
         # 全フォントの幾何スコアと最適シフトを評価
         font_eval = font_manager.evaluate_word_fonts(word)
@@ -260,7 +265,8 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 pre_bold=pre_bold,
                 font_path=selected_font_path,
                 shift=shift,
-                enable_snap=enable_snap,
+                enable_snap=(snap_strength > 0.0),
+                snap_strength=snap_strength,
                 return_intermediates=True,
             )
             slots[i] = slot_img
@@ -376,7 +382,8 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
                 "smoothness": smoothness,
                 "diff_blend": diff_blend,
                 "pre_bold": pre_bold,
-                "enable_snap": enable_snap,
+                "enable_snap": (snap_strength > 0.0),
+                "snap_strength": snap_strength,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",

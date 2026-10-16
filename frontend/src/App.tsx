@@ -84,6 +84,7 @@ export const App: React.FC = () => {
   const [brushStyle, setBrushStyle] = useState<"calligraphic" | "uniform">("calligraphic");
   const [strokeModulation, setStrokeModulation] = useState<boolean>(true);
   const [enableSnap, setEnableSnap] = useState<boolean>(true);
+  const [snapStrength, setSnapStrength] = useState<number>(0.75);
   const [readabilityData, setReadabilityData] = useState<ReadabilityResponse | null>(null);
   const [isReadabilityLoading, setIsReadabilityLoading] = useState<boolean>(false);
   // ビットマップパラメータ
@@ -129,7 +130,8 @@ export const App: React.FC = () => {
           strokeThickness,
           brushStyle,
           strokeModulation,
-          enableSnap,
+          enableSnap: snapStrength > 0,
+          snapStrength,
           diffBlend,
           preBold,
           blendWeight,
@@ -160,6 +162,7 @@ export const App: React.FC = () => {
       brushStyle,
       strokeModulation,
       enableSnap,
+      snapStrength,
       diffBlend,
       preBold,
       blendWeight,
@@ -248,6 +251,7 @@ export const App: React.FC = () => {
     brushStyle,
     strokeModulation,
     enableSnap,
+    snapStrength,
     preBold,
     diffBlend,
     blendRatio,
@@ -288,6 +292,7 @@ export const App: React.FC = () => {
         if (config.parameters.brushStyle) setBrushStyle(config.parameters.brushStyle);
         if (config.parameters.strokeModulation !== undefined) setStrokeModulation(config.parameters.strokeModulation);
         if (config.parameters.enableSnap !== undefined) setEnableSnap(config.parameters.enableSnap);
+        if (config.parameters.snapStrength !== undefined) setSnapStrength(config.parameters.snapStrength);
         if (config.parameters.blendRatio !== undefined) setBlendRatio(config.parameters.blendRatio);
         if (config.parameters.highlightMode !== undefined) setHighlightMode(config.parameters.highlightMode);
         if (config.parameters.blendWeight !== undefined) setBlendWeight(config.parameters.blendWeight);
@@ -539,6 +544,8 @@ export const App: React.FC = () => {
             onStrokeModulationChange={setStrokeModulation}
             enableSnap={enableSnap}
             onEnableSnapChange={setEnableSnap}
+            snapStrength={snapStrength}
+            onSnapStrengthChange={setSnapStrength}
             blendWeight={blendWeight}
             onBlendWeightChange={setBlendWeight}
             smoothness={smoothness}
@@ -568,6 +575,7 @@ export const App: React.FC = () => {
             brushStyle={brushStyle}
             strokeModulation={strokeModulation}
             enableSnap={enableSnap}
+            snapStrength={snapStrength}
             blendRatio={blendRatio}
             blendWeight={blendWeight}
             smoothness={smoothness}

@@ -30,6 +30,8 @@ interface EngineCompareProps {
   onStrokeModulationChange?: (val: boolean) => void;
   enableSnap?: boolean;
   onEnableSnapChange?: (val: boolean) => void;
+  snapStrength?: number;
+  onSnapStrengthChange?: (val: number) => void;
   blendRatio: number;
   onBlendRatioChange: (val: number) => void;
   blendWeight: number;
@@ -61,8 +63,10 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onBrushStyleChange,
   strokeModulation = true,
   onStrokeModulationChange,
-  enableSnap = true,
+  enableSnap: _enableSnap = true,
   onEnableSnapChange,
+  snapStrength = 0.75,
+  onSnapStrengthChange,
   blendRatio,
   onBlendRatioChange,
   blendWeight,
@@ -165,15 +169,29 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                 <span className="swiss-slider-hint">{PARAM_LABELS.diffBlend.hint}</span>
               </div>
 
-              {onEnableSnapChange && (
-                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", cursor: "pointer", marginTop: "0.2rem" }}>
+              {(onSnapStrengthChange || onEnableSnapChange) && (
+                <div className="swiss-slider-group">
+                  <div className="swiss-slider-header">
+                    <span>{PARAM_LABELS.snapStrength?.title || "Thin Plate Spline 吸引強度"}</span>
+                    <span className="swiss-slider-val">{Math.round(snapStrength * 100)}%</span>
+                  </div>
                   <input
-                    type="checkbox"
-                    checked={enableSnap}
-                    onChange={(e) => onEnableSnapChange(e.target.checked)}
+                    type="range"
+                    className="swiss-slider"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={snapStrength}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (onSnapStrengthChange) onSnapStrengthChange(val);
+                      if (onEnableSnapChange) onEnableSnapChange(val > 0);
+                    }}
                   />
-                  <span>{PARAM_LABELS.enableSnap.title}</span>
-                </label>
+                  <span className="swiss-slider-hint">
+                    {PARAM_LABELS.snapStrength?.hint || "薄板スプライン弾性変形による近接ストロークの中間対称軸への引き寄せ吸着度合 (0%で無効)"}
+                  </span>
+                </div>
               )}
             </>
           );

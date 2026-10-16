@@ -84,6 +84,7 @@ export interface GenerateParams {
   brushStyle?: "calligraphic" | "uniform";
   strokeModulation?: boolean;
   enableSnap?: boolean;
+  snapStrength?: number;
   diffBlend?: number;
   preBold?: number;
   blendWeight?: number;
@@ -279,6 +280,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
       brush_style: params.brushStyle,
       stroke_modulation: params.strokeModulation,
       enable_snap: params.enableSnap,
+      snap_strength: params.snapStrength,
       diff_blend: params.diffBlend,
       pre_bold: params.preBold,
       blend_weight: params.blendWeight,

@@ -40,6 +40,10 @@ export const PARAM_LABELS = {
     title: "Thin Plate Spline 近接吸引スナップ",
     hint: "薄板スプライン(Thin Plate Spline)弾性変形により、近接ストローク同士を中間の回転対称軸へ滑らかに吸着・一本化",
   },
+  snapStrength: {
+    title: "Thin Plate Spline 吸引強度",
+    hint: "▲増: 相手ストロークへ強く引き寄せて一体化 / ▼減: 原型の文字形状を維持 (0%で無変形)",
+  },
 
   // ベクター合成
   blendRatio: {
