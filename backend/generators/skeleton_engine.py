@@ -138,7 +138,12 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         if enable_snap:
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
-                p_img1_pre, p_img2_rot_pre, max_distance=24, snap_strength=0.5
+                p_img1_pre,
+                p_img2_rot_pre,
+                guide_img1=img1,
+                guide_img2=img2_rot,
+                max_distance=40,
+                snap_strength=0.75,
             )
         else:
             p_img1 = p_img1_pre

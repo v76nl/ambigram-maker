@@ -37,14 +37,14 @@ class StrokeSnapWarper:
         self,
         img1: np.ndarray,
         img2_rot: np.ndarray,
-        max_distance: int = 28,
-        snap_strength: float = 0.5,
-        smooth_sigma: float = 16.0,
+        max_distance: int = 40,
+        snap_strength: float = 0.75,
+        smooth_sigma: float = 14.0,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
         """
         正反2画像の骨格から中間対称軸への局所変位ベクトル場 (dx, dy) を算出。
         - max_distance: スナップを適用する最大近接ストローク距離 (px)
-        - snap_strength: 中間軸への引き寄せ係数 (0.0: 無変形, 0.5: 中間線で完全一致)
+        - snap_strength: 中間軸への引き寄せ係数 (0.0: 無変形, 0.5: 中間線で完全一致, 0.75: 強力吸引)
         - smooth_sigma: 変形場の滑らかさ (Thin Plate Spline弾性補間拡散)
         """
         h, w = img1.shape[:2]
@@ -114,18 +114,18 @@ class StrokeSnapWarper:
         vy2_b = cv2.GaussianBlur(vy2, (ksize, ksize), smooth_sigma)
         w2_b = cv2.GaussianBlur(w2, (ksize, ksize), smooth_sigma)
 
-        # 正規化: 疎な変位マスクによる局所平均希釈を解消
+        # 正規化: 疎な変位マスクによる局所平均希釈を解消 (ストローク骨格上の変位を100%保持)
         vld1 = w1_b > 1e-5
         vx1_out = np.zeros_like(vx1)
         vy1_out = np.zeros_like(vy1)
-        att1 = np.clip(w1_b[vld1] * 20.0, 0.0, 1.0)
+        att1 = np.clip(w1_b[vld1] * 50.0, 0.0, 1.0)
         vx1_out[vld1] = (vx1_b[vld1] / w1_b[vld1]) * att1
         vy1_out[vld1] = (vy1_b[vld1] / w1_b[vld1]) * att1
 
         vld2 = w2_b > 1e-5
         vx2_out = np.zeros_like(vx2)
         vy2_out = np.zeros_like(vy2)
-        att2 = np.clip(w2_b[vld2] * 20.0, 0.0, 1.0)
+        att2 = np.clip(w2_b[vld2] * 50.0, 0.0, 1.0)
         vx2_out[vld2] = (vx2_b[vld2] / w2_b[vld2]) * att2
         vy2_out[vld2] = (vy2_b[vld2] / w2_b[vld2]) * att2
 
@@ -142,15 +142,22 @@ class StrokeSnapWarper:
         self,
         img1: np.ndarray,
         img2_rot: np.ndarray,
-        max_distance: int = 28,
-        snap_strength: float = 0.5,
+        max_distance: int = 40,
+        snap_strength: float = 0.75,
+        guide_img1: Any = None,
+        guide_img2: Any = None,
     ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
         """
-        正位置画像と反転画像を受け取り、近接ストロークをThin Plate Spline弾性変形で中間対称軸へワープさせた2画像を返却
+        正位置画像と反転画像を受け取り、近接ストロークをThin Plate Spline弾性変形で中間対称軸へワープさせた2画像を返却。
+        guide_img1, guide_img2 が指定された場合、骨格・変位場の算出にそれら（元の細ストローク）を使用し、
+        算出された変形場を img1, img2_rot (太らせ後画像など) に適用する。
         """
         h, w = img1.shape[:2]
+        calc_img1 = guide_img1 if guide_img1 is not None else img1
+        calc_img2 = guide_img2 if guide_img2 is not None else img2_rot
+
         vx1, vy1, vx2, vy2, snap_count = self.compute_snap_displacement_fields(
-            img1, img2_rot, max_distance=max_distance, snap_strength=snap_strength
+            calc_img1, calc_img2, max_distance=max_distance, snap_strength=snap_strength
         )
 
         if snap_count == 0:
