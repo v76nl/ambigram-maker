@@ -170,11 +170,14 @@ class CharacterRecognizer:
         img: np.ndarray,
         target_char: Optional[str] = None,
         top_k: int = 3,
-    ) -> tuple[float, list[dict[str, Any]]]:
+    ) -> tuple[Optional[float], Optional[int], bool, list[dict[str, Any]]]:
         """
         入力画像に対する文字認識を実行
-        - target_char が指定された場合、その文字の予測確信度 (0.0〜1.0) を返却
-        - 上位 top_k 件の予測文字と確率リストを返却
+        返り値: (target_prob, target_rank, is_supported, top_predictions)
+        - target_prob: target_charの純粋なSoftmax予測確率 (0.0〜1.0)。未収録の場合はNone
+        - target_rank: target_charの全体順位 (1〜)。未収録の場合はNone
+        - is_supported: モデルの収録文字セットに含まれるか
+        - top_predictions: 上位 top_k 件の予測文字・順位・確率リスト
         """
         if self.onnx_session is not None:
             return self._predict_onnx(img, target_char=target_char, top_k=top_k)
@@ -185,11 +188,11 @@ class CharacterRecognizer:
         img: np.ndarray,
         target_char: Optional[str] = None,
         top_k: int = 3,
-    ) -> tuple[float, list[dict[str, Any]]]:
+    ) -> tuple[Optional[float], Optional[int], bool, list[dict[str, Any]]]:
         x = self._preprocess_onnx(img)
         logits = self.onnx_session.run(["logits"], {"input": x})[0][0].astype(np.float64)
 
-        # Softmax計算
+        # 純粋なSoftmax確率計算 (温度パラメータや恣意的な変形を行わない)
         exp_logits = np.exp(logits - logits.max())
         probs = exp_logits / (exp_logits.sum() + 1e-12)
 
@@ -203,64 +206,61 @@ class CharacterRecognizer:
                 "rank": i + 1,
             })
 
-        target_score = 0.0
+        target_prob: Optional[float] = None
+        target_rank: Optional[int] = None
+        is_supported = False
+
         if target_char:
             if target_char in self.char_to_index:
+                is_supported = True
                 target_idx = self.char_to_index[target_char]
-                raw_prob = float(probs[target_idx])
+                target_prob = round(float(probs[target_idx]), 4)
                 ranks = np.where(top_indices == target_idx)[0]
-                rank = int(ranks[0]) + 1 if len(ranks) > 0 else 9999
-
-                # 順位と確率を組み合わせた客観的可読性確信度スコア
-                if rank == 1:
-                    target_score = 0.85 + 0.14 * min(raw_prob * 3.0, 1.0)
-                elif rank <= 3:
-                    target_score = 0.70 + 0.14 * (1.0 - (rank - 2) / 2.0) + min(raw_prob * 2.0, 0.05)
-                elif rank <= 10:
-                    target_score = 0.50 + 0.18 * (1.0 - (rank - 4) / 7.0)
-                elif rank <= 30:
-                    target_score = 0.30 + 0.18 * (1.0 - (rank - 11) / 20.0)
-                elif rank <= 100:
-                    target_score = 0.15 + 0.14 * (1.0 - (rank - 31) / 70.0)
-                else:
-                    target_score = max(raw_prob * 5.0, 0.02)
+                target_rank = int(ranks[0]) + 1 if len(ranks) > 0 else len(self.labels)
             else:
-                target_score = 0.50
+                # 収録文字外は評価対象外 (N/A) とし、架空の数値を捏造しない
+                is_supported = False
+                target_prob = None
+                target_rank = None
 
-        return round(float(target_score), 4), top_predictions
+        return target_prob, target_rank, is_supported, top_predictions
 
     def _predict_template(
         self,
         img: np.ndarray,
         target_char: Optional[str] = None,
         top_k: int = 3,
-    ) -> tuple[float, list[dict[str, Any]]]:
+    ) -> tuple[Optional[float], Optional[int], bool, list[dict[str, Any]]]:
         feat = self._extract_features(img)
         sims = []
         for char, t_feat in self.char_templates.items():
             sim = float(np.dot(feat, t_feat))
             sims.append((char, sim))
 
-        sim_vals = np.array([s[1] for s in sims])
-        temperature = 0.08
-        exp_sims = np.exp((sim_vals - sim_vals.max()) / temperature)
-        probs = exp_sims / (np.sum(exp_sims) + 1e-6)
+        sims.sort(key=lambda x: x[1], reverse=True)
+        top_predictions = [
+            {"char": c, "similarity": round(s, 4), "probability": round(max(0.0, s), 4), "rank": i + 1}
+            for i, (c, s) in enumerate(sims[:top_k])
+        ]
 
-        results = []
-        target_prob = 0.0
-        for i, (char, sim) in enumerate(sims):
-            prob = float(probs[i])
-            if target_char and char == target_char:
-                target_prob = prob
-            results.append({"char": char, "similarity": round(sim, 4), "probability": round(prob, 4)})
+        target_prob: Optional[float] = None
+        target_rank: Optional[int] = None
+        is_supported = False
 
-        results.sort(key=lambda x: x["probability"], reverse=True)
-        top_predictions = results[:top_k]
+        if target_char:
+            if target_char in self.char_templates:
+                is_supported = True
+                for i, (c, s) in enumerate(sims):
+                    if c == target_char:
+                        target_prob = round(max(0.0, s), 4)
+                        target_rank = i + 1
+                        break
+            else:
+                is_supported = False
+                target_prob = None
+                target_rank = None
 
-        if target_char and target_char not in self.char_templates:
-            target_prob = float(top_predictions[0]["similarity"]) if top_predictions else 0.5
-
-        return round(target_prob, 4), top_predictions
+        return target_prob, target_rank, is_supported, top_predictions
 
     def evaluate_ambigram_slot(
         self,
@@ -269,36 +269,50 @@ class CharacterRecognizer:
         c2: str,
     ) -> dict[str, Any]:
         """
-        1文字スロットにおける双方向可読性の客観評価 (魏・山口 2023)
-        - 正位置: c1 と認識できるか
-        - 180度回転: c2 と認識できるか
-        - 調和平均可読性スコア (Harmonic Readability)
+        1文字スロットにおける双方向可読性の客観評価 (魏・山口 2023 §2.2)
+        - 正位置: c1 と認識できるか (予測確率 prob1, 順位 rank1)
+        - 180度回転: c2 と認識できるか (予測確率 prob2, 順位 rank2)
+        - 調和平均可読性 (Harmonic Mean Readability)
+        - 未収録文字の場合は supported=False とし、架空のスコア代入を行わない
         """
-        prob1, top1 = self.predict_char(slot_img, target_char=c1)
+        prob1, rank1, sup1, top1 = self.predict_char(slot_img, target_char=c1)
 
         rot_img = cv2.rotate(slot_img, cv2.ROTATE_180)
-        prob2, top2 = self.predict_char(rot_img, target_char=c2)
+        prob2, rank2, sup2, top2 = self.predict_char(rot_img, target_char=c2)
 
-        # 魏・山口 (2023) §2.2: 調和平均可読性 (Harmonic Mean Readability)
-        denom = prob1 + prob2
-        harmonic_readability = (2.0 * prob1 * prob2) / denom if denom > 1e-6 else 0.0
-
-        is_readable_c1 = prob1 >= 0.50
-        is_readable_c2 = prob2 >= 0.50
-
-        if is_readable_c1 and is_readable_c2:
-            status = "perfect"
-        elif is_readable_c1 or is_readable_c2:
-            status = "partial"
+        # 調和平均の計算 (両文字ともモデル収録済みかつ有意な確率が存在する場合)
+        if sup1 and sup2 and prob1 is not None and prob2 is not None:
+            denom = prob1 + prob2
+            harmonic_readability: Optional[float] = (
+                round((2.0 * prob1 * prob2) / denom, 4) if denom > 1e-6 else 0.0
+            )
         else:
-            status = "poor"
+            harmonic_readability = None
+
+        # 科学的に透明な状態判定 (Top-K順位に基づく)
+        # perfect: 両方向とも Top-1 (最有力候補)
+        # partial: 片方のみ Top-1、または両方向とも Top-3 以内
+        # poor: いずれかが Top-3 圏外
+        if rank1 is not None and rank2 is not None:
+            if rank1 == 1 and rank2 == 1:
+                status = "perfect"
+            elif (rank1 == 1 or rank2 == 1) or (rank1 <= 3 and rank2 <= 3):
+                status = "partial"
+            else:
+                status = "poor"
+        else:
+            status = "unsupported"
 
         return {
             "char1": c1,
             "char2": c2,
-            "prob1": round(float(prob1), 4),
-            "prob2": round(float(prob2), 4),
-            "harmonic_readability": round(float(harmonic_readability), 4),
+            "prob1": prob1,
+            "prob2": prob2,
+            "rank1": rank1,
+            "rank2": rank2,
+            "is_supported1": sup1,
+            "is_supported2": sup2,
+            "harmonic_readability": harmonic_readability,
             "status": status,
             "top1_pred": top1[0]["char"] if top1 else "",
             "top2_pred": top2[0]["char"] if top2 else "",

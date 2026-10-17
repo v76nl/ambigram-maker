@@ -44,7 +44,7 @@ def test_api_generate():
     assert "bitmap" in results
 
 def test_api_evaluate_readability():
-    """POST /api/evaluate-readability で魏・山口(2023)に基づく可読性スコアが取得できるか検証"""
+    """POST /api/evaluate-readability で魏・山口(2023)に基づく客観的可読性・順位が取得できるか検証"""
     payload = {
         "word": "日の目",
         "font": "zen_maru",
@@ -56,3 +56,13 @@ def test_api_evaluate_readability():
     assert "overall_readability" in data
     assert "slots" in data
     assert "model_type" in data
+    assert len(data["slots"]) > 0
+
+    first_slot = data["slots"][0]
+    assert "char1" in first_slot
+    assert "char2" in first_slot
+    assert "prob1" in first_slot
+    assert "rank1" in first_slot
+    assert "is_supported1" in first_slot
+    assert "status" in first_slot
+    assert first_slot["status"] in ("perfect", "partial", "poor", "unsupported")

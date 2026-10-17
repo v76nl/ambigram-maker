@@ -166,15 +166,18 @@ def evaluate_readability(req: ReadabilityRequest):
         eval_slot = char_recognizer.evaluate_ambigram_slot(slot_img, c1, c2)
         eval_slot["slot_index"] = i
         slot_evaluations.append(eval_slot)
-        harmonic_scores.append(eval_slot["harmonic_readability"])
+        if eval_slot.get("harmonic_readability") is not None:
+            harmonic_scores.append(eval_slot["harmonic_readability"])
 
-    overall_readability = float(np.mean(harmonic_scores)) if harmonic_scores else 0.0
+    overall_readability: Optional[float] = (
+        round(float(np.mean(harmonic_scores)), 4) if harmonic_scores else None
+    )
 
     return {
         "word": word,
         "target_text": target_word,
         "font_id": font_id,
-        "overall_readability": round(overall_readability, 4),
+        "overall_readability": overall_readability,
         "slots": slot_evaluations,
         "model_type": char_recognizer.model_type,
     }
