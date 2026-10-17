@@ -98,21 +98,26 @@ export interface ReadabilitySlot {
   slot_index: number;
   char1: string;
   char2: string;
-  prob1: number;
-  prob2: number;
-  harmonic_readability: number;
-  status: "perfect" | "partial" | "poor";
+  prob1: number | null;
+  prob2: number | null;
+  rank1?: number | null;
+  rank2?: number | null;
+  is_supported1?: boolean;
+  is_supported2?: boolean;
+  harmonic_readability: number | null;
+  status: "perfect" | "partial" | "poor" | "unsupported";
   top1_pred: string;
   top2_pred: string;
-  predictions_normal: { char: string; similarity: number; probability: number }[];
-  predictions_inverted: { char: string; similarity: number; probability: number }[];
+  predictions_normal: { char: string; similarity?: number; probability: number; rank?: number }[];
+  predictions_inverted: { char: string; similarity?: number; probability: number; rank?: number }[];
+  model_type?: string;
 }
 
 export interface ReadabilityResponse {
   word: string;
   target_text: string;
   font_id: string;
-  overall_readability: number;
+  overall_readability: number | null;
   slots: ReadabilitySlot[];
   model_type?: string;
 }

@@ -54,21 +54,23 @@ export const ReadabilityCard: React.FC<ReadabilityCardProps> = ({
             className="diff-stat-badge"
             style={{
               background:
-                data.overall_readability >= 0.7
+                data.overall_readability !== null && data.overall_readability >= 0.15
                   ? "rgba(16, 185, 129, 0.15)"
-                  : data.overall_readability >= 0.45
+                  : data.overall_readability !== null && data.overall_readability >= 0.05
                   ? "rgba(245, 158, 11, 0.15)"
                   : "rgba(239, 68, 68, 0.15)",
               color:
-                data.overall_readability >= 0.7
+                data.overall_readability !== null && data.overall_readability >= 0.15
                   ? "#059669"
-                  : data.overall_readability >= 0.45
+                  : data.overall_readability !== null && data.overall_readability >= 0.05
                   ? "#d97706"
                   : "#dc2626",
               fontWeight: 600,
             }}
           >
-            総合双方向可読率 {data.overall_readability.toFixed(3)}
+            {data.overall_readability !== null
+              ? `双方向可読調和平均: ${(data.overall_readability * 100).toFixed(1)}%`
+              : "双方向可読率: 判定不可 (未収録文字)"}
           </span>
         </div>
       </div>
@@ -92,7 +94,26 @@ export const ReadabilityCard: React.FC<ReadabilityCardProps> = ({
           {data.slots.map((slot) => {
             const isGood = slot.status === "perfect";
             const isReadable = slot.status === "partial";
-            const statusColor = isGood ? "#059669" : isReadable ? "#d97706" : "#dc2626";
+            const isUnsupported = slot.status === "unsupported";
+            const statusColor = isGood
+              ? "#059669"
+              : isReadable
+              ? "#d97706"
+              : isUnsupported
+              ? "#6b7280"
+              : "#dc2626";
+
+            const formatPrediction = (
+              prob: number | null,
+              rank: number | null | undefined,
+              isSupported: boolean | undefined
+            ) => {
+              if (isSupported === false || prob === null) return "未収録 (N/A)";
+              const rankStr = rank ? `${rank}位` : "-";
+              const probStr = `${(prob * 100).toFixed(1)}%`;
+              return `${rankStr} (${probStr})`;
+            };
+
             return (
               <div
                 key={slot.slot_index}
@@ -126,12 +147,16 @@ export const ReadabilityCard: React.FC<ReadabilityCardProps> = ({
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem" }}>
-                  <span style={{ color: "var(--text-muted)" }}>正: {slot.char1} 認識率</span>
-                  <span style={{ fontWeight: 600 }}>{slot.prob1.toFixed(3)}</span>
+                  <span style={{ color: "var(--text-muted)" }}>正: {slot.char1}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {formatPrediction(slot.prob1, slot.rank1, slot.is_supported1)}
+                  </span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem" }}>
-                  <span style={{ color: "var(--text-muted)" }}>反: {slot.char2} 認識率</span>
-                  <span style={{ fontWeight: 600 }}>{slot.prob2.toFixed(3)}</span>
+                  <span style={{ color: "var(--text-muted)" }}>反: {slot.char2}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {formatPrediction(slot.prob2, slot.rank2, slot.is_supported2)}
+                  </span>
                 </div>
 
                 <div
@@ -143,7 +168,7 @@ export const ReadabilityCard: React.FC<ReadabilityCardProps> = ({
                     color: "var(--text-muted)",
                   }}
                 >
-                  AI予測: {slot.top1_pred} / {slot.top2_pred}
+                  最有力予測: {slot.top1_pred || "-"} / {slot.top2_pred || "-"}
                 </div>
               </div>
             );

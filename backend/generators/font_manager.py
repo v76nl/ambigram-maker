@@ -73,6 +73,11 @@ FONT_PRESETS = {
     },
 }
 
+# 幾何学的類似度ブレンド比率 (合計 1.0)
+WEIGHT_AREA: float = 0.45       # 黒画素交差・Chance-Adjusted IoU & 調和被覆率
+WEIGHT_SKELETON: float = 0.35   # 中心線骨格トポロジー整合度
+WEIGHT_NEG_SPACE: float = 0.20  # 開口部・ふところ (負の空間) 整合度
+
 def compute_word_cognitive_score(
     scores: list[float],
     word_len: int,
@@ -83,6 +88,7 @@ def compute_word_cognitive_score(
     - 単語を構成する他の文字の可読率が高いほど、1文字の低可読性（ボトルネック）が単語全体の可読性に
       及ぼす悪影響は大幅に減衰する（表5: 被験者の87.8%が単語として読めた実証）。
     - 幾何平均と単語長N、日常語フラグに応じてmin_scoreのペナルティ重みを適応的に減衰。
+    - 恣意的な乗算ゲイン (1.10倍等) を廃止し、数学的な凸結合 (w_geom + w_min = 1.0) で正規化算出。
     """
     if not scores:
         return 0.0, 0.0, 0.0
@@ -95,19 +101,17 @@ def compute_word_cognitive_score(
 
     # 単語長Nに応じた文脈冗長度 (文字数が多いほど1文字の欠損を前後文脈で補完可能)
     context_power = (word_len - 1) / max(1, word_len) if word_len > 1 else 0.0
-    
-    # 常用語ではトップダウンの語彙親密度補完が働く (井上・高橋 2020 §6.2)
-    common_factor = 1.25 if is_common else 1.0
 
-    # ボトルネック最小値に対する重み:
-    # 通常0.25から、幾何平均と文脈冗長度が高い場合に最大0.05まで適応的に減少
-    reduction = (geom_mean ** 2) * context_power * common_factor
-    w_min = 0.25 * max(0.20, 1.0 - reduction)
+    # ボトルネック最小値に対する適応的重み:
+    # 基準重み0.25から、全体の幾何平均と文脈冗長度が高い場合に最大0.05まで適応的に減少
+    # 常用語では語彙親密度補完が作用するため減衰係数が高まる
+    familiarity_factor = 1.25 if is_common else 1.0
+    reduction = min(1.0, (geom_mean ** 2) * context_power * familiarity_factor)
+    w_min = 0.25 * (1.0 - 0.80 * reduction)
     w_geom = 1.0 - w_min
 
-    base_score = w_geom * geom_mean + w_min * min_score
-    bias = 1.10 if is_common else 1.0
-    final_score = min(1.0, base_score * bias)
+    # 凸結合により常に 0.0 〜 1.0 の幾何・認知平均スコアを保証
+    final_score = w_geom * geom_mean + w_min * min_score
 
     return round(float(final_score), 4), round(float(geom_mean), 4), round(float(min_score), 4)
 
@@ -358,8 +362,12 @@ class FontManager:
         union_white = np.sum(np.clip(roi_a_white + roi_b_white, 0, 1))
         neg_space_score = float(inter_white / union_white) if union_white > 0 else 1.0
 
-        # 総合ブレンド（面積: 45%, 骨格: 35%, 負の空間: 20%）
-        total_score = float(0.45 * area_score + 0.35 * skel_score + 0.20 * neg_space_score)
+        # 総合ブレンド（面積: WEIGHT_AREA, 骨格: WEIGHT_SKELETON, 負の空間: WEIGHT_NEG_SPACE）
+        total_score = float(
+            WEIGHT_AREA * area_score +
+            WEIGHT_SKELETON * skel_score +
+            WEIGHT_NEG_SPACE * neg_space_score
+        )
         return float(np.clip(total_score, 0.0, 1.0))
 
     def calculate_pair_similarity_with_shift(

@@ -218,14 +218,22 @@ def get_any_char_compatibility(c1: str, c2: str, hiragana_matrix: dict | None = 
         _pair_score_cache[rev_pair] = score
         return score
 
-    # 3. 幾何学的類似度計算 (漢字・カタカナ・混在)
-    im1 = render_proper_centered(c1, FONT_PATH, size=64)
-    im2 = render_proper_centered(c2, FONT_PATH, size=64)
-    raw_geom = calculate_geometric_similarity_with_jitter(im1, im2, max_jitter=2)
+    # 3. 幾何学的類似度計算 (漢字・カタカナ・混在): font_managerの統合幾何計算エンジンを使用
+    try:
+        from generators.font_manager import font_manager
+    except ImportError:
+        from backend.generators.font_manager import font_manager
 
-    # 調和平均スコアを 0.0〜1.0 にスケーリング
-    score = min(1.0, raw_geom * 1.25)
-    score = round(max(0.1, score), 4)
+    im1 = font_manager.render_char_matrix(c1, "zen_maru")
+    im2 = font_manager.render_char_matrix(c2, "zen_maru")
+    skel1 = font_manager.render_char_skeleton(c1, "zen_maru")
+    skel2 = font_manager.render_char_skeleton(c2, "zen_maru")
+    raw_geom, _ = font_manager.calculate_pair_similarity_with_shift(
+        im1, im2, max_shift=2, skel_a=skel1, skel_b=skel2
+    )
+
+    # 恣意的な乗算ゲイン (1.25倍) を廃止し、純粋な幾何類似度 (0.0〜1.0) を返却
+    score = round(float(np.clip(raw_geom, 0.0, 1.0)), 4)
 
     _pair_score_cache[pair] = score
     _pair_score_cache[rev_pair] = score
