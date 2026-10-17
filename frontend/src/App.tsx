@@ -9,6 +9,7 @@ import {
   evaluateReadability,
 } from "./services/api";
 import { useWordSearch } from "./hooks/useWordSearch";
+import { useAmbigramParams } from "./hooks/useAmbigramParams";
 import { parseAmbigramConfig } from "./utils/configParser";
 import { WordSearch } from "./components/WordSearch";
 import { AmbigramViewer } from "./components/AmbigramViewer";
@@ -70,31 +71,28 @@ export const App: React.FC = () => {
   }>({});
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
-  // パラメータ
-  const [blendRatio, setBlendRatio] = useState<number>(0.5);
-  const [highlightMode, setHighlightMode] = useState<boolean>(false);
-  // 手法A (論理積モルフォロジー) パラメータ
-  const [dilationSize, setDilationSize] = useState<number>(11);
-  // 手法B (スケルトン平均化) パラメータ
-  const [strokeThickness, setStrokeThickness] = useState<number>(15);
-  // 手法A/B 共通 (異文字固有パーツ保持・事前太らせ)
-  const [diffBlend, setDiffBlend] = useState<number>(0.35);
-  const [preBold, setPreBold] = useState<number>(4);
-  // 先行研究パラメータ
-  const [brushStyle, setBrushStyle] = useState<"calligraphic" | "uniform">("calligraphic");
-  const [strokeModulation, setStrokeModulation] = useState<boolean>(true);
-  const [enableSnap, setEnableSnap] = useState<boolean>(true);
-  const [snapStrength, setSnapStrength] = useState<number>(0.75);
+  // アンビグラム生成パラメータカスタムフック
+  const {
+    params,
+    setBlendRatio,
+    setHighlightMode,
+    setDilationSize,
+    setStrokeThickness,
+    setBrushStyle,
+    setStrokeModulation,
+    setDiffBlend,
+    setPreBold,
+    setSnapStrength,
+    setBlendWeight,
+    setSmoothness,
+    setThresholdVal,
+    setApiKey,
+    setStylePrompt,
+    applyImportedConfig,
+  } = useAmbigramParams();
+
   const [readabilityData, setReadabilityData] = useState<ReadabilityResponse | null>(null);
   const [isReadabilityLoading, setIsReadabilityLoading] = useState<boolean>(false);
-  // ビットマップパラメータ
-  const [blendWeight, setBlendWeight] = useState<number>(0.65);
-  const [smoothness, setSmoothness] = useState<number>(7);
-  const [thresholdVal, setThresholdVal] = useState<number>(110);
-  const [apiKey, setApiKey] = useState<string>("");
-  const [stylePrompt, setStylePrompt] = useState<string>(
-    "minimalist black calligraphy on pure white background, sharp vector aesthetic"
-  );
   const [importToast, setImportToast] = useState<string | null>(null);
 
   // フォント一覧の取得
@@ -123,22 +121,22 @@ export const App: React.FC = () => {
           engine: (engineToGen || activeEngine) as any,
           font: fontToGen || selectedFont,
           customOffsets: offsets || undefined,
-          blendRatio,
+          blendRatio: params.blendRatio,
           strokeWidth: 0.0,
-          highlightMode: overrideHighlight !== undefined ? overrideHighlight : highlightMode,
-          dilationSize,
-          strokeThickness,
-          brushStyle,
-          strokeModulation,
-          enableSnap: snapStrength > 0,
-          snapStrength,
-          diffBlend,
-          preBold,
-          blendWeight,
-          smoothness,
-          thresholdVal,
-          apiKey: apiKey || undefined,
-          stylePrompt,
+          highlightMode: overrideHighlight !== undefined ? overrideHighlight : params.highlightMode,
+          dilationSize: params.dilationSize,
+          strokeThickness: params.strokeThickness,
+          brushStyle: params.brushStyle,
+          strokeModulation: params.strokeModulation,
+          enableSnap: params.snapStrength > 0,
+          snapStrength: params.snapStrength,
+          diffBlend: params.diffBlend,
+          preBold: params.preBold,
+          blendWeight: params.blendWeight,
+          smoothness: params.smoothness,
+          thresholdVal: params.thresholdVal,
+          apiKey: params.apiKey || undefined,
+          stylePrompt: params.stylePrompt,
         });
 
         setResults((prev) => ({
@@ -151,26 +149,7 @@ export const App: React.FC = () => {
         setIsGenerating(false);
       }
     },
-    [
-      activeEngine,
-      selectedFont,
-      customOffsets,
-      blendRatio,
-      highlightMode,
-      dilationSize,
-      strokeThickness,
-      brushStyle,
-      strokeModulation,
-      enableSnap,
-      snapStrength,
-      diffBlend,
-      preBold,
-      blendWeight,
-      smoothness,
-      thresholdVal,
-      apiKey,
-      stylePrompt,
-    ]
+    [activeEngine, selectedFont, customOffsets, params]
   );
 
   // 客観的文字認識・可読性評価の更新
@@ -246,25 +225,13 @@ export const App: React.FC = () => {
     activeEngine,
     selectedFont,
     customOffsets,
-    dilationSize,
-    strokeThickness,
-    brushStyle,
-    strokeModulation,
-    enableSnap,
-    snapStrength,
-    preBold,
-    diffBlend,
-    blendRatio,
-    blendWeight,
-    smoothness,
-    thresholdVal,
-    stylePrompt,
+    params,
     triggerGenerate,
     updateReadability,
   ]);
 
   const handleToggleHighlightMode = () => {
-    const nextVal = !highlightMode;
+    const nextVal = !params.highlightMode;
     setHighlightMode(nextVal);
     if (selectedWord && activeEngine === "vector") {
       triggerGenerate(selectedWord, "vector", nextVal);
@@ -284,21 +251,8 @@ export const App: React.FC = () => {
       try {
         const config = parseAmbigramConfig(importedData);
 
-        // 各種パラメータの適用
-        if (config.parameters.dilationSize !== undefined) setDilationSize(config.parameters.dilationSize);
-        if (config.parameters.strokeThickness !== undefined) setStrokeThickness(config.parameters.strokeThickness);
-        if (config.parameters.diffBlend !== undefined) setDiffBlend(config.parameters.diffBlend);
-        if (config.parameters.preBold !== undefined) setPreBold(config.parameters.preBold);
-        if (config.parameters.brushStyle) setBrushStyle(config.parameters.brushStyle);
-        if (config.parameters.strokeModulation !== undefined) setStrokeModulation(config.parameters.strokeModulation);
-        if (config.parameters.enableSnap !== undefined) setEnableSnap(config.parameters.enableSnap);
-        if (config.parameters.snapStrength !== undefined) setSnapStrength(config.parameters.snapStrength);
-        if (config.parameters.blendRatio !== undefined) setBlendRatio(config.parameters.blendRatio);
-        if (config.parameters.highlightMode !== undefined) setHighlightMode(config.parameters.highlightMode);
-        if (config.parameters.blendWeight !== undefined) setBlendWeight(config.parameters.blendWeight);
-        if (config.parameters.smoothness !== undefined) setSmoothness(config.parameters.smoothness);
-        if (config.parameters.thresholdVal !== undefined) setThresholdVal(config.parameters.thresholdVal);
-        if (config.parameters.stylePrompt !== undefined) setStylePrompt(config.parameters.stylePrompt);
+        // 各種生成パラメータの一括適用 (カスタムフックへ委譲)
+        applyImportedConfig(config);
 
         setActiveEngine(config.engine);
         setSelectedFont(config.font);
@@ -322,7 +276,7 @@ export const App: React.FC = () => {
         alert(`設定ファイルのインポートに失敗しました: ${err.message || err}`);
       }
     },
-    [words, setSelectedWord]
+    [words, setSelectedWord, applyImportedConfig]
   );
 
   const currentResult = results[activeEngine as keyof typeof results] || null;
@@ -479,7 +433,7 @@ export const App: React.FC = () => {
             activeResult={currentResult}
             activeEngine={activeEngine}
             onEngineChange={(engine) => setActiveEngine(engine)}
-            highlightMode={highlightMode}
+            highlightMode={params.highlightMode}
             onToggleHighlightMode={handleToggleHighlightMode}
             readabilityData={readabilityData}
             isReadabilityLoading={isReadabilityLoading}
@@ -528,33 +482,33 @@ export const App: React.FC = () => {
             selectedFont={selectedFont}
             onFontChange={setSelectedFont}
             availableFonts={availableFonts}
-            blendRatio={blendRatio}
+            blendRatio={params.blendRatio}
             onBlendRatioChange={setBlendRatio}
-            dilationSize={dilationSize}
+            dilationSize={params.dilationSize}
             onDilationSizeChange={setDilationSize}
-            strokeThickness={strokeThickness}
+            strokeThickness={params.strokeThickness}
             onStrokeThicknessChange={setStrokeThickness}
-            diffBlend={diffBlend}
+            diffBlend={params.diffBlend}
             onDiffBlendChange={setDiffBlend}
-            preBold={preBold}
+            preBold={params.preBold}
             onPreBoldChange={setPreBold}
-            brushStyle={brushStyle}
+            brushStyle={params.brushStyle}
             onBrushStyleChange={setBrushStyle}
-            strokeModulation={strokeModulation}
+            strokeModulation={params.strokeModulation}
             onStrokeModulationChange={setStrokeModulation}
-            enableSnap={enableSnap}
-            onEnableSnapChange={setEnableSnap}
-            snapStrength={snapStrength}
+            enableSnap={params.snapStrength > 0}
+            onEnableSnapChange={(val) => setSnapStrength(val ? 0.75 : 0.0)}
+            snapStrength={params.snapStrength}
             onSnapStrengthChange={setSnapStrength}
-            blendWeight={blendWeight}
+            blendWeight={params.blendWeight}
             onBlendWeightChange={setBlendWeight}
-            smoothness={smoothness}
+            smoothness={params.smoothness}
             onSmoothnessChange={setSmoothness}
-            thresholdVal={thresholdVal}
+            thresholdVal={params.thresholdVal}
             onThresholdValChange={setThresholdVal}
-            apiKey={apiKey}
+            apiKey={params.apiKey}
             onApiKeyChange={setApiKey}
-            stylePrompt={stylePrompt}
+            stylePrompt={params.stylePrompt}
             onStylePromptChange={setStylePrompt}
             onRegenerate={() => triggerGenerate(selectedWord)}
             isGenerating={isGenerating}
@@ -568,19 +522,19 @@ export const App: React.FC = () => {
             selectedFont={selectedFont}
             customOffsets={customOffsets}
             readabilityData={readabilityData}
-            dilationSize={dilationSize}
-            strokeThickness={strokeThickness}
-            diffBlend={diffBlend}
-            preBold={preBold}
-            brushStyle={brushStyle}
-            strokeModulation={strokeModulation}
-            enableSnap={enableSnap}
-            snapStrength={snapStrength}
-            blendRatio={blendRatio}
-            blendWeight={blendWeight}
-            smoothness={smoothness}
-            thresholdVal={thresholdVal}
-            stylePrompt={stylePrompt}
+            dilationSize={params.dilationSize}
+            strokeThickness={params.strokeThickness}
+            diffBlend={params.diffBlend}
+            preBold={params.preBold}
+            brushStyle={params.brushStyle}
+            strokeModulation={params.strokeModulation}
+            enableSnap={params.snapStrength > 0}
+            snapStrength={params.snapStrength}
+            blendRatio={params.blendRatio}
+            blendWeight={params.blendWeight}
+            smoothness={params.smoothness}
+            thresholdVal={params.thresholdVal}
+            stylePrompt={params.stylePrompt}
             onImportConfig={handleImportConfig}
           />
         </aside>
