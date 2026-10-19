@@ -574,6 +574,93 @@ style: |
     text-align: center;
   }
 
+  /* スライド3: bodyコンテンツ垂直中央揃え用クラス */
+  .body-vcenter {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .intro-points {
+    font-size: 30px;
+    line-height: 1.6;
+  }
+
+  .intro-points > li {
+    font-size: 30px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .intro-subtext {
+    margin-left: 28px;
+    margin-top: 8px;
+    font-size: 26px;
+    color: #4A5568;
+    line-height: 1.5;
+  }
+
+  /* スライド6, 7: 1カラム水平・垂直中央揃え */
+  .center-message {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .center-message .message-text {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1A1A1A;
+    line-height: 1.4;
+  }
+
+  /* スライド7: デモ用箇条書きリスト (中央配置コンテナ内で左端揃え) */
+  .demo-list {
+    margin: 0;
+    padding-left: 36px;
+    list-style-type: square;
+    text-align: left;
+    display: inline-block;
+  }
+
+  .demo-list > li {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 22px;
+    color: #1A1A1A;
+  }
+
+  .demo-list > li:last-child {
+    margin-bottom: 0;
+  }
+
+  .demo-list ul {
+    list-style-type: circle;
+    margin: 8px 0 0 0;
+    padding-left: 28px;
+    font-size: 25px;
+    font-weight: 500;
+    color: #4A5568;
+    line-height: 1.4;
+  }
+
+  .demo-subtext {
+    font-size: 25px;
+    font-weight: 500;
+    color: #4A5568;
+    margin-top: 8px;
+    margin-left: 14px;
+    line-height: 1.4;
+  }
+
   .toc-wrapper {
     flex: 1;
     display: flex;
@@ -694,17 +781,17 @@ style: |
     <div class="toc-item">
       <span class="toc-text"><span class="toc-num">3.</span><strong>システムのデモ</strong></span>
       <span class="toc-leader"></span>
-      <span class="toc-page">6</span>
+      <span class="toc-page">7</span>
     </div>
     <div class="toc-item">
       <span class="toc-text"><span class="toc-num">4.</span><strong>研究の3要素確認</strong></span>
       <span class="toc-leader"></span>
-      <span class="toc-page">7</span>
+      <span class="toc-page">8</span>
     </div>
     <div class="toc-item">
       <span class="toc-text"><span class="toc-num">5.</span><strong>まとめと今後の展望</strong></span>
       <span class="toc-leader"></span>
-      <span class="toc-page">8</span>
+      <span class="toc-page">9</span>
     </div>
   </div>
 </div>
@@ -713,12 +800,12 @@ style: |
 
 # 1. はじめに
 
-<div class="main-col" style="justify-content: center; flex: 1;">
-  <ul class="points" style="font-size: 30px; line-height: 1.6;">
+<div class="body-vcenter">
+  <ul class="points intro-points">
     <li>11月29日のHCD学会でポスター発表を予定</li>
     <li>調査・実装にAIエージェントを活用して進めた</li>
-    <div style="margin-left: 28px; margin-top: 8px;">→ 見落としや論理の穴があるかも</div>
-    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点・疑問点・改善アイデア等あれば教えてください</div>
+    <div class="intro-subtext">→ 見落としや論理の穴があるかも</div>
+    <div class="intro-subtext">→ 気になった点・疑問点・改善アイデア等あれば教えてください</div>
   </ul>
 </div>
 
@@ -740,7 +827,7 @@ style: |
 
   <div class="ambigram-footer-area">
     <div class="caption-text is-hidden">
-      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
+      点対称であり、<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
     </div>
   </div>
 </div>
@@ -769,7 +856,7 @@ style: |
 
   <div class="ambigram-footer-area">
     <div class="caption-text">
-      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
+      点対称であり、<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
     </div>
   </div>
 </div>
@@ -778,22 +865,23 @@ style: |
 
 # 2. アンビグラムとは？
 
-<div class="slide-grid">
-  <div class="main-col">
-  <strong>
+<div class="center-message">
+  <strong class="message-text">
     Xに上がっている作例を確認
-    </strong>
-  </div>
+  </strong>
 </div>
 
 ---
 
 # 3. システムのデモ
 
-<div class="slide-grid">
-  <div class="main-col">
-    <strong>実際のソフトをデモンストレーション</strong>
-  </div>
+<div class="center-message">
+  <ul class="demo-list">
+    <li>実際のソフトをデモンストレーション
+      <div class="demo-subtext">→ test_wordsを使った生成</div>
+    </li>
+    <li>これまでに得られたグラフィックを紹介</li>
+  </ul>
 </div>
 
 ---
@@ -802,7 +890,7 @@ style: |
 
 <div class="three-elements-grid">
   <!-- 新規性 -->
-  <div class="element-card accent-card">
+  <div class="element-card">
     <div class="element-header">
       <span class="element-title">新規性</span>
       <span class="status-badge accent">◎ あり</span>
@@ -838,13 +926,13 @@ style: |
       <span class="status-badge warn">△ 微妙</span>
     </div>
     <div class="element-content">
-      <p class="element-lead info">微妙！ どう活用するかが未定</p>
+      <p class="element-lead info">微妙<br>どう活用するかが未定</p>
       <ul class="element-list">
         <li>「何のために使うのか？」「誰が喜ぶか？」</li>
         <li>実社会・デザイン現場での価値を模索中</li>
       </ul>
       <div class="element-action-box">
-        → 活用アイデアがあれば教えてください
+        → 活用アイデアがあれば<br>教えてください
       </div>
     </div>
   </div>
