@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-16T09:43:40.480Z",
+  "reproducibility": {
+    "target": {
+      "word": "そなえ",
+      "reading": "そなえ",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "zen_maru",
+      "name": "Zen Maru Gothic",
+      "style": "丸ゴシック"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          -7
+        ],
+        [
+          -5,
+          -3
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 6,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.4816,
+      "min_pair_score": 0.447,
+      "overall_readability": 0.1001,
+      "readability_slots": [
+        {
+          "char1": "そ",
+          "char2": "え",
+          "prob1": 0.0851,
+          "prob2": 0.1487,
+          "harmonic_readability": 0.1082,
+          "status": "perfect",
+          "top1_pred": "そ",
+          "top2_pred": "え",
+          "predictions_normal": [
+            {
+              "char": "そ",
+              "similarity": 0.7285,
+              "probability": 0.0851
+            },
+            {
+              "char": "キ",
+              "similarity": 0.6974,
+              "probability": 0.0577
+            },
+            {
+              "char": "も",
+              "similarity": 0.6889,
+              "probability": 0.0518
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "え",
+              "similarity": 0.7964,
+              "probability": 0.1487
+            },
+            {
+              "char": "ま",
+              "similarity": 0.7544,
+              "probability": 0.088
+            },
+            {
+              "char": "ミ",
+              "similarity": 0.7432,
+              "probability": 0.0764
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "な",
+          "char2": "な",
+          "prob1": 0.092,
+          "prob2": 0.092,
+          "harmonic_readability": 0.092,
+          "status": "perfect",
+          "top1_pred": "な",
+          "top2_pred": "な",
+          "predictions_normal": [
+            {
+              "char": "な",
+              "similarity": 0.7821,
+              "probability": 0.092
+            },
+            {
+              "char": "り",
+              "similarity": 0.7259,
+              "probability": 0.0456
+            },
+            {
+              "char": "ネ",
+              "similarity": 0.7124,
+              "probability": 0.0385
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "な",
+              "similarity": 0.7821,
+              "probability": 0.092
+            },
+            {
+              "char": "り",
+              "similarity": 0.7259,
+              "probability": 0.0456
+            },
+            {
+              "char": "ネ",
+              "similarity": 0.7124,
+              "probability": 0.0385
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "そなえ",
+      "engine": "skeleton",
+      "font": "zen_maru",
+      "customOffsets": [
+        [
+          -1,
+          -7
+        ],
+        [
+          -5,
+          -3
+        ]
+      ],
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 6,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"そなえ\",\"engine\":\"skeleton\",\"font\":\"zen_maru\",\"customOffsets\":[[-1,-7],[-5,-3]],\"stroke_thickness\":15,\"diff_blend\":0.8,\"pre_bold\":6,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true,\"snap_strength\":0.75}'"
+  }
+}
