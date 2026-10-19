@@ -117,15 +117,16 @@ style: |
     );
   }
 
-  /* スライドごとの進捗率 (全8ページ構成) */
-  section:nth-of-type(1), section[id="1"] { --progress: 12.5%; }
-  section:nth-of-type(2), section[id="2"] { --progress: 25.0%; }
-  section:nth-of-type(3), section[id="3"] { --progress: 37.5%; }
-  section:nth-of-type(4), section[id="4"] { --progress: 50.0%; }
-  section:nth-of-type(5), section[id="5"] { --progress: 62.5%; }
-  section:nth-of-type(6), section[id="6"] { --progress: 75.0%; }
-  section:nth-of-type(7), section[id="7"] { --progress: 87.5%; }
-  section:nth-of-type(8), section[id="8"] { --progress: 100.0%; }
+  /* スライドごとの進捗率 (全9ページ構成) */
+  section:nth-of-type(1), section[id="1"] { --progress: 11.1%; }
+  section:nth-of-type(2), section[id="2"] { --progress: 22.2%; }
+  section:nth-of-type(3), section[id="3"] { --progress: 33.3%; }
+  section:nth-of-type(4), section[id="4"] { --progress: 44.4%; }
+  section:nth-of-type(5), section[id="5"] { --progress: 55.6%; }
+  section:nth-of-type(6), section[id="6"] { --progress: 66.7%; }
+  section:nth-of-type(7), section[id="7"] { --progress: 77.8%; }
+  section:nth-of-type(8), section[id="8"] { --progress: 88.9%; }
+  section:nth-of-type(9), section[id="9"] { --progress: 100.0%; }
 
   /* 2カラムレイアウト (縦中央揃え) */
   .slide-grid {
@@ -878,7 +879,8 @@ style: |
 <div class="center-message">
   <ul class="demo-list">
     <li>実際のソフトをデモンストレーション
-      <div class="demo-subtext">→ test_wordsを使った生成</div>
+      <div class="demo-subtext">フローを説明</div>
+      <div class="demo-subtext">test_wordsを使った生成</div>
     </li>
     <li>これまでに得られたグラフィックを紹介</li>
   </ul>

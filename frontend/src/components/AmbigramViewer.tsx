@@ -259,20 +259,33 @@ export const AmbigramViewer: React.FC<AmbigramViewerProps> = ({
         {/* 中間ステッププレビュー中バナー */}
         {activeStep && (
           <div className="pipeline-preview-banner">
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
               <Eye size={15} color="var(--accent)" />
               <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
                 中間工程プレビュー中: STEP {activeStep.step} - {activeStep.title}
+              </span>
+              <span
+                style={{
+                  fontSize: "0.68rem",
+                  color: "var(--accent)",
+                  background: "var(--accent-subtle, rgba(216, 67, 21, 0.08))",
+                  padding: "0.1rem 0.35rem",
+                  borderRadius: "3px",
+                  border: "1px solid var(--border-subtle, rgba(216, 67, 21, 0.2))",
+                  fontWeight: 500,
+                }}
+              >
+                ↑ / ↓ で切替
               </span>
             </div>
             <button
               className="swiss-btn swiss-btn-subtle"
               style={{ padding: "0.2rem 0.6rem", fontSize: "0.72rem" }}
               onClick={() => setSelectedStepIndex(null)}
-              title="完成アンビグラム表示に戻す"
+              title="完成アンビグラム表示に戻す (Esc)"
             >
               <Undo2 size={12} />
-              <span>完成結果に戻す</span>
+              <span>完成結果に戻す (Esc)</span>
             </button>
           </div>
         )}

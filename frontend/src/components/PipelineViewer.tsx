@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Layers, Eye } from "lucide-react";
 import type { PipelineStep } from "../services/api";
 import { MathText } from "./MathText";
@@ -14,6 +14,53 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
   selectedStepIndex,
   onSelectStep,
 }) => {
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // 選択されたステップ要素が見える位置に自動スクロール
+  useEffect(() => {
+    if (selectedStepIndex !== null && rowRefs.current[selectedStepIndex]) {
+      rowRefs.current[selectedStepIndex]?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedStepIndex]);
+
+  // ステップ選択時: 上下キーでステップ間を移動、Escapeで解除
+  useEffect(() => {
+    if (selectedStepIndex === null || steps.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // テキスト入力中はキー入力を妨げない
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        onSelectStep(Math.min(steps.length - 1, selectedStepIndex + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        onSelectStep(Math.max(0, selectedStepIndex - 1));
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        onSelectStep(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedStepIndex, steps.length, onSelectStep]);
+
   if (!steps || steps.length === 0) return null;
 
   return (
@@ -34,9 +81,24 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
           >
             全 {steps.length} 工程
           </span>
+          {selectedStepIndex !== null && (
+            <span
+              style={{
+                fontSize: "0.68rem",
+                padding: "0.1rem 0.4rem",
+                borderRadius: "4px",
+                background: "var(--accent-subtle, #fff7ed)",
+                color: "var(--accent, #d97706)",
+                border: "1px solid var(--border-subtle, #fed7aa)",
+                fontWeight: 500,
+              }}
+            >
+              ↑ / ↓ キーで移動可
+            </span>
+          )}
         </div>
         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-          各ステップをクリックしてメインビューワーで拡大プレビュー
+          各ステップをクリックしてメインビューワーで拡大プレビュー（選択中は ↑ / ↓ キーで移動）
         </div>
       </div>
 
@@ -46,6 +108,9 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
           return (
             <div
               key={step.step}
+              ref={(el) => {
+                rowRefs.current[idx] = el;
+              }}
               className={`pipeline-step-row ${isSelected ? "selected" : ""}`}
               onClick={() => onSelectStep(isSelected ? null : idx)}
               title={`クリックで STEP ${step.step} をプレビュー`}
@@ -55,6 +120,16 @@ export const PipelineViewer: React.FC<PipelineViewerProps> = ({
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   onSelectStep(isSelected ? null : idx);
+                } else if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const nextIdx = Math.min(steps.length - 1, idx + 1);
+                  onSelectStep(nextIdx);
+                  rowRefs.current[nextIdx]?.focus();
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const prevIdx = Math.max(0, idx - 1);
+                  onSelectStep(prevIdx);
+                  rowRefs.current[prevIdx]?.focus();
                 }
               }}
             >
