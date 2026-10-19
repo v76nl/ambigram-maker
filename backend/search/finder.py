@@ -26,6 +26,11 @@ try:
 except ImportError:
     from ..generators.font_manager import compute_word_cognitive_score
 
+try:
+    from search.rules import RankingRuleManager
+except ImportError:
+    from .rules import RankingRuleManager
+
 def katakana_to_hiragana(s: str) -> str:
     """カタカナをひらがなに変換する"""
     result = []
@@ -166,17 +171,42 @@ class AmbigramFinder:
                     if kat not in self.katakana_to_word or (is_common and not self.katakana_to_word[kat].get("common")):
                         self.katakana_to_word[kat] = w
 
+        # キュレーションルールのロード
+        self.rules = RankingRuleManager()
+
         # 事前スコアインデックス（真のスコア降順ランキング用）のロード
         self.scored_words: list[dict[str, Any]] = []
         if SCORED_WORDS_PATH.exists():
             try:
                 with open(SCORED_WORDS_PATH, "r", encoding="utf-8") as f:
                     self.scored_words = json.load(f)
+                self._apply_rules_to_index()
                 print(f"事前スコアインデックス読み込み完了: {len(self.scored_words):,} 単語 (スコア降順)")
             except Exception as e:
                 print(f"事前スコアインデックス読み込み失敗: {e}")
                     
         print(f"探索エンジン準備完了: 単語数 {len(self.words):,}")
+
+    def _apply_rules_to_index(self) -> None:
+        """事前スコアインデックスにキュレーションルール（スコア補正）を反映して再ソート"""
+        if not self.scored_words:
+            return
+        needs_resort = False
+        for item in self.scored_words:
+            target_text = item.get("target_text") or item.get("word") or ""
+            adj = self.rules.get_score_adjustment(target_text)
+            if adj != 0.0:
+                base_score = item.get("base_score", item.get("score", 0.0))
+                item["base_score"] = base_score
+                item["score"] = round(min(1.0, max(0.0, base_score + adj)), 4)
+                needs_resort = True
+        if needs_resort:
+            self.scored_words.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+
+    def reload_rules(self) -> None:
+        """キュレーションルールを再読み込みしてインデックスに再適用"""
+        self.rules.load()
+        self._apply_rules_to_index()
 
     def get_char_compatibility(self, c1: str, c2: str) -> float:
         """2文字の180度回転相性スコアを取得（ひらがな・カタカナ・漢字対応）"""
@@ -307,6 +337,9 @@ class AmbigramFinder:
         final_score, geometric_mean, min_score = compute_word_cognitive_score(
             scores, word_len=n, is_common=is_common
         )
+        adj = self.rules.get_score_adjustment(target_text)
+        if adj != 0.0:
+            final_score = min(1.0, max(0.0, final_score + adj))
 
         return {
             "word": target_text,
@@ -371,6 +404,10 @@ class AmbigramFinder:
                 reading = item.get("reading", "")
                 script_type = item.get("script_type", "hiragana")
                 score = item.get("score", 0.0)
+
+                # キュレーションルールによる除外判定
+                if self.rules.is_excluded(target_text, reading=reading, query=q_clean):
+                    continue
 
                 # スコア降順なので、閾値未満かつクエリなしなら走査打ち切り可能
                 if not q_clean and score < effective_min_score:
@@ -501,6 +538,10 @@ class AmbigramFinder:
                 continue
 
             if target_script_text in seen_targets:
+                continue
+
+            # キュレーションルールによる除外判定
+            if self.rules.is_excluded(target_script_text, reading=reading, query=q_clean):
                 continue
 
             # クエリ判定

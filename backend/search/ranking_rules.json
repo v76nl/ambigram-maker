@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "アンビグラム探索・ランキングのキュレーションルール設定 (サムネイル・上位候補の品質管理用)",
+  "rules": {
+    "excluded_words": [
+      {
+        "word": "同国",
+        "reading": "どうこく",
+        "scope": "all",
+        "reason": "感覚として日常的・一般的な言葉ではないため除外"
+      },
+      {
+        "word": "日の目",
+        "reading": "ひのめ",
+        "scope": "all",
+        "reason": "スコアは良いが生成結果の視覚的品質が良くないため除外"
+      }
+    ],
+    "score_adjustments": []
+  }
+}

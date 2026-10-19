@@ -664,7 +664,7 @@ style: |
     <li>11月29日のHCD学会でポスター発表を予定</li>
     <li>調査・実装にAIエージェントを活用して進めた</li>
     <div style="margin-left: 28px; margin-top: 8px;">→ 見落としや論理の穴があるかも</div>
-    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点・疑問点・改善アイデア等あれば教えてください！</div>
+    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点・疑問点・改善アイデア等あれば教えてください</div>
   </ul>
 </div>
 
@@ -686,7 +686,7 @@ style: |
 
   <div class="ambigram-footer-area">
     <div class="caption-text is-hidden">
-      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=自己対称型アンビグラム）
+      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
     </div>
   </div>
 </div>
@@ -715,7 +715,7 @@ style: |
 
   <div class="ambigram-footer-area">
     <div class="caption-text">
-      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=自己対称型アンビグラム）
+      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=180度回転同一型アンビグラム）
     </div>
   </div>
 </div>
@@ -800,7 +800,7 @@ style: |
       </li>
       <li>
         <strong>フィードバックのお願い</strong><br>
-        見落としの指摘やアドバイスなど、気になった点は気軽に教えてください！
+        見落としの指摘やアドバイスなど、気になった点は気軽に教えてください
       </li>
     </ul>
   </div>
