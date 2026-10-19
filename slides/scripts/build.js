@@ -92,7 +92,7 @@ function build() {
 
   // 静止画・印刷・PPTX用の一時ファイル（アニメーション完了・回転状態のスタイルを注入）
   const staticTmpFile = path.join(slidesDir, '_slides.static.built.md');
-  const staticStyleOverride = `\n\n<style>\n/* PDF/PPTX静止出力用: 180度回転・左右分離・縮小完了・バッジ表示の完成状態で静止キャプチャ */\n.anim-left, .anim-right { transform: translateX(0) scale(1) !important; animation: none !important; }\n.anim-rotate-img { transform: rotate(180deg) !important; animation: none !important; }\n.split-card .rel-badge { opacity: 1 !important; transform: none !important; animation: none !important; }\n</style>\n`;
+  const staticStyleOverride = `\n\n<style>\n/* PDF/PPTX静止出力用: 180度回転・左右分離・バッジ表示の完成状態で静止キャプチャ */\n.anim-left, .anim-right { transform: translateX(0) !important; animation: none !important; }\n.anim-rotate-img { transform: rotate(180deg) !important; animation: none !important; }\n.split-card .rel-badge:not(.is-hidden) { opacity: 1 !important; transform: none !important; animation: none !important; }\n</style>\n`;
   fs.writeFileSync(staticTmpFile, content + staticStyleOverride, 'utf-8');
 
   try {
@@ -111,17 +111,18 @@ function build() {
         const animScript = `\n<script>
 (() => {
   const setupAnimation = () => {
-    const sec5 = document.getElementById('5');
-    const stage = document.querySelector('.split-ambigram-stage');
-    let parentSvg = null;
-    if (stage) {
-      parentSvg = stage.closest('svg') || (sec5 ? sec5.parentElement.closest('svg') || sec5.parentElement.parentElement : null);
-    }
-    if (!stage || !parentSvg) return false;
+    const sec5 = document.getElementById('5') || document.querySelector('section[id="5"]');
+    if (!sec5) return false;
+    const stage = sec5.querySelector('.split-ambigram-stage');
+    if (!stage) return false;
+    const slideWrapper = sec5.closest('.bespoke-marp-slide') || sec5.closest('svg') || sec5;
 
     let prevActive = false;
     const update = () => {
-      const isActive = parentSvg.classList.contains('bespoke-marp-active');
+      const hasActiveCls = slideWrapper.classList.contains('bespoke-marp-active') || !!slideWrapper.closest('.bespoke-marp-active');
+      const isHash5 = window.location.hash === '#5' || window.location.hash.startsWith('#5:') || window.location.hash.startsWith('#5?');
+      const isActive = hasActiveCls || isHash5;
+
       if (isActive && !prevActive) {
         stage.classList.remove('is-animated');
         void stage.offsetWidth;
@@ -135,9 +136,16 @@ function build() {
     };
 
     const obs = new MutationObserver(update);
-    obs.observe(parentSvg, { attributes: true, attributeFilter: ['class'] });
+    obs.observe(slideWrapper, { attributes: true, attributeFilter: ['class'] });
+    if (slideWrapper !== sec5) {
+      obs.observe(sec5, { attributes: true, attributeFilter: ['class'] });
+    }
+
     window.addEventListener('hashchange', update);
     window.addEventListener('popstate', update);
+    window.addEventListener('keydown', () => setTimeout(update, 50));
+    window.addEventListener('click', () => setTimeout(update, 50));
+
     update();
     return true;
   };
@@ -147,7 +155,7 @@ function build() {
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
-      if (setupAnimation() || attempts > 30) {
+      if (setupAnimation() || attempts > 50) {
         clearInterval(interval);
       }
     }, 50);

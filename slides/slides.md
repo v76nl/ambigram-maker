@@ -242,34 +242,41 @@ style: |
     align-items: center;
     width: 100%;
     text-align: center;
+    min-height: 0;
+  }
+
+  .ambigram-header-area {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-sizing: border-box;
   }
 
   .question-text {
     font-size: 38px;
     font-weight: 700;
     color: #1A1A1A;
-    margin-bottom: 28px;
+    margin: 0;
     letter-spacing: 0.02em;
+    line-height: 1.3;
   }
 
-  .single-ambigram-box {
-    width: 520px;
-    background-color: #FFFFFF;
-    border: 2px solid #CBD5E1;
-    border-radius: 14px;
-    padding: 24px;
-    box-sizing: border-box;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  .ambigram-footer-area {
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 20px;
+    box-sizing: border-box;
   }
 
-  .single-ambigram-box img {
-    max-width: 100%;
-    max-height: 260px;
-    object-fit: contain;
-    display: block;
+  .caption-text {
+    font-size: 26px;
+    color: #2D3748;
+    line-height: 1.5;
+    margin: 0;
   }
 
   /* 分裂 & 180度回転ステージ */
@@ -280,16 +287,28 @@ style: |
     gap: 48px;
     width: 100%;
     max-width: 960px;
-    margin: 8px 0 16px 0;
+    margin: 0;
     position: relative;
+    box-sizing: border-box;
+  }
+
+  .split-ambigram-stage.single-stage {
+    justify-content: center;
+  }
+
+  .split-ambigram-stage.single-stage .split-card {
+    flex: 0 0 456px;
+    width: 456px;
+    max-width: 456px;
   }
 
   .split-card {
     flex: 1;
+    max-width: 456px;
     background-color: #FFFFFF;
     border: 2px solid #CBD5E1;
     border-radius: 14px;
-    padding: 16px;
+    padding: 24px 20px 20px 20px;
     box-sizing: border-box;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
     display: flex;
@@ -300,39 +319,39 @@ style: |
 
   .split-card img {
     max-width: 95%;
-    max-height: 220px;
+    max-height: 230px;
     object-fit: contain;
     display: block;
   }
 
-  /* アニメーション: 中央・拡大状態から左へ移動しつつ自然に縮小 (ease-in-out) */
+  /* アニメーション: 中央状態から左へスムーズに移動 (等倍平行移動) */
   @keyframes slide-to-left {
     0% {
-      transform: translateX(calc(50% + 24px)) scale(1.182);
+      transform: translateX(calc(50% + 24px));
       z-index: 1;
     }
     15% {
-      transform: translateX(calc(50% + 24px)) scale(1.182);
+      transform: translateX(calc(50% + 24px));
       z-index: 1;
     }
     100% {
-      transform: translateX(0) scale(1);
+      transform: translateX(0);
       z-index: 1;
     }
   }
 
-  /* アニメーション: 中央・拡大状態から右へ移動しつつ自然に縮小 (ease-in-out) */
+  /* アニメーション: 中央状態から右へスムーズに移動 (等倍平行移動) */
   @keyframes slide-to-right {
     0% {
-      transform: translateX(calc(-50% - 24px)) scale(1.182);
+      transform: translateX(calc(-50% - 24px));
       z-index: 2;
     }
     15% {
-      transform: translateX(calc(-50% - 24px)) scale(1.182);
+      transform: translateX(calc(-50% - 24px));
       z-index: 2;
     }
     100% {
-      transform: translateX(0) scale(1);
+      transform: translateX(0);
       z-index: 2;
     }
   }
@@ -366,15 +385,21 @@ style: |
     }
   }
 
-  /* 初期状態（スライド5読み込み時・待機時）: スライド4と同等の中央・拡大・0度で待機（チラつきを100%防止） */
+  .is-hidden {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* 初期状態（スライド5読み込み時・待機時）: スライド4と1pxの狂いもなく中央・重なり・0度で待機 (チラつき防止) */
   .anim-left {
-    transform: translateX(calc(50% + 24px)) scale(1.182);
+    transform: translateX(calc(50% + 24px));
     transform-origin: center center;
     animation: none;
   }
 
   .anim-right {
-    transform: translateX(calc(-50% - 24px)) scale(1.182);
+    transform: translateX(calc(-50% - 24px));
     transform-origin: center center;
     animation: none;
   }
@@ -386,8 +411,18 @@ style: |
   }
 
   .split-card .rel-badge {
+    margin-top: 14px;
+    font-size: 22px;
+    padding: 6px 16px;
     opacity: 0;
     transform: translateY(8px);
+    width: auto;
+    min-width: 140px;
+  }
+
+  .split-card .rel-badge.is-hidden {
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 
   /* .is-animated が付与された瞬間にアニメーション開始 */
@@ -403,7 +438,7 @@ style: |
     animation: img-spin-180 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  .is-animated .split-card .rel-badge {
+  .is-animated .split-card .rel-badge:not(.is-hidden) {
     animation: badge-reveal 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
@@ -602,13 +637,8 @@ style: |
       <span class="toc-leader"></span>
       <span class="toc-page">4</span>
     </div>
-    <div class="toc-sub-item">
-      <span class="toc-text"><span class="toc-accent">▶</span>180度回転の驚きと制作の難しさ</span>
-      <span class="toc-leader"></span>
-      <span class="toc-page">5</span>
-    </div>
     <div class="toc-item">
-      <span class="toc-text"><span class="toc-num">3.</span><strong>制作支援システムの実演</strong></span>
+      <span class="toc-text"><span class="toc-num">3.</span><strong>システムのデモ</strong></span>
       <span class="toc-leader"></span>
       <span class="toc-page">6</span>
     </div>
@@ -632,9 +662,9 @@ style: |
 <div class="main-col" style="justify-content: center; flex: 1;">
   <ul class="points" style="font-size: 30px; line-height: 1.6;">
     <li>11月29日のHCD学会でポスター発表を予定</li>
-    <li>アルゴリズム設計や実装にAIエージェントを活用して進めた</li>
+    <li>調査・実装にAIエージェントを活用して進めた</li>
     <div style="margin-left: 28px; margin-top: 8px;">→ 見落としや論理の穴があるかも</div>
-    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点や疑問点、改善アイデアがあれば教えてください！</div>
+    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点・疑問点・改善アイデア等あれば教えてください！</div>
   </ul>
 </div>
 
@@ -643,63 +673,60 @@ style: |
 # 2. アンビグラムとは？
 
 <div class="center-content">
-  <div class="question-text">この文字、何と読めますか？</div>
-  <div class="single-ambigram-box">
-    <img src="images/ambigram_saiaku.png" alt="最悪 アンビグラム">
+  <div class="ambigram-header-area">
+    <div class="question-text">読める？</div>
+  </div>
+
+  <div class="split-ambigram-stage single-stage">
+    <div class="split-card">
+      <img src="images/ambigram_saiaku.png" alt="最悪 アンビグラム">
+      <div class="rel-badge is-hidden">0°</div>
+    </div>
+  </div>
+
+  <div class="ambigram-footer-area">
+    <div class="caption-text is-hidden">
+      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=自己対称型アンビグラム）
+    </div>
   </div>
 </div>
 
 ---
 
-# 2. 180度回転型アンビグラム
+# 2. アンビグラムとは？
 
 <div class="center-content">
+  <div class="ambigram-header-area">
+    <div class="question-text is-hidden">読める？</div>
+  </div>
+
   <div class="split-ambigram-stage" id="ambigram-stage">
     <!-- 左：正位置（中央から左へ移動） -->
     <div class="split-card anim-left">
       <img src="images/ambigram_saiaku.png" alt="最悪 正位置">
-      <div class="rel-badge" style="margin-top: 14px; font-size: 22px; padding: 6px 16px;">0°（正位置）</div>
+      <div class="rel-badge">0°</div>
     </div>
     <!-- 右：180度回転（中央から回転しながら右へ移動） -->
     <div class="split-card anim-right">
       <img src="images/ambigram_saiaku.png" class="anim-rotate-img" alt="最悪 180度回転">
-      <div class="rel-badge accent" style="margin-top: 14px; font-size: 22px; padding: 6px 16px;">180°回転</div>
+      <div class="rel-badge accent">180°回転</div>
     </div>
   </div>
-  <div style="font-size: 26px; color: #2D3748; line-height: 1.5; margin-top: 10px;">
-    逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（自己対称型アンビグラム）
+
+  <div class="ambigram-footer-area">
+    <div class="caption-text">
+      逆さにしても同じ<strong>「最悪」</strong>と読めるタイポグラフィ（=自己対称型アンビグラム）
+    </div>
   </div>
 </div>
 
 ---
 
-# 3. 制作支援システムの実演
+# 3. システムのデモ
 
 <div class="slide-grid">
   <div class="main-col">
-    <ul class="points">
-      <li>
-        <strong>作り手の3つの課題を解決するシステム</strong><br>
-        直感的なWebインターフェースで、誰でもアンビグラムを探索・制作・微調整できる環境を開発。
-      </li>
-      <li>
-        <strong>実演の3大ハイライト</strong><br>
-        ① <strong>高速探索</strong>：20万語の辞書から正規表現と対称性で単語推薦<br>
-        ② <strong>骨格変形</strong>：近接ストローク吸引で自然に一本化・変形<br>
-        ③ <strong>AI可読性判定</strong>：双方向の認識確率をリアルタイム評価
-      </li>
-      <li>
-        <strong>実際のソフトウェア画面をデモ実演します</strong>
-      </li>
-    </ul>
-  </div>
-  <div class="diag-box">
-    <div class="rel-badge accent">探索 ➜ 変形 ➜ 評価</div>
-    <div class="placeholder-card" style="padding: 24px 16px;">
-      <strong>実演デモ</strong><br>
-      実際のWeb画面へ<br>切り替えます
-    </div>
-    <div class="rel-badge">リアルタイム支援</div>
+    <strong>実際のソフトをデモンストレーション</strong>
   </div>
 </div>
 
@@ -715,10 +742,10 @@ style: |
       <span class="status-badge accent">◎ あり</span>
     </div>
     <div class="element-content">
-      <p style="font-size: 26px; font-weight: 700; color: #D84315; margin-bottom: 14px; line-height: 1.4;">○○なのであり</p>
+      <p style="font-size: 26px; font-weight: 700; color: #D84315; margin-bottom: 14px; line-height: 1.4;">Google Scholar等で調べ、このアプローチは無さそうなので新規性あり ※要再調査</p>
       <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
-        <li style="margin-bottom: 8px;">20万語の対称性探索と骨格手順変形</li>
-        <li>職人芸に依存しない制作支援手法</li>
+        <li style="margin-bottom: 8px;">辞書ベースの対称性探索・骨格の手続き的変形</li>
+        <li>アンビグラム作家の職人芸に依存しない制作支援</li>
       </ul>
     </div>
   </div>
@@ -732,7 +759,7 @@ style: |
     <div class="element-content">
       <p style="font-size: 25px; font-weight: 700; color: #1A1A1A; margin-bottom: 14px; line-height: 1.4;">実際に読めている時点であり？</p>
       <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
-        <li style="margin-bottom: 8px;">180度回転後も「最悪」と判読可能</li>
+        <li style="margin-bottom: 8px;">実際、180度回転後も「最悪」と判読できる</li>
         <li>AI判定による客観的可読性評価</li>
       </ul>
     </div>
@@ -751,7 +778,7 @@ style: |
         <li>実社会・デザイン現場での価値を模索中</li>
       </ul>
       <div style="margin-top: 14px; background: #FFF5F5; border: 1.5px dashed #FEB2B2; border-radius: 8px; padding: 8px 12px; font-size: 18px; line-height: 1.35; color: #C53030; font-weight: 700; text-align: center;">
-        → ぜひ活用アイデアを教えてください！
+        → 活用アイデアがあれば教えてください
       </div>
     </div>
   </div>
@@ -766,24 +793,15 @@ style: |
     <ul class="points">
       <li>
         <strong>本研究のまとめ</strong><br>
-        フォント骨格の手順的変形とAI可読性評価を統合し、職人芸に依存しない180度回転型アンビグラム制作支援を実現。
+        フォント骨格の手続き的変形による、職人芸に依存しない180度回転型アンビグラム制作支援を実現。
       </li>
       <li>
-        <strong>11/29 HCD-Net ポスター発表に向けた検証課題</strong><br>
-        実際のユーザーによる制作実験（難易度・作業時間の変化）や、AI可読性スコアと人間の主観評価の相関検証。
+        <strong>11/29 HCD学会 ポスター発表に向けた課題</strong><br>
       </li>
       <li>
         <strong>フィードバックのお願い</strong><br>
-        AI共創研究だからこその見落としや、実験設計へのアドバイスなど、気になった点はぜひ忌憚なく教えてください！
+        見落としの指摘やアドバイスなど、気になった点は気軽に教えてください！
       </li>
     </ul>
-  </div>
-  <div class="diag-box">
-    <div class="rel-badge accent">11/29 HCD-Net</div>
-    <div style="font-size: 24px; color: #D84315; font-weight: bold;">↓</div>
-    <div class="rel-badge">ポスター発表へ</div>
-    <div class="placeholder-card" style="padding: 16px; font-size: 18px; line-height: 1.4;">
-      <strong>ご意見・アドバイスを<br>お待ちしています！</strong>
-    </div>
   </div>
 </div>
