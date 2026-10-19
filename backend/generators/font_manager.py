@@ -133,6 +133,10 @@ class FontManager:
         self._char_cache: dict[tuple[str, str, int, bool], np.ndarray] = {}
         # 骨格（スケルトン）キャッシュ: (char, font_id, size) -> np.ndarray
         self._skel_cache: dict[tuple[str, str, int], np.ndarray] = {}
+        # ペア類似度＆最適シフトキャッシュ: (c1, c2, font_id, max_shift) -> (score, offset)
+        self._pair_shift_cache: dict[tuple[str, str, str, int], tuple[float, tuple[int, int]]] = {}
+        # 単語フォント評価キャッシュ: (word, is_common) -> dict[str, Any]
+        self._word_font_cache: dict[tuple[str, bool], dict[str, Any]] = {}
 
     def get_font_path(self, font_id: Optional[str] = None) -> Path:
         """指定されたフォントIDのファイルパスを取得（デフォルト: zen_maru）"""
@@ -377,12 +381,20 @@ class FontManager:
         max_shift: int = 5,
         skel_a: Optional[np.ndarray] = None,
         skel_b: Optional[np.ndarray] = None,
+        c1: Optional[str] = None,
+        c2: Optional[str] = None,
+        font_id: Optional[str] = None,
     ) -> tuple[float, tuple[int, int]]:
         """
         正位置Aと180度反転Bの幾何類似度を計算。
         座標揺らし探索 (-max_shift <= dx, dy <= max_shift) を行い、
         最も一致率が高くなる座標オフセットと最高スコアを採用する。
+        (c1, c2, font_id, max_shift) が与えられている場合はインメモリキャッシュを活用。
         """
+        cache_key = (c1, c2, font_id, max_shift) if (c1 and c2 and font_id) else None
+        if cache_key and cache_key in self._pair_shift_cache:
+            return self._pair_shift_cache[cache_key]
+
         best_score = 0.0
         best_offset = (0, 0)
 
@@ -416,7 +428,12 @@ class FontManager:
                     best_score = score
                     best_offset = (dx, dy)
 
-        return best_score, best_offset
+        res = (best_score, best_offset)
+        if cache_key:
+            if len(self._pair_shift_cache) > 4096:
+                self._pair_shift_cache.clear()
+            self._pair_shift_cache[cache_key] = res
+        return res
 
     def evaluate_word_with_custom_offsets(
         self,
@@ -463,11 +480,72 @@ class FontManager:
             "offsets": normalized_offsets,
         }
 
+    def evaluate_single_font(self, word: str, font_id: str, is_common: bool = False) -> dict[str, Any]:
+        """
+        指定単語に対し、要求された単一フォントのみを高速評価。
+        全フォント探索をスキップすることで大幅に処理時間を短縮する。
+        """
+        n = len(word)
+        fid = font_id if (font_id and font_id != "auto") else "zen_maru"
+        meta = FONT_PRESETS.get(fid, FONT_PRESETS["zen_maru"])
+        if n < 1:
+            return {
+                "best_font_id": fid,
+                "best_font_name": meta["name"],
+                "best_font_style": meta["style"],
+                "best_score": 0.0,
+                "font_scores": [],
+            }
+
+        half_len = (n + 1) // 2
+        pair_scores = []
+        offsets = []
+
+        for i in range(half_len):
+            c1 = word[i]
+            c2 = word[n - 1 - i]
+            img_a = self.render_char_matrix(c1, fid)
+            img_b = self.render_char_matrix(c2, fid)
+            skel_a = self.render_char_skeleton(c1, fid)
+            skel_b = self.render_char_skeleton(c2, fid)
+            score, offset = self.calculate_pair_similarity_with_shift(
+                img_a, img_b, skel_a=skel_a, skel_b=skel_b, c1=c1, c2=c2, font_id=fid
+            )
+            pair_scores.append(score)
+            offsets.append(offset)
+
+        total_score, geom_mean, min_score = compute_word_cognitive_score(
+            pair_scores, word_len=n, is_common=is_common
+        )
+
+        font_evaluation = {
+            "id": fid,
+            "name": meta["name"],
+            "style": meta["style"],
+            "description": meta["description"],
+            "score": total_score,
+            "geometric_mean": geom_mean,
+            "min_pair_score": min_score,
+            "offsets": offsets,
+        }
+
+        return {
+            "best_font_id": fid,
+            "best_font_name": meta["name"],
+            "best_font_style": meta["style"],
+            "best_score": total_score,
+            "font_scores": [font_evaluation],
+        }
+
     def evaluate_word_fonts(self, word: str, is_common: bool = False) -> dict[str, Any]:
         """
         指定単語に対し、全フォント候補の幾何一致度スコアと最適オフセットを算出。
-        最もスコアが高いフォントを自動決定する。
+        最もスコアが高いフォントを自動決定する。キャッシュを活用して再計算を回避。
         """
+        cache_key = (word, is_common)
+        if cache_key in self._word_font_cache:
+            return self._word_font_cache[cache_key]
+
         n = len(word)
         if n < 1:
             return {"best_font_id": "zen_maru", "best_font_name": "Zen Maru Gothic", "font_scores": []}
@@ -482,13 +560,12 @@ class FontManager:
             for i in range(half_len):
                 c1 = word[i]
                 c2 = word[n - 1 - i]
-                is_center = (i == n - 1 - i)
                 img_a = self.render_char_matrix(c1, fid)
                 img_b = self.render_char_matrix(c2, fid)
                 skel_a = self.render_char_skeleton(c1, fid)
                 skel_b = self.render_char_skeleton(c2, fid)
                 score, offset = self.calculate_pair_similarity_with_shift(
-                    img_a, img_b, skel_a=skel_a, skel_b=skel_b
+                    img_a, img_b, skel_a=skel_a, skel_b=skel_b, c1=c1, c2=c2, font_id=fid
                 )
                 pair_scores.append(score)
                 offsets.append(offset)
@@ -521,13 +598,17 @@ class FontManager:
             ", ".join([f"{f['name']}({f['score']:.1%})" for f in font_evaluations[1:]])
         )
 
-        return {
+        res = {
             "best_font_id": best["id"],
             "best_font_name": best["name"],
             "best_font_style": best["style"],
             "best_score": best["score"],
             "font_scores": font_evaluations,
         }
+        if len(self._word_font_cache) > 1024:
+            self._word_font_cache.clear()
+        self._word_font_cache[cache_key] = res
+        return res
 
 # シングルトンインスタンス
 font_manager = FontManager()

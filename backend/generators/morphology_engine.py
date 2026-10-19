@@ -201,9 +201,13 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         font_id: str = "auto",
         enable_snap: bool = True,
         snap_strength: float = 0.75,
+        cancel_event: Any = None,
         **params,
     ) -> dict[str, Any]:
         """単語全体のアンビグラム画像を生成してBase64形式で返却"""
+        if cancel_event and cancel_event.is_set():
+            return {"engine": "morphology", "type": "png", "data": "", "cancelled": True, "details": {}}
+
         n = len(word)
         if n == 0:
             return {"engine": "morphology", "type": "png", "data": "", "details": {}}
@@ -213,16 +217,15 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         if not enable_snap:
             snap_strength = 0.0
 
-        # 全フォントの幾何スコアと最適シフトを評価
-        font_eval = font_manager.evaluate_word_fonts(word)
-        
-        # 適用フォントの決定 (autoの場合は最高スコアフォント)
+        # 適用フォントの決定および幾何評価 (font_id指定時は単一フォントのみ高速評価)
         if font_id and font_id != "auto":
+            font_eval = font_manager.evaluate_single_font(word, font_id)
             selected_fid = font_id
-            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
-            selected_name = selected_meta["name"] if selected_meta else font_id
+            selected_meta = font_eval["font_scores"][0] if font_eval["font_scores"] else None
+            selected_name = font_eval["best_font_name"]
             selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
         else:
+            font_eval = font_manager.evaluate_word_fonts(word)
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
             selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
@@ -250,6 +253,8 @@ class MorphologyAmbigramEngine(BaseAmbigramGenerator):
         slot_intermediates = [None] * n
         half_len = (n + 1) // 2
         for i in range(half_len):
+            if cancel_event and cancel_event.is_set():
+                return {"engine": "morphology", "type": "png", "data": "", "cancelled": True, "details": {}}
             c1 = word[i]
             c2 = word[n - 1 - i]
             is_center = (i == n - 1 - i)

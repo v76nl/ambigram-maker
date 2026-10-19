@@ -27,6 +27,7 @@ from generators.morphology_engine import MorphologyAmbigramEngine
 from generators.skeleton_engine import SkeletonAmbigramEngine
 from generators.font_manager import font_manager
 from evaluation.recognizer import char_recognizer
+from cancellation import gen_manager
 
 app = FastAPI(
     title="Ambigram Maker API",
@@ -129,12 +130,17 @@ def evaluate_word_fonts(word: str = Query(...)):
         "font_scores": font_eval["font_scores"],
     }
 
+# 可読性評価用スロット画像のインメモリキャッシュ (最大256件)
+_readability_slot_cache: dict[tuple[str, str, str, tuple[int, int]], np.ndarray] = {}
+
+
 @app.post("/api/evaluate-readability")
 def evaluate_readability(req: ReadabilityRequest):
     """
     魏・山口 (2023) および 井上・高橋 (2020) に基づく客観的文字認識・可読性評価
     各文字スロットについて正反両方向の認識確率と調和平均スコアを算出
     """
+    cancel_event = gen_manager.start_readability()
     word = req.word.strip()
     if not word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
@@ -154,15 +160,28 @@ def evaluate_readability(req: ReadabilityRequest):
     harmonic_scores = []
 
     for i in range(half_len):
+        if cancel_event.is_set():
+            logger.info(f"  [可読性評価中断] 新規割り込みのため '{word}' の評価を即座に中止しました")
+            return {"word": word, "overall_readability": None, "slots": [], "cancelled": True}
+
         c1 = target_word[i]
         c2 = target_word[n - 1 - i]
         shift = tuple(offsets[i]) if i < len(offsets) else (0, 0)
+        cache_key = (c1, c2, str(font_path), shift)
 
-        # 骨格平均化スロット画像を生成して認識器に入力
-        slot_img = skeleton_engine.generate_slot(
-            c1, c2, size=256, font_path=font_path, shift=shift,
-            brush_style="calligraphic", stroke_modulation=True, enable_snap=True
-        )
+        # キャッシュ済みなら再計算を完全スキップ
+        if cache_key in _readability_slot_cache:
+            slot_img = _readability_slot_cache[cache_key]
+        else:
+            # ONNXモデルの入力解像度 (128x128) に合わせて高速生成 (256比で約3倍高速)
+            slot_img = skeleton_engine.generate_slot(
+                c1, c2, size=128, font_path=font_path, shift=shift,
+                brush_style="calligraphic", stroke_modulation=True, enable_snap=True
+            )
+            if len(_readability_slot_cache) > 256:
+                _readability_slot_cache.clear()
+            _readability_slot_cache[cache_key] = slot_img
+
         eval_slot = char_recognizer.evaluate_ambigram_slot(slot_img, c1, c2)
         eval_slot["slot_index"] = i
         slot_evaluations.append(eval_slot)
@@ -312,6 +331,7 @@ def generate_ambigram(req: GenerateRequest):
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
 
+    cancel_event = gen_manager.start_generation()
     t0 = time.time()
     eval_res = finder.evaluate_word(req.word)
     # 本来の表記（漢字やカタカナ）そのものをアンビグラムの対象とする
@@ -325,6 +345,9 @@ def generate_ambigram(req: GenerateRequest):
     results: dict[str, Any] = {}
 
     if req.engine in ("vector", "all"):
+        if cancel_event.is_set():
+            logger.info("  >> 新規割り込みのためベクター合成をスキップ")
+            return {"word": req.word, "cancelled": True, "results": {}}
         te = time.time()
         logger.info(f"  [原案: ベクター合成] 実行中 (比率={req.blend_ratio}, ハイライト={req.highlight_mode})...")
         results["vector"] = vector_engine.generate(
@@ -338,6 +361,9 @@ def generate_ambigram(req: GenerateRequest):
         logger.info(f"  [原案: ベクター合成] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("morphology", "all"):
+        if cancel_event.is_set():
+            logger.info("  >> 新規割り込みのため論理積＋膨張をスキップ")
+            return {"word": req.word, "cancelled": True, "results": {}}
         te = time.time()
         logger.info(
             f"  [手法A: 論理積＋膨張] 実行中 (膨張={req.dilation_size}px, 平滑={req.smoothness}px, "
@@ -357,10 +383,14 @@ def generate_ambigram(req: GenerateRequest):
             snap_strength=snap_val,
             font_id=font_id,
             custom_offsets=req.custom_offsets,
+            cancel_event=cancel_event,
         )
         logger.info(f"  [手法A: 論理積＋膨張] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("skeleton", "all"):
+        if cancel_event.is_set():
+            logger.info("  >> 新規割り込みのため骨格平均化をスキップ")
+            return {"word": req.word, "cancelled": True, "results": {}}
         te = time.time()
         logger.info(
             f"  [手法B: 骨格平均化] 実行中 (線幅={req.stroke_thickness}px, "
@@ -381,10 +411,13 @@ def generate_ambigram(req: GenerateRequest):
             brush_style=req.brush_style or "calligraphic",
             stroke_modulation=req.stroke_modulation if req.stroke_modulation is not None else True,
             custom_offsets=req.custom_offsets,
+            cancel_event=cancel_event,
         )
         logger.info(f"  [手法B: 骨格平均化] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("bitmap", "all"):
+        if cancel_event.is_set():
+            return {"word": req.word, "cancelled": True, "results": {}}
         te = time.time()
         logger.info(f"  [手法2: ビットマップ] 実行中 (重み={req.blend_weight}, 閾値={req.threshold_val})...")
         results["bitmap"] = bitmap_engine.generate(
@@ -396,6 +429,8 @@ def generate_ambigram(req: GenerateRequest):
         logger.info(f"  [手法2: ビットマップ] 完了 ({time.time() - te:.3f}s)")
 
     if req.engine in ("gemini", "all"):
+        if cancel_event.is_set():
+            return {"word": req.word, "cancelled": True, "results": {}}
         te = time.time()
         logger.info(f"  [手法3: Gemini AI] 実行中...")
         results["gemini"] = gemini_engine.generate(
@@ -404,6 +439,9 @@ def generate_ambigram(req: GenerateRequest):
             style_prompt=req.style_prompt or "minimalist black calligraphy on pure white background, sharp vector aesthetic",
         )
         logger.info(f"  [手法3: Gemini AI] 完了 ({time.time() - te:.3f}s)")
+
+    if cancel_event.is_set():
+        return {"word": req.word, "cancelled": True, "results": {}}
 
     total_elapsed = time.time() - t0
     logger.info(
