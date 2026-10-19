@@ -509,15 +509,69 @@ style: |
   }
 
   .status-badge.warn {
-    border-color: #E53E3E;
-    color: #E53E3E;
-    background: #FFF5F5;
+    border-color: #3078C5;
+    color: #3078C5;
+    background: #F0F7FF;
+  }
+
+  .status-badge.info {
+    border-color: #3078C5;
+    color: #3078C5;
+    background: #F0F7FF;
   }
 
   .element-content {
     flex: 1;
     display: flex;
     flex-direction: column;
+  }
+
+  /* 研究の3要素カード内のテキスト & リスト (Marpサニタイズ対策クラス) */
+  .element-lead {
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0 0 12px 0;
+    color: #1A1A1A;
+  }
+
+  .element-lead.accent {
+    color: #D84315;
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+
+  .element-lead.info {
+    color: #3078C5;
+  }
+
+  .element-list {
+    font-size: 20px;
+    line-height: 1.5;
+    padding-left: 20px;
+    color: #4A5568;
+    margin: 0;
+  }
+
+  .element-list > li {
+    margin-bottom: 8px;
+  }
+
+  .element-list > li:last-child {
+    margin-bottom: 0;
+  }
+
+  .element-action-box {
+    margin-top: 14px;
+    background: #F0F7FF;
+    border: 1.5px dashed #B2D9FE;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    line-height: 1.35;
+    color: #3078C5;
+    font-weight: 700;
+    text-align: center;
   }
 
   .toc-wrapper {
@@ -722,6 +776,18 @@ style: |
 
 ---
 
+# 2. アンビグラムとは？
+
+<div class="slide-grid">
+  <div class="main-col">
+  <strong>
+    Xに上がっている作例を確認
+    </strong>
+  </div>
+</div>
+
+---
+
 # 3. システムのデモ
 
 <div class="slide-grid">
@@ -742,9 +808,9 @@ style: |
       <span class="status-badge accent">◎ あり</span>
     </div>
     <div class="element-content">
-      <p style="font-size: 26px; font-weight: 700; color: #D84315; margin-bottom: 14px; line-height: 1.4;">Google Scholar等で調べ、このアプローチは無さそうなので新規性あり ※要再調査</p>
-      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
-        <li style="margin-bottom: 8px;">辞書ベースの対称性探索・骨格の手続き的変形</li>
+      <p class="element-lead accent">Google Scholar等で調べ、このアプローチは無さそうなので新規性あり <br>※要再調査</p>
+      <ul class="element-list">
+        <li>辞書ベースの対称性探索・骨格の手続き的変形</li>
         <li>アンビグラム作家の職人芸に依存しない制作支援</li>
       </ul>
     </div>
@@ -757,9 +823,9 @@ style: |
       <span class="status-badge">◯ あり？</span>
     </div>
     <div class="element-content">
-      <p style="font-size: 25px; font-weight: 700; color: #1A1A1A; margin-bottom: 14px; line-height: 1.4;">実際に読めている時点であり？</p>
-      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
-        <li style="margin-bottom: 8px;">実際、180度回転後も「最悪」と判読できる</li>
+      <p class="element-lead">実際に読めている時点であり？</p>
+      <ul class="element-list">
+        <li>実際、180度回転後も「最悪」と判読できる</li>
         <li>AI判定による客観的可読性評価</li>
       </ul>
     </div>
@@ -769,15 +835,15 @@ style: |
   <div class="element-card" style="border-color: #E2E8F0;">
     <div class="element-header">
       <span class="element-title">有効性</span>
-      <span class="status-badge warn">△ 微妙！</span>
+      <span class="status-badge warn">△ 微妙</span>
     </div>
     <div class="element-content">
-      <p style="font-size: 25px; font-weight: 700; color: #C53030; margin-bottom: 12px; line-height: 1.4;">微妙！ どう活用するかが未定</p>
-      <ul style="font-size: 20px; line-height: 1.5; padding-left: 20px; color: #4A5568; margin: 0;">
-        <li style="margin-bottom: 8px;">「何のために使うのか？」「誰が喜ぶか？」</li>
+      <p class="element-lead info">微妙！ どう活用するかが未定</p>
+      <ul class="element-list">
+        <li>「何のために使うのか？」「誰が喜ぶか？」</li>
         <li>実社会・デザイン現場での価値を模索中</li>
       </ul>
-      <div style="margin-top: 14px; background: #FFF5F5; border: 1.5px dashed #FEB2B2; border-radius: 8px; padding: 8px 12px; font-size: 18px; line-height: 1.35; color: #C53030; font-weight: 700; text-align: center;">
+      <div class="element-action-box">
         → 活用アイデアがあれば教えてください
       </div>
     </div>
@@ -793,10 +859,10 @@ style: |
     <ul class="points">
       <li>
         <strong>本研究のまとめ</strong><br>
-        フォント骨格の手続き的変形による、職人芸に依存しない180度回転型アンビグラム制作支援を実現。
+        フォント骨格の手続き的変形による、職人芸に依存しない180度回転型アンビグラム制作支援を実現
       </li>
       <li>
-        <strong>11/29 HCD学会 ポスター発表に向けた課題</strong><br>
+        <strong>HCD学会 (11/29) ポスター発表に向けた課題</strong><br>
       </li>
       <li>
         <strong>フィードバックのお願い</strong><br>
