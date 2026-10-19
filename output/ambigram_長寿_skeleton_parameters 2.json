@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-16T03:18:43.863Z",
+  "reproducibility": {
+    "target": {
+      "word": "長寿",
+      "reading": "ちょうじゅ",
+      "length": 2,
+      "is_pure_hiragana": false,
+      "has_kanji": true,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "shippori",
+      "name": "Shippori Mincho",
+      "style": "明朝体"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          0
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 29,
+      "diff_blend": 0.2,
+      "pre_bold": 1,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.786,
+      "min_pair_score": 0.786,
+      "overall_readability": 0.809,
+      "readability_slots": [
+        {
+          "char1": "長",
+          "char2": "寿",
+          "prob1": 0.7877,
+          "prob2": 0.8314,
+          "harmonic_readability": 0.809,
+          "status": "perfect",
+          "top1_pred": "せ",
+          "top2_pred": "き",
+          "predictions_normal": [
+            {
+              "char": "せ",
+              "similarity": 0.7877,
+              "probability": 0.0418
+            },
+            {
+              "char": "ね",
+              "similarity": 0.7776,
+              "probability": 0.0368
+            },
+            {
+              "char": "な",
+              "similarity": 0.7638,
+              "probability": 0.031
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "き",
+              "similarity": 0.8314,
+              "probability": 0.0638
+            },
+            {
+              "char": "せ",
+              "similarity": 0.8165,
+              "probability": 0.0529
+            },
+            {
+              "char": "を",
+              "similarity": 0.7953,
+              "probability": 0.0406
+            }
+          ],
+          "slot_index": 0
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "長寿",
+      "engine": "skeleton",
+      "font": "shippori",
+      "customOffsets": [
+        [
+          -1,
+          0
+        ]
+      ],
+      "stroke_thickness": 29,
+      "diff_blend": 0.2,
+      "pre_bold": 1,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"長寿\",\"engine\":\"skeleton\",\"font\":\"shippori\",\"customOffsets\":[[-1,0]],\"stroke_thickness\":29,\"diff_blend\":0.2,\"pre_bold\":1,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true}'"
+  }
+}

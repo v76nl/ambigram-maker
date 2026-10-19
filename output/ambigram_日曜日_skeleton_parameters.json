@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-10-16T09:56:19.747Z",
+  "reproducibility": {
+    "target": {
+      "word": "日曜日",
+      "reading": "にちようび",
+      "length": 3,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "shippori",
+      "name": "Shippori Mincho",
+      "style": "明朝体"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          -2
+        ],
+        [
+          -1,
+          -5
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 6,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.8421,
+      "min_pair_score": 0.8421,
+      "overall_readability": 0.8201,
+      "readability_slots": [
+        {
+          "char1": "日",
+          "char2": "日",
+          "prob1": 0.8188,
+          "prob2": 0.8188,
+          "harmonic_readability": 0.8188,
+          "status": "perfect",
+          "top1_pred": "ら",
+          "top2_pred": "ら",
+          "predictions_normal": [
+            {
+              "char": "ら",
+              "similarity": 0.8188,
+              "probability": 0.111
+            },
+            {
+              "char": "る",
+              "similarity": 0.7666,
+              "probability": 0.0578
+            },
+            {
+              "char": "ヨ",
+              "similarity": 0.7568,
+              "probability": 0.0511
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ら",
+              "similarity": 0.8188,
+              "probability": 0.111
+            },
+            {
+              "char": "る",
+              "similarity": 0.7666,
+              "probability": 0.0578
+            },
+            {
+              "char": "ヨ",
+              "similarity": 0.7568,
+              "probability": 0.0511
+            }
+          ],
+          "slot_index": 0
+        },
+        {
+          "char1": "曜",
+          "char2": "曜",
+          "prob1": 0.8215,
+          "prob2": 0.8215,
+          "harmonic_readability": 0.8215,
+          "status": "perfect",
+          "top1_pred": "な",
+          "top2_pred": "な",
+          "predictions_normal": [
+            {
+              "char": "な",
+              "similarity": 0.8215,
+              "probability": 0.041
+            },
+            {
+              "char": "ぬ",
+              "similarity": 0.8146,
+              "probability": 0.0376
+            },
+            {
+              "char": "ゆ",
+              "similarity": 0.811,
+              "probability": 0.036
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "な",
+              "similarity": 0.8215,
+              "probability": 0.041
+            },
+            {
+              "char": "ぬ",
+              "similarity": 0.8146,
+              "probability": 0.0376
+            },
+            {
+              "char": "ゆ",
+              "similarity": 0.811,
+              "probability": 0.036
+            }
+          ],
+          "slot_index": 1
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "日曜日",
+      "engine": "skeleton",
+      "font": "shippori",
+      "customOffsets": [
+        [
+          -1,
+          -2
+        ],
+        [
+          -1,
+          -5
+        ]
+      ],
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 6,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"日曜日\",\"engine\":\"skeleton\",\"font\":\"shippori\",\"customOffsets\":[[-1,-2],[-1,-5]],\"stroke_thickness\":15,\"diff_blend\":0.8,\"pre_bold\":6,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true,\"snap_strength\":0.75}'"
+  }
+}
