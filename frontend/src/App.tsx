@@ -106,6 +106,42 @@ export const App: React.FC = () => {
   const generateAbortRef = useRef<AbortController | null>(null);
   const generationSeqRef = useRef<number>(0);
   const prevWordRef = useRef<string | null>(null);
+  const lastGeneratedKeyRef = useRef<string>("");
+  const lastReadabilityKeyRef = useRef<string>("");
+
+  const getGenerationKey = useCallback(
+    (
+      wordText: string,
+      engine: string,
+      font: string,
+      offsets: [number, number][] | null,
+      p: typeof params,
+      highlight?: boolean
+    ) => {
+      return JSON.stringify({
+        w: wordText,
+        e: engine,
+        f: font,
+        o: offsets,
+        h: highlight !== undefined ? highlight : p.highlightMode,
+        p: {
+          blendRatio: p.blendRatio,
+          dilationSize: p.dilationSize,
+          strokeThickness: p.strokeThickness,
+          brushStyle: p.brushStyle,
+          strokeModulation: p.strokeModulation,
+          diffBlend: p.diffBlend,
+          preBold: p.preBold,
+          snapStrength: p.snapStrength,
+          blendWeight: p.blendWeight,
+          smoothness: p.smoothness,
+          thresholdVal: p.thresholdVal,
+          stylePrompt: p.stylePrompt,
+        },
+      });
+    },
+    []
+  );
 
   // アンビグラム生成
   const triggerGenerate = useCallback(
@@ -259,6 +295,19 @@ export const App: React.FC = () => {
     const currentWordText =
       selectedWord.target_text || selectedWord.primary_display || selectedWord.word || selectedWord.reading;
 
+    const currentKey = getGenerationKey(
+      currentWordText,
+      activeEngine,
+      selectedFont,
+      customOffsets,
+      params
+    );
+
+    // 既に同一条件で生成済みまたはリクエスト中の場合はスキップ（点滅・無限ループ防止）
+    if (currentKey === lastGeneratedKeyRef.current) {
+      return;
+    }
+
     const isWordChanged = prevWordRef.current !== currentWordText;
     prevWordRef.current = currentWordText;
 
@@ -266,6 +315,7 @@ export const App: React.FC = () => {
     const delay = isWordChanged ? 0 : 150;
 
     const timer = setTimeout(() => {
+      lastGeneratedKeyRef.current = currentKey;
       triggerGenerate(selectedWord);
     }, delay);
 
@@ -277,13 +327,19 @@ export const App: React.FC = () => {
     customOffsets,
     params,
     triggerGenerate,
+    getGenerationKey,
   ]);
 
   // 2. 客観文字認識・可読性評価 (バックグラウンド低優先度実行: 600ms デバウンス & スライダー操作影響ゼロ)
   useEffect(() => {
     if (!selectedWord) return;
+    const currentWordText =
+      selectedWord.target_text || selectedWord.primary_display || selectedWord.word || selectedWord.reading;
+    const key = `${currentWordText}|${selectedFont}|${JSON.stringify(customOffsets)}`;
+    if (key === lastReadabilityKeyRef.current) return;
 
     const timer = setTimeout(() => {
+      lastReadabilityKeyRef.current = key;
       updateReadability(selectedWord, selectedFont, customOffsets || undefined);
     }, 600);
 
@@ -299,6 +355,7 @@ export const App: React.FC = () => {
     const nextVal = !params.highlightMode;
     setHighlightMode(nextVal);
     if (selectedWord && activeEngine === "vector") {
+      lastGeneratedKeyRef.current = ""; // 強制再生成
       triggerGenerate(selectedWord, "vector", nextVal);
     }
   };
@@ -323,6 +380,27 @@ export const App: React.FC = () => {
     setSelectedWord(w);
     setCustomOffsets(null);
     setRecalculatedScore(null);
+    lastGeneratedKeyRef.current = "";
+    lastReadabilityKeyRef.current = "";
+  };
+
+  // 自由入力単語の送信ハンドラ
+  const handleCustomWordSubmit = async (inputWord: string) => {
+    if (generateAbortRef.current) {
+      generateAbortRef.current.abort();
+      generateAbortRef.current = null;
+    }
+    if (readabilityAbortRef.current) {
+      readabilityAbortRef.current.abort();
+      readabilityAbortRef.current = null;
+    }
+    setResults({});
+    setIsGenerating(true);
+    setCustomOffsets(null);
+    setRecalculatedScore(null);
+    lastGeneratedKeyRef.current = "";
+    lastReadabilityKeyRef.current = "";
+    await handleCustomWord(inputWord);
   };
 
   // 設定インポート (parameters.json) ハンドラ
@@ -479,7 +557,7 @@ export const App: React.FC = () => {
             onLoadMore={loadMoreWords}
             selectedWord={selectedWord}
             onSelectWord={handleSelectWord}
-            onCustomWordSubmit={handleCustomWord}
+            onCustomWordSubmit={handleCustomWordSubmit}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
             minLength={minLength}

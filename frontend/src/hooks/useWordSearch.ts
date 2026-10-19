@@ -65,6 +65,23 @@ export function useWordSearch() {
     setAllWords([]);
     setVisibleCount(INITIAL_VISIBLE_COUNT);
 
+    let buffer: WordItem[] = [];
+    let flushTimer: any = null;
+
+    const flushBuffer = () => {
+      if (buffer.length === 0) return;
+      const batch = [...buffer];
+      buffer = [];
+      setAllWords((prev) => {
+        const existingKeys = new Set(prev.map((w) => w.target_text || w.reading));
+        const newItems = batch.filter((w) => !existingKeys.has(w.target_text || w.reading));
+        if (newItems.length === 0) return prev;
+        const next = [...prev, ...newItems];
+        next.sort((a, b) => b.score - a.score);
+        return next;
+      });
+    };
+
     const cancel = searchWordsStream(
       {
         minLength,
@@ -79,22 +96,30 @@ export function useWordSearch() {
         includePhrase,
       },
       (newWord) => {
-        setAllWords((prev) => {
-          const key = newWord.target_text || newWord.reading;
-          if (prev.some((w) => (w.target_text || w.reading) === key)) {
-            return prev;
-          }
-          const next = [...prev, newWord];
-          next.sort((a, b) => b.score - a.score);
-          return next;
-        });
-
+        buffer.push(newWord);
         setSelectedWord((prev) => prev || newWord);
+
+        if (!flushTimer) {
+          flushTimer = setTimeout(() => {
+            flushTimer = null;
+            flushBuffer();
+          }, 100);
+        }
       },
       () => {
+        if (flushTimer) {
+          clearTimeout(flushTimer);
+          flushTimer = null;
+        }
+        flushBuffer();
         setIsLoadingWords(false);
       },
       (err) => {
+        if (flushTimer) {
+          clearTimeout(flushTimer);
+          flushTimer = null;
+        }
+        flushBuffer();
         console.error("単語読み込みエラー:", err);
         setLoadError(
           "バックエンドAPI (http://127.0.0.1:8000) への接続に失敗しました。サーバーが起動しているか確認してください。"

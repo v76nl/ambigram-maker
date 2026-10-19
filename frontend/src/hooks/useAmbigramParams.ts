@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { ParsedAmbigramConfig } from "../utils/configParser";
 
 export interface AmbigramParams {
@@ -59,22 +59,40 @@ export function useAmbigramParams() {
     if (p.thresholdVal !== undefined) setThresholdVal(p.thresholdVal);
   }, []);
 
-  const params: AmbigramParams = {
-    blendRatio,
-    highlightMode,
-    dilationSize,
-    strokeThickness,
-    brushStyle,
-    strokeModulation,
-    diffBlend,
-    preBold,
-    snapStrength,
-    blendWeight,
-    smoothness,
-    thresholdVal,
-    apiKey,
-    stylePrompt,
-  };
+  const params: AmbigramParams = useMemo(
+    () => ({
+      blendRatio,
+      highlightMode,
+      dilationSize,
+      strokeThickness,
+      brushStyle,
+      strokeModulation,
+      diffBlend,
+      preBold,
+      snapStrength,
+      blendWeight,
+      smoothness,
+      thresholdVal,
+      apiKey,
+      stylePrompt,
+    }),
+    [
+      blendRatio,
+      highlightMode,
+      dilationSize,
+      strokeThickness,
+      brushStyle,
+      strokeModulation,
+      diffBlend,
+      preBold,
+      snapStrength,
+      blendWeight,
+      smoothness,
+      thresholdVal,
+      apiKey,
+      stylePrompt,
+    ]
+  );
 
   return {
     params,
