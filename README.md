@@ -111,6 +111,10 @@ ambigram-maker/
 │       │   └── ExportBar.tsx       # SVG/PNG/JSON & 再現パラメータ一括エクスポート
 │       └── services/
 │           └── api.ts              # API クライアント (PipelineStep, Export パラメータ型定義)
+├── slides/                         # 研究発表スライド環境 (Marp)
+│   ├── slides.md                   # スライド原稿 (Markdown)
+│   ├── scripts/                    # ビルドスクリプト ＆ はみ出し自動検査
+│   └── .env.example                # 発表者情報用環境変数テンプレート
 ├── test_words.json                 # 既知アンビグラム単語データセット (評価・ベンチマーク用)
 ├── research/                       # 先行研究文献調査資料 (Google Scholar・分析提案書)
 └── reference                       # 参考仕様ファイル
@@ -174,6 +178,9 @@ pnpm dev
 | **バックエンド自動テスト (pytest)**     | `backend/`   | `uv run pytest`                                  |
 | **フロントエンド自動テスト (Vitest)**   | `frontend/`  | `pnpm test`                                      |
 | **スライドローカル確認 (ポート8080)**   | ルート       | `pnpm slides:serve`                              |
+| **スライド全形式一括ビルド ＆ 検査**   | ルート       | `pnpm slides:build`                              |
+| **スライドPPTX形式 (PowerPoint) 生成** | ルート       | `pnpm slides:build:pptx`                         |
+| **スライド要素はみ出し自動検査**        | ルート       | `pnpm slides:check`                              |
 
 ---
 
