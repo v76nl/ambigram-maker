@@ -631,11 +631,10 @@ style: |
 
 <div class="main-col" style="justify-content: center; flex: 1;">
   <ul class="points" style="font-size: 30px; line-height: 1.6;">
-    <li>本研究は、11月29日のHCD-Net (学会) でポスター発表を予定しています</li>
-    <li>アルゴリズム設計や実装にAIエージェントを活用して進めたため、見落としや論理の穴があるかもしれません</li>
-    <li style="list-style-type: none; margin-left: -28px; margin-top: 20px;">
-      <strong style="color: #D84315;">→ 気になった点や疑問点、改善アイデアがあれば教えてください！</strong>
-    </li>
+    <li>11月29日のHCD学会でポスター発表を予定</li>
+    <li>アルゴリズム設計や実装にAIエージェントを活用して進めた</li>
+    <div style="margin-left: 28px; margin-top: 8px;">→ 見落としや論理の穴があるかも</div>
+    <div style="margin-left: 28px; margin-top: 8px;">→ 気になった点や疑問点、改善アイデアがあれば教えてください！</div>
   </ul>
 </div>
 
