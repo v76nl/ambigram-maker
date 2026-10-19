@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { WordItem, EngineResult, FontMeta, ReadabilityResponse } from "./services/api";
 import {
@@ -102,6 +102,11 @@ export const App: React.FC = () => {
       .catch((err) => console.error("フォント一覧取得エラー:", err));
   }, []);
 
+  // メイン画像生成の先行リクエストキャンセル用 & シーケンス番号管理
+  const generateAbortRef = useRef<AbortController | null>(null);
+  const generationSeqRef = useRef<number>(0);
+  const prevWordRef = useRef<string | null>(null);
+
   // アンビグラム生成
   const triggerGenerate = useCallback(
     async (
@@ -112,63 +117,101 @@ export const App: React.FC = () => {
       offsetsToGen?: [number, number][] | null
     ) => {
       if (!wordToGen) return;
+
+      // 直前の未完了な画像生成リクエストを即座にキャンセル
+      if (generateAbortRef.current) {
+        generateAbortRef.current.abort();
+      }
+      const controller = new AbortController();
+      generateAbortRef.current = controller;
+
+      const seq = ++generationSeqRef.current;
       setIsGenerating(true);
+
       try {
         const targetText = wordToGen.target_text || wordToGen.primary_display || wordToGen.word || wordToGen.reading;
         const offsets = offsetsToGen !== undefined ? offsetsToGen : customOffsets;
-        const response = await generateAmbigram({
-          word: targetText,
-          engine: (engineToGen || activeEngine) as any,
-          font: fontToGen || selectedFont,
-          customOffsets: offsets || undefined,
-          blendRatio: params.blendRatio,
-          strokeWidth: 0.0,
-          highlightMode: overrideHighlight !== undefined ? overrideHighlight : params.highlightMode,
-          dilationSize: params.dilationSize,
-          strokeThickness: params.strokeThickness,
-          brushStyle: params.brushStyle,
-          strokeModulation: params.strokeModulation,
-          enableSnap: params.snapStrength > 0,
-          snapStrength: params.snapStrength,
-          diffBlend: params.diffBlend,
-          preBold: params.preBold,
-          blendWeight: params.blendWeight,
-          smoothness: params.smoothness,
-          thresholdVal: params.thresholdVal,
-          apiKey: params.apiKey || undefined,
-          stylePrompt: params.stylePrompt,
-        });
+        const response = await generateAmbigram(
+          {
+            word: targetText,
+            engine: (engineToGen || activeEngine) as any,
+            font: fontToGen || selectedFont,
+            customOffsets: offsets || undefined,
+            blendRatio: params.blendRatio,
+            strokeWidth: 0.0,
+            highlightMode: overrideHighlight !== undefined ? overrideHighlight : params.highlightMode,
+            dilationSize: params.dilationSize,
+            strokeThickness: params.strokeThickness,
+            brushStyle: params.brushStyle,
+            strokeModulation: params.strokeModulation,
+            enableSnap: params.snapStrength > 0,
+            snapStrength: params.snapStrength,
+            diffBlend: params.diffBlend,
+            preBold: params.preBold,
+            blendWeight: params.blendWeight,
+            smoothness: params.smoothness,
+            thresholdVal: params.thresholdVal,
+            apiKey: params.apiKey || undefined,
+            stylePrompt: params.stylePrompt,
+          },
+          controller.signal
+        );
 
-        setResults((prev) => ({
-          ...prev,
-          ...response.results,
-        }));
-      } catch (err) {
-        console.error("生成エラー:", err);
+        // 最新のリクエストの場合のみ結果を反映 (古い破棄済みレスポンスを無視)
+        if (seq === generationSeqRef.current && !response.cancelled) {
+          setResults((prev) => ({
+            ...prev,
+            ...response.results,
+          }));
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("生成エラー:", err);
+        }
       } finally {
-        setIsGenerating(false);
+        if (seq === generationSeqRef.current) {
+          setIsGenerating(false);
+          generateAbortRef.current = null;
+        }
       }
     },
     [activeEngine, selectedFont, customOffsets, params]
   );
 
-  // 客観的文字認識・可読性評価の更新
+  // 可読性評価の先行リクエストキャンセル用
+  const readabilityAbortRef = useRef<AbortController | null>(null);
+
+  // 客観的文字認識・可読性評価の更新 (バックグラウンド低優先度実行)
   const updateReadability = useCallback(
     async (wordToEval: WordItem | null, fontId?: string, offsets?: [number, number][]) => {
       if (!wordToEval) return;
       const targetText = wordToEval.target_text || wordToEval.primary_display || wordToEval.word || wordToEval.reading;
+
+      // 直前の未完了リクエストを即座にキャンセルしてバックエンドのCPU負荷を解放
+      if (readabilityAbortRef.current) {
+        readabilityAbortRef.current.abort();
+      }
+      const controller = new AbortController();
+      readabilityAbortRef.current = controller;
+
       setIsReadabilityLoading(true);
       try {
         const res = await evaluateReadability(
           targetText,
           fontId || selectedFont,
-          offsets || customOffsets || undefined
+          offsets || customOffsets || undefined,
+          controller.signal
         );
         setReadabilityData(res);
-      } catch (err) {
-        console.error("可読性評価取得エラー:", err);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("可読性評価取得エラー:", err);
+        }
       } finally {
-        setIsReadabilityLoading(false);
+        if (readabilityAbortRef.current === controller) {
+          setIsReadabilityLoading(false);
+          readabilityAbortRef.current = null;
+        }
       }
     },
     [selectedFont, customOffsets]
@@ -210,14 +253,21 @@ export const App: React.FC = () => {
     setRecalculatedScore(null);
   }, []);
 
-  // 単語変更、エンジン変更、フォント変更、パラメータ変更時に自動反映 (デバウンス付き)
+  // 1. メイン画像生成の統合エフェクト (単語変更時は0ms即時、スライダー等変更時は150msデバウンス)
   useEffect(() => {
     if (!selectedWord) return;
+    const currentWordText =
+      selectedWord.target_text || selectedWord.primary_display || selectedWord.word || selectedWord.reading;
+
+    const isWordChanged = prevWordRef.current !== currentWordText;
+    prevWordRef.current = currentWordText;
+
+    // 単語変更時は待機ゼロ (0ms) で最優先即時発火、スライダー等パラメータ変更時は 150ms デバウンス
+    const delay = isWordChanged ? 0 : 150;
 
     const timer = setTimeout(() => {
       triggerGenerate(selectedWord);
-      updateReadability(selectedWord, selectedFont, customOffsets || undefined);
-    }, 150);
+    }, delay);
 
     return () => clearTimeout(timer);
   }, [
@@ -227,6 +277,21 @@ export const App: React.FC = () => {
     customOffsets,
     params,
     triggerGenerate,
+  ]);
+
+  // 2. 客観文字認識・可読性評価 (バックグラウンド低優先度実行: 600ms デバウンス & スライダー操作影響ゼロ)
+  useEffect(() => {
+    if (!selectedWord) return;
+
+    const timer = setTimeout(() => {
+      updateReadability(selectedWord, selectedFont, customOffsets || undefined);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedWord,
+    selectedFont,
+    customOffsets,
     updateReadability,
   ]);
 
@@ -238,8 +303,23 @@ export const App: React.FC = () => {
     }
   };
 
-  // 単語選択ハンドラ (手動シフトをリセット)
+  // 単語選択ハンドラ (現在処理中の全処理を取り消して最優先割り込み)
   const handleSelectWord = (w: WordItem) => {
+    // 1. ブラウザ側で先行リクエスト (画像生成・可読性評価) を即座に強制中断
+    if (generateAbortRef.current) {
+      generateAbortRef.current.abort();
+      generateAbortRef.current = null;
+    }
+    if (readabilityAbortRef.current) {
+      readabilityAbortRef.current.abort();
+      readabilityAbortRef.current = null;
+    }
+
+    // 2. 直前の画像結果をクリアし、即座に生成中インジケータへ切り替え (視覚的即時フィードバック)
+    setResults({});
+    setIsGenerating(true);
+
+    // 3. 状態の更新 (useEffect の delay: 0ms 最優先発火に委ねることで二重発火を完全排除)
     setSelectedWord(w);
     setCustomOffsets(null);
     setRecalculatedScore(null);
