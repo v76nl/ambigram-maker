@@ -152,6 +152,7 @@ export interface EngineResult {
 
 export interface GenerateResponse {
   word: string;
+  cancelled?: boolean;
   results: {
     vector?: EngineResult;
     morphology?: EngineResult;
@@ -264,7 +265,10 @@ export async function evaluateWord(word: string): Promise<WordItem> {
   return data;
 }
 
-export async function generateAmbigram(params: GenerateParams): Promise<GenerateResponse> {
+export async function generateAmbigram(
+  params: GenerateParams,
+  signal?: AbortSignal
+): Promise<GenerateResponse> {
   console.log(
     `[Ambigram API] 🎨 アンビグラム生成開始: 単語='${params.word}', 手法='${params.engine || "all"}', フォント='${params.font || "auto"}'`,
     params
@@ -273,6 +277,7 @@ export async function generateAmbigram(params: GenerateParams): Promise<Generate
   const res = await fetch(`${API_BASE_URL}/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal,
     body: JSON.stringify({
       word: params.word,
       engine: params.engine || "all",
@@ -358,7 +363,8 @@ export async function evaluateWordFonts(word: string): Promise<WordFontsEval> {
 export async function evaluateReadability(
   word: string,
   font: string = "zen_maru",
-  customOffsets?: [number, number][]
+  customOffsets?: [number, number][],
+  signal?: AbortSignal
 ): Promise<ReadabilityResponse> {
   console.log(`[Ambigram API] 👁️ 客観的文字認識・可読性評価リクエスト: '${word}', font='${font}'`);
   const res = await fetch(`${API_BASE_URL}/evaluate-readability`, {
@@ -369,9 +375,11 @@ export async function evaluateReadability(
       font,
       custom_offsets: customOffsets,
     }),
+    signal,
   });
   if (!res.ok) {
     throw new Error(`可読性評価エラー: ${res.statusText}`);
   }
   return res.json();
 }
+

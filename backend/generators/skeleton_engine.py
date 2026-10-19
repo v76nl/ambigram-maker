@@ -19,7 +19,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     マルチフォント自動最適化 & 重心微小シフト補正に対応。
     """
     def __init__(self):
-        pass
+        # スロット画像キャッシュ: (c1, c2, size, stroke_thickness, diff_blend, pre_bold, str(font_path), shift, brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates) -> (result, intermediates)
+        self._slot_cache: dict[tuple, Any] = {}
 
     def render_glyph_bitmap(self, char: str, size: int = 512, font_path: Optional[Path] = None) -> np.ndarray:
         """指定文字を高解像度ビットマップとしてレンダリング (0: 背景, 255: 文字)"""
@@ -99,6 +100,18 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
         - return_intermediates: 中間ステップ画像（バイカラー、距離場、骨格線等）を辞書で返すか
         """
+        cache_key = (
+            c1, c2, size, stroke_thickness, diff_blend, pre_bold,
+            str(font_path) if font_path else "", shift,
+            brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates
+        )
+        if cache_key in self._slot_cache:
+            cached_val = self._slot_cache[cache_key]
+            if return_intermediates:
+                res_img, inter_dict = cached_val
+                return res_img.copy(), {k: v.copy() for k, v in inter_dict.items()}
+            return cached_val.copy()
+
         img1_orig = self.render_glyph_bitmap(c1, size=size, font_path=font_path)
         img2_orig = self.render_glyph_bitmap(c2, size=size, font_path=font_path)
         img2_rot_orig = cv2.rotate(img2_orig, cv2.ROTATE_180)
@@ -254,8 +267,14 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "step6": step4_skeleton,
                 "step7": step7_render,
             }
+            if len(self._slot_cache) > 512:
+                self._slot_cache.clear()
+            self._slot_cache[cache_key] = (result.copy(), {k: v.copy() for k, v in intermediates.items()})
             return result, intermediates
 
+        if len(self._slot_cache) > 512:
+            self._slot_cache.clear()
+        self._slot_cache[cache_key] = result.copy()
         return result
 
     def generate(
@@ -270,9 +289,13 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         stroke_modulation: bool = True,
         enable_snap: bool = True,
         snap_strength: float = 0.75,
+        cancel_event: Any = None,
         **params,
     ) -> dict[str, Any]:
         """単語全体の平均骨格アンビグラム画像を生成してBase64形式で返却"""
+        if cancel_event and cancel_event.is_set():
+            return {"engine": "skeleton", "type": "png", "data": "", "cancelled": True, "details": {}}
+
         n = len(word)
         if n == 0:
             return {"engine": "skeleton", "type": "png", "data": "", "details": {}}
@@ -285,16 +308,15 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         if not enable_snap:
             snap_strength = 0.0
 
-        # 全フォントの幾何スコアと最適シフトを評価
-        font_eval = font_manager.evaluate_word_fonts(word)
-        
-        # 適用フォントの決定
+        # 適用フォントの決定および幾何評価 (font_id指定時は単一フォントのみ高速評価)
         if font_id and font_id != "auto":
+            font_eval = font_manager.evaluate_single_font(word, font_id)
             selected_fid = font_id
-            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
-            selected_name = selected_meta["name"] if selected_meta else font_id
+            selected_meta = font_eval["font_scores"][0] if font_eval["font_scores"] else None
+            selected_name = font_eval["best_font_name"]
             selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
         else:
+            font_eval = font_manager.evaluate_word_fonts(word)
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
             selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
@@ -322,6 +344,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         slot_intermediates = [None] * n
         half_len = (n + 1) // 2
         for i in range(half_len):
+            if cancel_event and cancel_event.is_set():
+                return {"engine": "skeleton", "type": "png", "data": "", "cancelled": True, "details": {}}
             c1 = word[i]
             c2 = word[n - 1 - i]
             is_center = (i == n - 1 - i)

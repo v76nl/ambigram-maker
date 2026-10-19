@@ -64,14 +64,15 @@ class VectorAmbigramEngine(BaseAmbigramGenerator):
         if n == 0:
             return {"engine": "vector", "type": "svg", "data": "", "details": {}}
 
-        # 全フォントの幾何スコアを評価
-        font_eval = font_manager.evaluate_word_fonts(word)
+        # 適用フォントの決定および幾何評価 (font_id指定時は単一フォントのみ高速評価)
         if font_id and font_id != "auto":
+            font_eval = font_manager.evaluate_single_font(word, font_id)
             selected_fid = font_id
-            selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == font_id), None)
-            selected_name = selected_meta["name"] if selected_meta else font_id
+            selected_meta = font_eval["font_scores"][0] if font_eval["font_scores"] else None
+            selected_name = font_eval["best_font_name"]
             selected_offsets = selected_meta["offsets"] if selected_meta else [(0, 0)] * n
         else:
+            font_eval = font_manager.evaluate_word_fonts(word)
             selected_fid = font_eval["best_font_id"]
             selected_name = font_eval["best_font_name"]
             selected_meta = next((f for f in font_eval["font_scores"] if f["id"] == selected_fid), None)
