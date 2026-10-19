@@ -178,7 +178,7 @@ pnpm dev
 | **バックエンド自動テスト (pytest)**     | `backend/`   | `uv run pytest`                                  |
 | **フロントエンド自動テスト (Vitest)**   | `frontend/`  | `pnpm test`                                      |
 | **スライドローカル確認 (ポート8080)**   | ルート       | `pnpm slides:serve`                              |
-| **スライド全形式一括ビルド ＆ 検査**   | ルート       | `pnpm slides:build`                              |
+| **スライド全形式一括ビルド**           | ルート       | `pnpm slides:build`                              |
 | **スライドPPTX形式 (PowerPoint) 生成** | ルート       | `pnpm slides:build:pptx`                         |
 | **スライド要素はみ出し自動検査**        | ルート       | `pnpm slides:check`                              |
 
