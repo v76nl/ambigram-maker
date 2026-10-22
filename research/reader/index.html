@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アンビグラム研究 論文・コード解読リーダー (Paper & Code Inspector)</title>
+  
+  <!-- Google Fonts: Zen Maru Gothic, BIZ UDPGothic, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for beautiful math equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  
+  <!-- Reader Stylesheet -->
+  <link rel="stylesheet" href="reader.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="reader-header">
+    <div class="brand-section">
+      <span class="brand-badge">RESEARCH</span>
+      <h1 class="brand-title">論文・コード解読リーダー</h1>
+    </div>
+
+    <!-- Paper Switch Tabs -->
+    <nav class="paper-tabs" aria-label="論文選択タブ">
+      <button class="tab-btn active" data-paper-id="paper05">
+        <span>📄 論文⑤: 魏・山口 (2023) [多目的GAN・調和平均]</span>
+      </button>
+      <button class="tab-btn" data-paper-id="paper02">
+        <span>📑 論文②: 井上・高橋 (2020) [文字骨格・幾何変形]</span>
+      </button>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button id="toggle-code-filter-btn" class="filter-toggle-btn" title="本アプリの実装に関わる用語だけをハイライト">
+        <span>⚙️ アプリ実装連動のみ表示</span>
+      </button>
+      <span id="progress-pill" class="progress-pill">理解済み: 0 / 14 用語</span>
+    </div>
+  </header>
+
+  <!-- Workspace: 3 Columns -->
+  <main class="reader-workspace">
+    
+    <!-- 1. Left: TOC Navigation -->
+    <aside class="toc-sidebar" aria-label="目次ナビゲーション">
+      <div class="toc-header">目次 (Table of Contents)</div>
+      <ul id="toc-list" class="toc-list">
+        <!-- JSで動的生成 -->
+      </ul>
+    </aside>
+
+    <!-- 2. Center: Document Scroll Area -->
+    <section id="content-scroll-area" class="content-scroll-area">
+      <article id="paper-sheet" class="paper-sheet">
+        <!-- JSで動的レンダリング -->
+      </article>
+    </section>
+
+    <!-- 3. Right: Inspector Panel -->
+    <aside id="inspector-sidebar" class="inspector-sidebar" aria-label="用語・コードインスペクター">
+      <div class="inspector-empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div class="empty-title">用語・数式をクリックして解読</div>
+        <p class="empty-hint">
+          本文中の青または橙色のハイライト用語をクリックすると、<br>
+          <strong>「日常の直感たとえ話」</strong> と <strong>「このアプリのコード実装との対応」</strong> がここに表示されます。
+        </p>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Floating Tooltip -->
+  <div id="floating-tooltip" class="floating-tooltip" role="tooltip"></div>
+
+  <!-- Scripts -->
+  <script src="annotations.js"></script>
+  <script src="papers_content.js"></script>
+  <script src="reader.js"></script>
+</body>
+</html>
