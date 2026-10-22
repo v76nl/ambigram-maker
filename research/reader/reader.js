@@ -37,7 +37,7 @@
     const understood = getUnderstoodTerms();
     const totalTerms = Object.keys(window.PAPER_ANNOTATIONS || {}).length;
     if (progressPill) {
-      progressPill.textContent = `理解済み: ${understood.length} / ${totalTerms} 用語`;
+      progressPill.textContent = `習得 ${understood.length}/${totalTerms}`;
     }
   }
 
@@ -64,7 +64,7 @@
         <h1 class="paper-main-title">${paper.title}</h1>
         <div class="paper-authors">${paper.authors} (${paper.year})</div>
         <div class="paper-source-info">
-          <span>📚 ${paper.source}</span>
+          <span>${paper.source}</span>
           <span>•</span>
           <span>${paper.badge}</span>
         </div>
@@ -113,12 +113,12 @@
 
     const metaHeader = `
       <div class="paper-meta-header">
-        <h1 class="paper-main-title">💻 ambigram-maker アーキテクチャ読解</h1>
+        <h1 class="paper-main-title">システム・アーキテクチャ</h1>
         <div class="paper-authors">フォント骨格の手順的変形に基づく180度回転型日本語アンビグラム制作支援システム</div>
         <div class="paper-source-info">
-          <span>⚙️ 実装コード ↔ 先行研究数理の完全対応マップ</span>
+          <span>先行研究数理とコード実装の対応</span>
           <span>•</span>
-          <span>sync_code.py 自動抽出連動</span>
+          <span>AST自動抽出連動</span>
         </div>
       </div>
       <div class="architecture-intro-card">
@@ -162,17 +162,17 @@
 
           <div class="arch-meta-grid">
             <div class="arch-why-card">
-              <div class="arch-label">🎯 なぜこのコードが必要か (設計意図・Why)</div>
+              <div class="arch-label">設計意図</div>
               <p>${mod.why}</p>
             </div>
             <div class="arch-paper-card">
-              <div class="arch-label">📖 対応する先行研究エビデンス</div>
+              <div class="arch-label">先行研究エビデンス</div>
               <p>${mod.related_paper}</p>
             </div>
           </div>
 
           <div class="arch-symbols-container">
-            <div class="arch-label">🔍 抽出された最新シンボル・シグネチャ</div>
+            <div class="arch-label">抽出シンボル</div>
             ${symbolsHtml || '<div class="empty-hint">シンボル抽出なし</div>'}
           </div>
         </section>
@@ -211,7 +211,7 @@
     tooltipEl.innerHTML = `
       <span class="tooltip-title">${data.term}</span>
       <span>${data.shortSummary}</span>
-      <span class="tooltip-click-hint">👉 クリックでアプリコード対応と詳細解説</span>
+      <span class="tooltip-click-hint">クリックして詳細を表示</span>
     `;
 
     positionTooltip(e);
@@ -261,9 +261,7 @@
     if (data.appImplementation) {
       codeSectionHtml = `
         <div class="inspector-block">
-          <div class="block-label">
-            <span>⚙️ このアプリ (ambigram-maker) での実装</span>
-          </div>
+          <div class="block-label">本システムでの実装</div>
           <div class="code-integration-card">
             <div class="code-header">
               <span class="code-file-badge">${data.appImplementation.filePath}</span>
@@ -280,31 +278,37 @@
       `;
     }
 
+    const stars = (data.difficulty.match(/★/g) || []).length;
+    const levelText = stars ? `Lv.${stars}` : data.difficulty;
+
     inspectorArea.innerHTML = `
       <div class="inspector-card">
         <div class="inspector-header-box">
           <div class="term-tag-row">
             <span class="term-category-badge">${data.category}</span>
-            <span class="term-difficulty-badge">${data.difficulty}</span>
+            <span class="term-difficulty-badge">難易度 ${levelText}</span>
           </div>
           <h2 class="term-heading">${data.term}</h2>
           <div class="term-reading">${data.reading || ""}</div>
         </div>
 
         <div class="inspector-block">
-          <div class="block-label">💡 中学生でもわかる直感的たとえ</div>
+          <div class="block-label">直感的解説</div>
           <div class="analogy-box">${data.intuitiveAnalogy}</div>
         </div>
 
         <div class="inspector-block">
-          <div class="block-label">📖 論文における役割・選定理由</div>
+          <div class="block-label">論文での役割</div>
           <div class="role-box">${data.paperRole}</div>
         </div>
 
         ${codeSectionHtml}
 
         <button id="toggle-understood-btn" class="check-understood-btn ${isUnderstood ? "checked" : ""}">
-          <span>${isUnderstood ? "✓ 理解できた！（記録済み）" : "◯ 理解したらクリック（チェックをつける）"}</span>
+          <svg class="btn-check-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>${isUnderstood ? "習得済み（記録中）" : "習得済みにする"}</span>
         </button>
       </div>
     `;
