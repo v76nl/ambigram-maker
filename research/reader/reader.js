@@ -41,16 +41,22 @@
     }
   }
 
-  // 論文の読み込みとレンダリング
+  // 論文・コードの読み込みとレンダリング
   function loadPaper(paperId) {
     currentPaperId = paperId;
-    const paper = window.PAPERS_CONTENT[paperId];
-    if (!paper) return;
 
     // タブのアクティブ更新
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.paperId === paperId);
     });
+
+    if (paperId === "app_code") {
+      loadCodeArchitecture();
+      return;
+    }
+
+    const paper = window.PAPERS_CONTENT[paperId];
+    if (!paper) return;
 
     // メタ情報ヘッダー
     const metaHeader = `
@@ -97,6 +103,89 @@
     }
 
     // スクロールトップ
+    contentArea.scrollTop = 0;
+  }
+
+  // アプリ実装コード読解ビューのレンダリング
+  function loadCodeArchitecture() {
+    const modules = window.APP_CODE_MODULES || [];
+    const sheetEl = document.getElementById("paper-sheet");
+
+    const metaHeader = `
+      <div class="paper-meta-header">
+        <h1 class="paper-main-title">💻 ambigram-maker アーキテクチャ読解</h1>
+        <div class="paper-authors">フォント骨格の手順的変形に基づく180度回転型日本語アンビグラム制作支援システム</div>
+        <div class="paper-source-info">
+          <span>⚙️ 実装コード ↔ 先行研究数理の完全対応マップ</span>
+          <span>•</span>
+          <span>sync_code.py 自動抽出連動</span>
+        </div>
+      </div>
+      <div class="architecture-intro-card">
+        <p>
+          本アプリのバックエンド実装コード（<code>backend/</code>）と、先行研究（論文② 井上・高橋 2020 / 論文⑤ 魏・山口 2023）の数理理論が
+          どのように具現化されているかを解読するワークスペースです。<br>
+          コードが変更されても、<code>python research/reader/sync_code.py</code> により最新の関数シグネチャ・Docstringが自動同期されます。
+        </p>
+      </div>
+    `;
+
+    let tocHtml = "";
+    let contentHtml = "";
+
+    modules.forEach((mod, idx) => {
+      tocHtml += `<li class="toc-item"><a href="#${mod.id}">${idx + 1}. ${mod.title}</a></li>`;
+
+      let symbolsHtml = "";
+      if (mod.symbols && mod.symbols.length > 0) {
+        mod.symbols.forEach((sym) => {
+          symbolsHtml += `
+            <div class="arch-symbol-box">
+              <div class="arch-symbol-header">
+                <span class="symbol-type-pill">${sym.type}</span>
+                <span class="symbol-name">${sym.name}</span>
+                <span class="symbol-line">L${sym.line}</span>
+              </div>
+              ${sym.docstring ? `<p class="arch-symbol-doc">${escapeHtml(sym.docstring)}</p>` : ""}
+              <pre class="code-pre"><code>${escapeHtml(sym.snippet)}</code></pre>
+            </div>
+          `;
+        });
+      }
+
+      contentHtml += `
+        <section id="${mod.id}" class="paper-section arch-module-section">
+          <div class="arch-module-header">
+            <span class="arch-file-badge">${mod.file}</span>
+            <h2 class="section-title arch-title">${mod.title}</h2>
+          </div>
+
+          <div class="arch-meta-grid">
+            <div class="arch-why-card">
+              <div class="arch-label">🎯 なぜこのコードが必要か (設計意図・Why)</div>
+              <p>${mod.why}</p>
+            </div>
+            <div class="arch-paper-card">
+              <div class="arch-label">📖 対応する先行研究エビデンス</div>
+              <p>${mod.related_paper}</p>
+            </div>
+          </div>
+
+          <div class="arch-symbols-container">
+            <div class="arch-label">🔍 抽出された最新シンボル・シグネチャ</div>
+            ${symbolsHtml || '<div class="empty-hint">シンボル抽出なし</div>'}
+          </div>
+        </section>
+      `;
+    });
+
+    sheetEl.innerHTML = metaHeader + contentHtml;
+
+    if (tocListEl) {
+      tocListEl.innerHTML = tocHtml;
+      setupTocSmoothScroll();
+    }
+
     contentArea.scrollTop = 0;
   }
 
@@ -292,6 +381,8 @@
         loadPaper("paper05");
       } else if (e.key === "2") {
         loadPaper("paper02");
+      } else if (e.key === "3") {
+        loadPaper("app_code");
       } else if (e.key === "Escape") {
         hideTooltip();
       }
