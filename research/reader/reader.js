@@ -41,6 +41,29 @@
     }
   }
 
+  // KaTeX 数式自動レンダリング
+  function renderMath(targetElement) {
+    if (!targetElement) return;
+    const run = () => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(targetElement, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    };
+    if (window.renderMathInElement) {
+      run();
+    } else {
+      window.addEventListener("load", run, { once: true });
+      setTimeout(run, 200);
+      setTimeout(run, 600);
+    }
+  }
+
   // 論文・コードの読み込みとレンダリング
   function loadPaper(paperId) {
     currentPaperId = paperId;
@@ -74,6 +97,9 @@
     // 本文レンダリング
     const sheetEl = document.getElementById("paper-sheet");
     sheetEl.innerHTML = metaHeader + paper.html;
+
+    // KaTeX 数式自動レンダリング
+    renderMath(sheetEl);
 
     // TOCの更新
     if (tocListEl) {
