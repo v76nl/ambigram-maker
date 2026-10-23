@@ -539,6 +539,140 @@
       }, 100);
     });
 
+  // ライトボックス（画像拡大モーダル）
+  let lightboxEl = null;
+
+  function initLightbox() {
+    if (lightboxEl) return;
+    lightboxEl = document.createElement("div");
+    lightboxEl.id = "lightbox-modal";
+    lightboxEl.className = "lightbox-modal";
+    lightboxEl.innerHTML = `
+      <div class="lightbox-overlay"></div>
+      <div class="lightbox-content">
+        <button class="lightbox-close-btn" title="閉じる (Esc)" aria-label="閉じる">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div class="lightbox-image-wrap">
+          <img class="lightbox-img" src="" alt="拡大表示">
+        </div>
+        <div class="lightbox-caption"></div>
+      </div>
+    `;
+    document.body.appendChild(lightboxEl);
+
+    lightboxEl.querySelector(".lightbox-overlay").addEventListener("click", closeLightbox);
+    lightboxEl.querySelector(".lightbox-close-btn").addEventListener("click", closeLightbox);
+  }
+
+  function openLightbox(src, captionHtml) {
+    initLightbox();
+    const imgEl = lightboxEl.querySelector(".lightbox-img");
+    const capEl = lightboxEl.querySelector(".lightbox-caption");
+    imgEl.src = src;
+    capEl.innerHTML = captionHtml || "";
+    lightboxEl.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox() {
+    if (!lightboxEl) return;
+    lightboxEl.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  // イベントリスナーのセットアップ
+  function setupEvents() {
+    initLightbox();
+
+    // 画像クリックによる拡大表示の委任
+    document.addEventListener("click", (e) => {
+      const zoomTarget = e.target.closest(".figure-zoomable, .figure-expand-btn");
+      if (zoomTarget) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const fig = zoomTarget.closest(".paper-figure, .concept-diagram-card");
+        let src = zoomTarget.dataset.zoomSrc;
+        if (!src && zoomTarget.tagName === "IMG") {
+          src = zoomTarget.src;
+        } else if (!src && fig) {
+          const img = fig.querySelector("img");
+          if (img) src = img.dataset.zoomSrc || img.src;
+        }
+
+        let captionHtml = zoomTarget.dataset.caption;
+        if (!captionHtml && fig) {
+          const capEl = fig.querySelector(".paper-figcaption, .concept-diagram-caption");
+          if (capEl) captionHtml = capEl.innerHTML;
+        }
+
+        if (src) {
+          openLightbox(src, captionHtml);
+        }
+      }
+    });
+
+    // タブ切り替え
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        loadPaper(btn.dataset.paperId);
+      });
+    });
+
+    // コード連動フィルター
+    const filterBtn = document.getElementById("toggle-code-filter-btn");
+    if (filterBtn) {
+      filterBtn.addEventListener("click", () => {
+        codeOnlyFilter = !codeOnlyFilter;
+        document.body.classList.toggle("filter-code-only", codeOnlyFilter);
+        filterBtn.classList.toggle("active", codeOnlyFilter);
+      });
+    }
+
+    // 目次クリック時のスムーズスクロールとアクティブ更新
+    if (tocListEl) {
+      tocListEl.addEventListener("click", (e) => {
+        const link = e.target.closest("a");
+        if (!link) return;
+        const targetId = link.getAttribute("href");
+        if (!targetId || !targetId.startsWith("#")) return;
+
+        e.preventDefault();
+        const targetSec = document.querySelector(targetId);
+        if (targetSec) {
+          targetSec.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.querySelectorAll(".toc-item a").forEach((a) => a.classList.remove("active"));
+          link.classList.add("active");
+        }
+      });
+    }
+
+    // スクロールスパイ: 閲覧中のセクションを目次でハイライト
+    let scrollTimeout = null;
+    contentArea.addEventListener("scroll", () => {
+      if (scrollTimeout) return;
+      scrollTimeout = setTimeout(() => {
+        scrollTimeout = null;
+        const sections = document.querySelectorAll(".paper-section");
+        const scrollPos = contentArea.scrollTop + 80;
+        let activeSectionId = null;
+
+        sections.forEach((sec) => {
+          if (sec.offsetTop <= scrollPos) {
+            activeSectionId = sec.id;
+          }
+        });
+
+        if (activeSectionId) {
+          document.querySelectorAll(".toc-item a").forEach((a) => {
+            const href = a.getAttribute("href");
+            a.classList.toggle("active", href === `#${activeSectionId}`);
+          });
+        }
+      }, 100);
+    });
+
     // マウスホバーとクリックのデリゲーション
     contentArea.addEventListener("mouseover", (e) => {
       const termEl = e.target.closest(".annotated-term");
