@@ -350,6 +350,49 @@
       });
     }
 
+    // 目次クリック時のスムーズスクロールとアクティブ更新
+    if (tocListEl) {
+      tocListEl.addEventListener("click", (e) => {
+        const link = e.target.closest("a");
+        if (!link) return;
+        const targetId = link.getAttribute("href");
+        if (!targetId || !targetId.startsWith("#")) return;
+
+        e.preventDefault();
+        const targetSec = document.querySelector(targetId);
+        if (targetSec) {
+          targetSec.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.querySelectorAll(".toc-item a").forEach((a) => a.classList.remove("active"));
+          link.classList.add("active");
+        }
+      });
+    }
+
+    // スクロールスパイ: 閲覧中のセクションを目次でハイライト
+    let scrollTimeout = null;
+    contentArea.addEventListener("scroll", () => {
+      if (scrollTimeout) return;
+      scrollTimeout = setTimeout(() => {
+        scrollTimeout = null;
+        const sections = document.querySelectorAll(".paper-section");
+        const scrollPos = contentArea.scrollTop + 80;
+        let activeSectionId = null;
+
+        sections.forEach((sec) => {
+          if (sec.offsetTop <= scrollPos) {
+            activeSectionId = sec.id;
+          }
+        });
+
+        if (activeSectionId) {
+          document.querySelectorAll(".toc-item a").forEach((a) => {
+            const href = a.getAttribute("href");
+            a.classList.toggle("active", href === `#${activeSectionId}`);
+          });
+        }
+      }, 100);
+    });
+
     // マウスホバーとクリックのデリゲーション
     contentArea.addEventListener("mouseover", (e) => {
       const termEl = e.target.closest(".annotated-term");

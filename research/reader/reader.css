@@ -41,7 +41,7 @@
 
   /* Layout Dimensions */
   --header-height: 54px;
-  --toc-width: 230px;
+  --toc-width: 255px;
   --inspector-width: 360px;
 }
 
@@ -239,12 +239,16 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
+}
+
+.toc-item {
+  position: relative;
 }
 
 .toc-item a {
   display: block;
-  padding: 0.4rem 0.6rem;
+  padding: 0.35rem 0.6rem;
   color: var(--text-muted);
   text-decoration: none;
   border-radius: var(--radius-xs);
@@ -253,10 +257,56 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+}
+
+/* 階層別インデント */
+.toc-item.toc-level-2 a {
+  padding-left: 0.6rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  margin-top: 0.25rem;
+}
+
+.toc-item.toc-level-3 a {
+  padding-left: 1.35rem;
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.toc-item.toc-level-3::before {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  width: 4px;
+  height: 1px;
+  background-color: var(--border-strong);
+  pointer-events: none;
+}
+
+.toc-item.toc-level-4 a {
+  padding-left: 2.1rem;
+  font-weight: 400;
+  font-size: 0.74rem;
+  color: var(--text-light);
+}
+
+.toc-item.toc-level-4::before {
+  content: "";
+  position: absolute;
+  left: 1.6rem;
+  top: 50%;
+  width: 4px;
+  height: 1px;
+  background-color: var(--border-subtle);
+  pointer-events: none;
 }
 
 .toc-item a:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--text-main);
 }
 
@@ -265,6 +315,17 @@ body {
   color: var(--accent-orange);
   font-weight: 700;
   box-shadow: var(--shadow-xs);
+}
+
+.toc-item a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 2.5px;
+  background: var(--accent-orange);
+  border-radius: 1px;
 }
 
 /* 2. Center: Document Content */
