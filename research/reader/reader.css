@@ -621,6 +621,60 @@ body.filter-code-only mark.annotated-term:not(.has-app-code) {
   box-shadow: var(--shadow-xs);
 }
 
+/* Acronym Breakdown Cards */
+.acronym-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.acronym-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 0.65rem 0.85rem;
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.acronym-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.acronym-abbr {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+  background: rgba(249, 115, 22, 0.08);
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.acronym-expansion {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.acronym-literal {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.acronym-literal strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
 /* Light Theme Code Integration Card */
 .code-integration-card {
   background: var(--bg-sidebar);

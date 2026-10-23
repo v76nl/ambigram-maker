@@ -278,6 +278,31 @@
       `;
     }
 
+    let acronymsHtml = "";
+    if (data.acronyms && data.acronyms.length > 0) {
+      acronymsHtml = `
+        <div class="inspector-block">
+          <div class="block-label">略語の正式名称と直訳 (Acronyms)</div>
+          <div class="acronym-list">
+            ${data.acronyms
+              .map(
+                (a) => `
+              <div class="acronym-card">
+                <div class="acronym-head">
+                  <span class="acronym-abbr">${escapeHtml(a.abbr)}</span>
+                  <span class="acronym-expansion">${escapeHtml(a.expansion)}</span>
+                </div>
+                <div class="acronym-literal">直訳: <strong>${escapeHtml(a.literalTranslation)}</strong></div>
+                ${a.note ? `<div class="acronym-literal" style="margin-top:0.15rem;font-size:0.74rem;">${escapeHtml(a.note)}</div>` : ""}
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+    }
+
     const stars = (data.difficulty.match(/★/g) || []).length;
     const levelText = stars ? `Lv.${stars}` : data.difficulty;
 
@@ -291,6 +316,8 @@
           <h2 class="term-heading">${data.term}</h2>
           <div class="term-reading">${data.reading || ""}</div>
         </div>
+
+        ${acronymsHtml}
 
         <div class="inspector-block">
           <div class="block-label">直感的解説</div>
