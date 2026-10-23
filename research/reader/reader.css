@@ -24,9 +24,9 @@
   --accent-orange-border: #FDBA74;
   --accent-orange-hover: #9A3412;
 
-  /* Typography */
-  --font-sans: 'Inter', 'BIZ UDPGothic', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Zen Maru Gothic', 'BIZ UDPGothic', sans-serif;
+  /* Typography: Swiss Modernism & Balanced Japanese Web Font Stack */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'YuGothic', 'BIZ UDGothic', sans-serif;
+  --font-display: 'Inter', 'Zen Maru Gothic', 'Hiragino Sans', 'Yu Gothic', sans-serif;
   --font-mono: 'JetBrains Mono', 'Consolas', monospace;
 
   /* Shadows: Ultra-subtle, paper-like elevations */
@@ -55,9 +55,11 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg-app);
   color: var(--text-main);
-  line-height: 1.8;
-  letter-spacing: 0.012em;
+  line-height: 1.82;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt" 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100vh;
   display: flex;
@@ -396,9 +398,10 @@ body {
 .section-title {
   font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--text-main);
-  margin: 2rem 0 0.85rem 0;
-  padding-bottom: 0.4rem;
+  margin: 2.4rem 0 0.95rem 0;
+  padding-bottom: 0.45rem;
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
 }
@@ -413,12 +416,40 @@ body {
   background: var(--accent-orange);
 }
 
+.paper-section h3.section-title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin: 1.8rem 0 0.8rem 0;
+  padding-bottom: 0.3rem;
+  border-bottom: none;
+}
+
+.paper-section h3.section-title::after {
+  display: none;
+}
+
+.paper-section h4.section-title {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 1.35rem 0 0.6rem 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.paper-section h4.section-title::after {
+  display: none;
+}
+
 .paper-paragraph {
-  font-size: 0.98rem;
-  line-height: 1.95;
+  font-size: 0.955rem;
+  line-height: 1.84;
+  letter-spacing: 0.035em;
   color: #27272A;
-  margin-bottom: 1.35rem;
-  text-align: justify;
+  margin-bottom: 1.45rem;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 /* Quotes without left border (anti-left-border rule) */
@@ -428,16 +459,19 @@ body {
   padding: 0.75rem 1rem;
   margin: 1.25rem 0;
   background: #FCFCFD;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  letter-spacing: 0.025em;
   color: var(--text-muted);
   font-style: normal;
 }
 
 .paper-li {
-  font-size: 0.95rem;
-  line-height: 1.8;
+  font-size: 0.92rem;
+  line-height: 1.78;
+  letter-spacing: 0.025em;
   margin-left: 1.5rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
   color: #27272A;
 }
 
@@ -449,11 +483,15 @@ mark.annotated-term {
   color: var(--accent-orange);
   border-bottom: 1px solid var(--accent-orange-border);
   border-radius: var(--radius-xs);
-  padding: 1px 4px;
+  padding: 0.08rem 0.28rem;
+  margin: 0 0.08em;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.12s ease;
   text-decoration: none;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 mark.annotated-term:hover {
