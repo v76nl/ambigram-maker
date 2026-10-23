@@ -180,6 +180,11 @@ FONT_MAP = {
     shortSummary: "多目的最適化において、複数の目的（正反2つの判別器スコア）が基準点からどこまで広い空間をカバーできているかをHV指標（Hypervolume Indicator：直訳『超体積評価指標』）として測り最大化する数理手法。",
     intuitiveAnalogy: "長方形の「縦の長さ（文字Aの完成度）」と「横の長さ（文字Bの完成度）」があるとき、片方だけが100で他方が0なら面積はゼロです。縦も横も同時にバランス良く広げて「長方形の面積（目的が3つ以上なら超体積）」を最大にするポイントを探す手法です。これによって、どちらか片方だけに偏った不合格作を自動的に排除できます。",
     paperRole: "論文⑤ §1 および §2.1 にて導入。先行研究[3]（Albuquerque et al. 2019）の多目的GAN手法をアンビグラム生成に適用し、2つの判別器の損失関数を合成する際の核となる数理指標。",
+    diagram: {
+      src: "images/diagrams/concept_hypervolume.jpg",
+      title: "超体積最大化とパレートフロンティア",
+      caption: "正位置判別器と反転判別器の損失空間における超体積（ルベーグ測度）最大化とパレート最適解フロンティアの数理モデル"
+    },
     appImplementation: {
       filePath: "backend/scoring/matrix.py",
       functionName: "calculate_geometric_similarity() / pair_similarity()",
@@ -400,6 +405,11 @@ junctions = (skeleton > 0) & (nbr_count >= 3)`
     shortSummary: "2つの異なる文字の骨格グラフの中で、SI（Subgraph Isomorphism：直訳『部分グラフ同型性 / 部分構造同一写像』）を満たす全く同じ接続構造を持つ共通の骨組みを検出する離散数学アルゴリズム。",
     intuitiveAnalogy: "「あ」の骨組みの一部（たとえば十字に交わる部分）が、「ま」や「す」の骨組みの一部とそっくり同じ形・繋がり方をしていないか照合するパズル合わせです。共通の骨組みが見つかれば、そこをアンビグラムの『共有ストローク（両方の文字に見える線）』として利用できます。",
     paperRole: "論文② §4.1「特徴点の対応付け」の最重要コア理論。大局的探索（エッジ濃度3以上の最大共通部分）および局所的探索（交点周辺の近接ノード探索）により、2文字の共通構造を自動抽出する。",
+    diagram: {
+      src: "images/diagrams/concept_subgraph.jpg",
+      title: "部分グラフ同型と全単射ノードマッチング",
+      caption: "文字骨格グラフにおける部分グラフ同型と幾何的配置制約に基づくノード・エッジの全単射写像モデル"
+    },
     appImplementation: {
       filePath: "backend/generators/snap_warper.py",
       functionName: "find_corresponding_points() / StrokeSnapWarper",
@@ -439,6 +449,11 @@ displacement_y = np.where(valid_mask, (closest_y - current_y) * snap_strength, 0
     shortSummary: "平面上の点群からDT（Delaunay Triangulation：直訳『ドロネー三角形分割網』）を構成し、各三角形領域ごとにアフィン写像を行うことで文字全体を連続的に歪ませる計算幾何学メッシュ変形手法。",
     intuitiveAnalogy: "点と点を結んで三角形の網（メッシュ）を作るとき、細長く尖った不自然な三角形ができないように、できるだけ正三角形に近い綺麗な三角形ばかりで平面を埋め尽くす数学的ルールです。ゴムシートに綺麗な三角形の網目を描くイメージです。",
     paperRole: "論文② §2「従来研究」および §4.2「特徴点のアフィン変換」で使用。文字の特徴点とバウンディングボックスの四隅を結んでドロネー三角形メッシュを作成し、各三角形ごとにアフィン変換行列を求めて文字全体を滑らかに変形する。",
+    diagram: {
+      src: "images/diagrams/concept_warping.jpg",
+      title: "ドロネー三角形メッシュと局所ワーピング",
+      caption: "ドロネー三角形分割による平面分割と局所アフィン変換による非剛体メッシュワーピングの幾何原理"
+    },
     appImplementation: {
       filePath: "backend/generators/snap_warper.py",
       functionName: "StrokeSnapWarper.compute_snap_displacement_fields()",
@@ -495,6 +510,11 @@ aligned_bitmap = cv2.warpAffine(u8, M, (size, size))`
     shortSummary: "線の太さに筆の入り・抜き・トメ・ハライのような抑揚をつけ、正反どちらの文字かを人間の脳に都合よく認知補正させるBSM（Brush Stroke Modulation：直訳『筆文字ストローク抑揚変調』）。",
     intuitiveAnalogy: "均一な太さのマジックペンで描くと「ただの落書き・奇妙な記号」に見える線でも、毛筆の入り・抜きで『ここはハライだから上に抜けている』と見せることで、人間の脳が勝手に『これは自然な文字だ』と騙されて（認知補完されて）読めるようになります。",
     paperRole: "論文② §5「ストロークの太線化」の核心理論。幾何学的な骨格線だけでは可読性が低いため、書道（石亀らの毛筆モデル）の45度傾斜楕円ブラシを適用し、共通ストロークを太く強調し非共通ストロークを目立たなくすることで可読率を飛躍的に向上させた。",
+    diagram: {
+      src: "images/diagrams/concept_stroke.jpg",
+      title: "進行方向追従楕円ブラシと筆圧減衰モデル",
+      caption: "ストローク接線角度に連動する楕円ブラシと共通・非共通エッジの3区間筆圧変調による筆文字描画アルゴリズム"
+    },
     appImplementation: {
       filePath: "backend/generators/skeleton_engine.py",
       functionName: "apply_brush_stroke_modulation() / cv2.ellipse",

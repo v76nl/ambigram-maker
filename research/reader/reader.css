@@ -1079,3 +1079,290 @@ body.filter-code-only mark.annotated-term:not(.has-app-code) {
   padding: 0 0.15em;
 }
 
+/* ==========================================================================
+   Figure & Table Styles (Academic Swiss Style with Interactive Lightbox)
+   ========================================================================== */
+.paper-figure {
+  margin: 2.25rem 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.paper-figure:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+  border-color: var(--border-strong);
+}
+
+.paper-figure.concept-figure {
+  border-left: 3.5px solid var(--accent-orange);
+  background: #FFFDFB;
+}
+
+.paper-figure.paper-table-figure {
+  border-left: 3.5px solid #2563EB;
+}
+
+.figure-image-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FAFAFA;
+  padding: 1.25rem 1rem;
+  min-height: 140px;
+}
+
+.concept-figure .figure-image-wrapper {
+  background: #FAF8F5;
+}
+
+.figure-zoomable {
+  max-width: 100%;
+  height: auto;
+  max-height: 540px;
+  object-fit: contain;
+  cursor: zoom-in;
+  transition: transform 0.15s ease;
+  border-radius: 2px;
+}
+
+.figure-zoomable:hover {
+  transform: scale(1.01);
+}
+
+.figure-expand-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.15s ease, color 0.15s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.paper-figure:hover .figure-expand-btn,
+.concept-diagram-wrapper:hover .figure-expand-btn {
+  opacity: 1;
+}
+
+.figure-expand-btn:hover {
+  background: #FFFFFF;
+  color: var(--accent-orange);
+  border-color: var(--accent-orange);
+}
+
+.paper-figcaption {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.figcaption-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.figure-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-xs);
+  background: var(--bg-sidebar);
+  color: var(--text-dark);
+  border: 1px solid var(--border-subtle);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.figure-badge-table {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-color: #BFDBFE;
+}
+
+.figure-badge-concept {
+  background: #FEF3C7;
+  color: #B45309;
+  border-color: #FDE68A;
+}
+
+.caption-title-jp {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.caption-title-en {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.25rem;
+  padding-left: 0.2rem;
+}
+
+/* ==========================================================================
+   Inspector Concept Diagram Card
+   ========================================================================== */
+.concept-diagram-card {
+  margin-top: 0.4rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.concept-diagram-wrapper {
+  position: relative;
+  background: #F8FAFC;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.concept-diagram-wrapper img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.concept-diagram-wrapper:hover img {
+  transform: scale(1.02);
+}
+
+.concept-diagram-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  padding: 0.6rem 0.75rem 0.2rem 0.75rem;
+  line-height: 1.4;
+}
+
+.concept-diagram-caption {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 0 0.75rem 0.65rem 0.75rem;
+}
+
+/* ==========================================================================
+   Lightbox Modal (High-Resolution Fullscreen Image Viewer)
+   ========================================================================== */
+.lightbox-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.lightbox-modal.active {
+  display: flex;
+}
+
+.lightbox-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.lightbox-content {
+  position: relative;
+  z-index: 10;
+  max-width: 92vw;
+  max-height: 92vh;
+  background: #FFFFFF;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: lightboxFadeIn 0.2s ease-out;
+}
+
+@keyframes lightboxFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lightbox-close-btn {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 30;
+  background: rgba(15, 23, 42, 0.65);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  transform: scale(1.05);
+}
+
+.lightbox-image-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0F172A;
+  max-height: 78vh;
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  background: #FFFFFF;
+}
+
+.lightbox-caption {
+  padding: 1rem 1.5rem;
+  background: #FFFFFF;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+  max-height: 14vh;
+  overflow-y: auto;
+}
+
+
