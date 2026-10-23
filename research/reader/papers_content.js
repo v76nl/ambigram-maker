@@ -29,20 +29,20 @@ window.PAPERS_CONTENT = {
 <section id="p5-sec-1" class="paper-section">
 <h2 class="section-title">1. はじめに</h2>
 <p class="paper-paragraph">回転や鏡像などの変換を施しても可読性を保つ文字画像はアンビグラムと呼ばれる。従来アンビグラムは人間によって設計されているが、本研究ではアンビグラムを生成モデルにより生成させることを考える。具体的には、実際のデータと類似した新しいデータを生成できる<mark class="annotated-term" data-term-id="cgan-wgan">敵対生成ネットワーク</mark>（GAN）[1, 2]を利用し、回転可読性のある文字の生成を行う。</p>
-<p class="paper-paragraph">GANは鮮明な画像を生成できるため、芸術分野での活用が期待されている。アンビグラムはカリグラフィーであり、芸術形式の一種でもある。GANに関する研究では、生成データが回転しても可読性を保たせることを目的とした研究例は少ない。本研究では、アンビグラム生成課題を<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>として捉える。その手法のひとつである<mark class="annotated-term" data-term-id="hypervolume">超体積最大化指標</mark>[3]を損失関数に用いて、アンビグラム画像を生成するモデルを構築した。そして、<mark class="annotated-term" data-term-id="recognition-model">画像認識モデル</mark>を用いて、生成された画像をラベルペアごとに評価する。</p>
+<p class="paper-paragraph">GAN は鮮明な画像を生成できるため、芸術分野での活用が期待されている。アンビグラムはカリグラフィーであり、芸術形式の一種でもある。GAN に関する研究では、生成データが回転しても可読性を保たせることを目的とした研究例は少ない。本研究では、アンビグラム生成課題を<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>として捉える。その手法のひとつである<mark class="annotated-term" data-term-id="hypervolume">超体積最大化指標</mark>[3]を損失関数に用いて、アンビグラム画像を生成するモデルを構築した。そして、<mark class="annotated-term" data-term-id="recognition-model">画像認識モデル</mark>を用いて、生成された画像をラベルペアごとに評価する。</p>
 </section>
 <section id="p5-sec-2" class="paper-section">
 <h2 class="section-title">2. 手法</h2>
 </section>
 <section id="p5-sec-3" class="paper-section">
 <h3 class="section-title">2.1 モデル</h3>
-<p class="paper-paragraph">本実験のモデルは図1のように、<mark class="annotated-term" data-term-id="cgan-wgan">条件付きGAN</mark> (<mark class="annotated-term" data-term-id="cgan-wgan">CGAN</mark>) を拡張し、ラベルペアを条件入力に持つ生成器と、2つの判別器からなる構成とする。WGAN[2]の損失関数を用いて学習し、画像を生成する。</p>
-<p class="paper-paragraph">2つの判別器それぞれには訓練サンプル画像データと、それを180度回転した画像データ及びラベルを訓練データとして入力する。生成器は2つの判別器による評価をともに高めることが求められ、これは<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>問題となる。GANに対する<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>手法として提案されている<mark class="annotated-term" data-term-id="hypervolume">超体積最大化法</mark>を導入して、生成器を訓練する。生成器は、2つの訓練データの特徴を同時に学習することができる。訓練データには <mark class="annotated-term" data-term-id="emnist">EMNIST</mark>を用いる。</p>
+<p class="paper-paragraph">本実験のモデルは図1のように、<mark class="annotated-term" data-term-id="cgan-wgan">条件付き GAN</mark> (<mark class="annotated-term" data-term-id="cgan-wgan">CGAN</mark>) を拡張し、ラベルペアを条件入力に持つ生成器と、2つの判別器からなる構成とする。WGAN[2]の損失関数を用いて学習し、画像を生成する。</p>
+<p class="paper-paragraph">2つの判別器それぞれには訓練サンプル画像データと、それを180度回転した画像データ及びラベルを訓練データとして入力する。生成器は2つの判別器による評価をともに高めることが求められ、これは<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>問題となる。GAN に対する<mark class="annotated-term" data-term-id="multi-objective">多目的最適化</mark>手法として提案されている<mark class="annotated-term" data-term-id="hypervolume">超体積最大化法</mark>を導入して、生成器を訓練する。生成器は、2つの訓練データの特徴を同時に学習することができる。訓練データには <mark class="annotated-term" data-term-id="emnist">EMNIST</mark> を用いる。</p>
 <blockquote class="paper-quote"><strong>図1 ネットワークモデル</strong></blockquote>
 </section>
 <section id="p5-sec-4" class="paper-section">
 <h3 class="section-title">2.2 評価手法</h3>
-<p class="paper-paragraph">生成された画像の品質を評価するために、<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>を利用する。<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>に、GAN モデル学習時と同様の訓練データを用いてクラス判別を学習させる。そして、学習後の GANにより生成された画像を入力し、生成された画像のラベルを判定する。</p>
+<p class="paper-paragraph">生成された画像の品質を評価するために、<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>を利用する。<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>に、GAN モデル学習時と同様の訓練データを用いてクラス判別を学習させる。そして、学習後の GAN により生成された画像を入力し、生成された画像のラベルを判定する。</p>
 <p class="paper-paragraph">生成画像に対しては生成器 $G$ に入力したラベル $C_1$、その180度回転画像に対しては $C_2$ が<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>の出力として得られた場合を正解とする。各ラベルペアに対し、生成した画像と回転画像に対する正解率を求め、さらに2つの値の<mark class="annotated-term" data-term-id="harmonic-mean">調和平均値</mark>を計算する。</p>
 </section>
 <section id="p5-sec-5" class="paper-section">
@@ -60,7 +60,7 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p5-sec-8" class="paper-section">
 <h2 class="section-title">4. まとめ</h2>
-<p class="paper-paragraph">本研究では、2つの判別器を持つ <mark class="annotated-term" data-term-id="cgan-wgan">CGAN</mark>を用いて、生成データが実際のデータと回転データの特徴を学習できるように訓練し、アンビグラムを生成した。そして、<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>を用いて生成データを評価し、評価結果に基づいて回転可読性の良い文字を探し出した。</p>
+<p class="paper-paragraph">本研究では、2つの判別器を持つ <mark class="annotated-term" data-term-id="cgan-wgan">CGAN</mark> を用いて、生成データが実際のデータと回転データの特徴を学習できるように訓練し、アンビグラムを生成した。そして、<mark class="annotated-term" data-term-id="recognition-model">認識モデル</mark>を用いて生成データを評価し、評価結果に基づいて回転可読性の良い文字を探し出した。</p>
 </section>
 <section id="p5-sec-9" class="paper-section">
 <h2 class="section-title">参考文献</h2>
@@ -133,9 +133,9 @@ window.PAPERS_CONTENT = {
 <section id="p2-sec-4" class="paper-section">
 <h2 class="section-title">2. 従来研究</h2>
 <p class="paper-paragraph">細谷ら5)は文字画像を正方形メッシュで変形することで変形文字を生成する研究を行った。変形演算を組み合わせることで文字の形状を多様に変化させることが実現できたが、格子線を変形し、メッシュ頂点の移動をするという限られた変形しかできない。アンビグラムを生成するために文字を変形する際は、対応する2文字間の中間構造に変化させる必要があり、ストロークごとに変形するような詳細な変形をすることが求められる。</p>
-<p class="paper-paragraph">Igarashi ら6)やSchaefer ら7)は、変形演算を付与することなく、画像をメッシュで変形する手法を提案した。Igarashi らは画像内の閉多角形中に三角形のメッシュを作成し、各三角形の歪みが最小になるように移動させることで変形が伝搬していく手法を提案した。しかし、文字は曲線から構成されるためメッシュを作成できず、本手法をそのまま適用させることは困難である。また、Schaefer らは、画像全体を四角形メッシュで分割し、<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>、<mark class="annotated-term" data-term-id="affine-transformation">相似変換</mark>、剛体変換に最小二乗法を用いて、ユーザにとって自然な変形を実現した。しかし、本手法の欠点として画像を折り返すような変形が生成されることが挙げられており、文字画像に適応するとストロークが折り曲げられてしまう可能性がある。</p>
-<p class="paper-paragraph">ストロークごとに変形を行う手法としては、Campbell ら8)やFujita ら9)によるmanifoldを用いたフォント変換が挙げられる。フォントごとにmanifoldを作成することで、形状の類似したフォントへ連続的に遷移することができ、同時にストロークごとに変形も行われる。しかし、本手法は形状の大きく異なるフォントへの変換が困難であるため、アンビグラムのように形状が大きく異なる2文字の中間形状の生成に適用することは難しい。</p>
-<p class="paper-paragraph">成沢ら10)は画像のコンテンツを維持しつつ別の画像のスタイルを転写することのできるNeural Style Transfer11)を用いて、文字のフォントを変換する手法を提案した。英字をConvolutional Neural Networkで学習させることで、英字のフォントをひらがなや漢字にも適用することが可能になった。文字フォントの転写は他にも、異なるドメイン間で画像対をマッピング可能なCycleGAN(Generative Adversarial Networks)12)を用いて<mark class="annotated-term" data-term-id="thinning-zhang-suen">細線化</mark>した文字画像を毛筆文字へ変換する手法13)や、Recurrent Neural Networkを用いて筆順を考慮して毛筆文字へ変換する手法14)がある。このように、ディープラーニングによってフォントを多様に変換させることができるようになってきた。しかし、アンビグラムは二つの文字が合成されて一つの文字をなしているため、共通ストロークは目立つように、非共通ストロークは片方の文字の可読性に干渉しないように呈示する必要がある。そのため、各<mark class="annotated-term" data-term-id="brush-modulation">ストロークの太さ</mark>まで考慮したフォント生成を行う必要があり、前述した文字のフォントを一様に変換する手法は用いることが困難である。</p>
+<p class="paper-paragraph">Igarashi ら6)や Schaefer ら7)は、変形演算を付与することなく、画像をメッシュで変形する手法を提案した。Igarashi らは画像内の閉多角形中に三角形のメッシュを作成し、各三角形の歪みが最小になるように移動させることで変形が伝搬していく手法を提案した。しかし、文字は曲線から構成されるためメッシュを作成できず、本手法をそのまま適用させることは困難である。また、Schaefer らは、画像全体を四角形メッシュで分割し、<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>、<mark class="annotated-term" data-term-id="affine-transformation">相似変換</mark>、剛体変換に最小二乗法を用いて、ユーザにとって自然な変形を実現した。しかし、本手法の欠点として画像を折り返すような変形が生成されることが挙げられており、文字画像に適応するとストロークが折り曲げられてしまう可能性がある。</p>
+<p class="paper-paragraph">ストロークごとに変形を行う手法としては、Campbell ら8)や Fujita ら9)による manifold を用いたフォント変換が挙げられる。フォントごとに manifold を作成することで、形状の類似したフォントへ連続的に遷移することができ、同時にストロークごとに変形も行われる。しかし、本手法は形状の大きく異なるフォントへの変換が困難であるため、アンビグラムのように形状が大きく異なる2文字の中間形状の生成に適用することは難しい。</p>
+<p class="paper-paragraph">成沢ら10)は画像のコンテンツを維持しつつ別の画像のスタイルを転写することのできる Neural Style Transfer11)を用いて、文字のフォントを変換する手法を提案した。英字を Convolutional Neural Network で学習させることで、英字のフォントをひらがなや漢字にも適用することが可能になった。文字フォントの転写は他にも、異なるドメイン間で画像対をマッピング可能な CycleGAN(Generative Adversarial Networks)12)を用いて<mark class="annotated-term" data-term-id="thinning-zhang-suen">細線化</mark>した文字画像を毛筆文字へ変換する手法13)や、Recurrent Neural Network を用いて筆順を考慮して毛筆文字へ変換する手法14)がある。このように、ディープラーニングによってフォントを多様に変換させることができるようになってきた。しかし、アンビグラムは二つの文字が合成されて一つの文字をなしているため、共通ストロークは目立つように、非共通ストロークは片方の文字の可読性に干渉しないように呈示する必要がある。そのため、各<mark class="annotated-term" data-term-id="brush-modulation">ストロークの太さ</mark>まで考慮したフォント生成を行う必要があり、前述した文字のフォントを一様に変換する手法は用いることが困難である。</p>
 <p class="paper-paragraph">そこで本論文では、<mark class="annotated-term" data-term-id="delaunay-triangulation">ドロネー三角形</mark>と文字の特徴点を基に<mark class="annotated-term" data-term-id="delaunay-triangulation">三角形メッシュ</mark>を作成し、三角形間の<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>行列を用いて文字変形を行い、2文字間の中間構造を生成する。そして、<mark class="annotated-term" data-term-id="brush-modulation">ストロークの太さ</mark>を自在に制御しながら<mark class="annotated-term" data-term-id="brush-modulation">筆文字化</mark>することのできる手法を用いてフォント生成を行う。</p>
 <blockquote class="paper-quote"><strong>図2 提案手法</strong></blockquote>
 <blockquote class="paper-quote"><strong>Fig.2 Proposed approach</strong></blockquote>
@@ -143,8 +143,8 @@ window.PAPERS_CONTENT = {
 <section id="p2-sec-5" class="paper-section">
 <h2 class="section-title">3. 文字構造の取得</h2>
 <p class="paper-paragraph">提案手法の概要を図2に示す。入力文字の構造を得るために、文字を構成するストロークの端点、ストロークが交わる交点、ストロークの形状を近似する角点を特徴点として抽出する。なお、本論文では入力画像のサイズを300×300ピクセルで統一している。</p>
-<p class="paper-paragraph">まず、<mark class="annotated-term" data-term-id="thinning-zhang-suen">Zhang-Suen</mark>の<mark class="annotated-term" data-term-id="thinning-zhang-suen">細線化</mark>アルゴリズム15)を用いて文字の細線化を行う。ただし、文字のフォントはうろこと呼ばれる文字の飾りがなく、文字の太さが均一である游ゴシック体を採用する。細線化では多数の点の集合として文字が表現されている。文字の形状を適切に表現可能な最低限の画素群で表現するために、まず、細線化した画素を追跡することで文字に含まれるストロークを全て抽出する。しかし、細線化文字では、ストローク交点の周辺に交点候補となる分岐点が複数生じ適切に文字構造を取得することが困難になる。また、ひらがなにおいて同一の場所で3本以上ストロークが交わることはないことから、ストローク交点における次数は最小3、最大4の2種類に限られる。そこで、まず細線化文字を追跡し、交点候補となる分岐点を検出する。次に分岐点を包含する矩形領域に含まれる線分を除去し、矩形領域に接する線分の画素位置を保持する。これによって交点の次数が3、あるいは、4であるかを判別する。交点の次数が4の場合、分断されたストロークが交差するように接続し、追跡を続ける。また、次数が3の場合、ストロークの曲率に基づき、2本のストロークに分割する。まず、分断されたストロークの端点をA, B, Cとする。次に、3点から1点、例えば点Aを選択する。点A から3画素離れたストローク上の画素を点Dとしたとき、∠BADと∠CADを比較して角度が大きい端点と点Aが接続しているとする。ただし、選ばなかった点を新たな端点とし、その点から追跡を行う。</p>
-<p class="paper-paragraph">次に抽出した各<mark class="annotated-term" data-term-id="rdp-simplification">ストロークの単純化</mark>をRamer-Douglas-Peuckerのアルゴリズム16)を用いて行う。ただし、点を間引くための点と直線の距離のしきい値は20画素とし、「はね」や「はらい」による構造の変化が単純化により失われないように設定した。その後、交点の決定を行う。まず、交点の次数が4の場合、単純化したストロークを構成する線分を2本選択する。そして、選択した線分が交差していれば、2 線分の交点をストロークの交点とし、全ての線分の組み合わせを調べることで交点を求める。交点の次数が3の場合、接続したストロークと追跡時に得た端点を延長した直線との交点をストロークの交点とする。文字構造の解析過程の例を図3に示す。</p>
+<p class="paper-paragraph">まず、<mark class="annotated-term" data-term-id="thinning-zhang-suen">Zhang-Suen</mark> の<mark class="annotated-term" data-term-id="thinning-zhang-suen">細線化</mark>アルゴリズム15)を用いて文字の細線化を行う。ただし、文字のフォントはうろこと呼ばれる文字の飾りがなく、文字の太さが均一である游ゴシック体を採用する。細線化では多数の点の集合として文字が表現されている。文字の形状を適切に表現可能な最低限の画素群で表現するために、まず、細線化した画素を追跡することで文字に含まれるストロークを全て抽出する。しかし、細線化文字では、ストローク交点の周辺に交点候補となる分岐点が複数生じ適切に文字構造を取得することが困難になる。また、ひらがなにおいて同一の場所で3本以上ストロークが交わることはないことから、ストローク交点における次数は最小3、最大4 の2種類に限られる。そこで、まず細線化文字を追跡し、交点候補となる分岐点を検出する。次に分岐点を包含する矩形領域に含まれる線分を除去し、矩形領域に接する線分の画素位置を保持する。これによって交点の次数が3、あるいは、4 であるかを判別する。交点の次数が4 の場合、分断されたストロークが交差するように接続し、追跡を続ける。また、次数が3 の場合、ストロークの曲率に基づき、2本のストロークに分割する。まず、分断されたストロークの端点をA, B, C とする。次に、3点から1点、例えば点A を選択する。点A から3画素離れたストローク上の画素を点D としたとき、∠BAD と∠CAD を比較して角度が大きい端点と点A が接続しているとする。ただし、選ばなかった点を新たな端点とし、その点から追跡を行う。</p>
+<p class="paper-paragraph">次に抽出した各<mark class="annotated-term" data-term-id="rdp-simplification">ストロークの単純化</mark>を Ramer-Douglas-Peucker のアルゴリズム16)を用いて行う。ただし、点を間引くための点と直線の距離のしきい値は20画素とし、「はね」や「はらい」による構造の変化が単純化により失われないように設定した。その後、交点の決定を行う。まず、交点の次数が4 の場合、単純化したストロークを構成する線分を2本選択する。そして、選択した線分が交差していれば、2 線分の交点をストロークの交点とし、全ての線分の組み合わせを調べることで交点を求める。交点の次数が3 の場合、接続したストロークと追跡時に得た端点を延長した直線との交点をストロークの交点とする。文字構造の解析過程の例を図3に示す。</p>
 </section>
 <section id="p2-sec-6" class="paper-section">
 <h2 class="section-title">4. アンビグラムの基本構造生成</h2>
@@ -163,13 +163,13 @@ window.PAPERS_CONTENT = {
 <p class="paper-paragraph">本項の手法の概略を図4に示し、文字をグラフで表現した例を図5に示す。</p>
 <p class="paper-paragraph">最大の共通部分を検出するために、まず、グラフ間で最大数のエッジを持つ<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>を求め、<mark class="annotated-term" data-term-id="subgraph-isomorphism">同型性</mark>を満たす組を取り出す。得られた部分グラフの組に対し、式(2)で示すランク, を求める。</p>
 <p class="paper-paragraph">, ,   ,   , (2)</p>
-<p class="paper-paragraph">, は式(3)で示す対応点間のユークリッド距離の和を正規化したものである。正規化は、得られた<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組間で平均0、分散1になるように行う。以降の正規化も同様に行う。</p>
+<p class="paper-paragraph">, は式(3)で示す対応点間のユークリッド距離の和を正規化したものである。正規化は、得られた<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組間で平均0、分散1 になるように行う。以降の正規化も同様に行う。</p>
 <p class="paper-paragraph">, ‖ "‖(3)したがって、<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>間で距離が遠くなるほど、値が大きくなる。</p>
 <p class="paper-paragraph">, は<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>間の対応エッジの角度差の標準偏差を正規化したものであり、<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の回転不変な幾何構造の類似度を表す。ただし、以降エッジの角度差は、0°以上180°以下になるように求めている。文字の共通部分は対応エッジの角度差が一般に小さい値となる。また、回転を伴って一致する場合は回転角度に近い値となる。したがって、角度差の標準偏差が小さければ部分グラフが共通部分となる可能性が高く、大きければ角度差がばらついており、共通部分となる可能性が低くなる。</p>
 <p class="paper-paragraph">, はあるノードが対応点に置き換わったとき、他のノードとの位置関係が崩れる場合のペナルティ値である。隣接ノードではないノード同士を結んだ線分とノードの対応点同士を結んだ線分間の角度差の集合を、許容する角度差のしきい値を、<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>間の対応エッジの角度差の平均を̅とすると正規化する前の値は次式のように計算される。</p>
 <p class="paper-paragraph">, #$(4)∈</p>
 <p class="paper-paragraph">#$%ℎ'$ " ̅ " (,̅) 90° かつ ) 10ℎ$ " ,,ℎ-./0-(5)</p>
-<p class="paper-paragraph">ℎ120,1) 0 1,1 3 0(6)本論文のすべての結果で 70°として計算を行った。<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の幾何構造が類似している場合、は小さい値になる。また、類似した幾何構造の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>が回転している場合、その回転角は̅に近い値になる。したがって、式(5)では、̅を引くことで、回転に影響されないペナルティを計算している。各部分グラフの組でランクを計算した後、ランクが最小の部分グラフの組を選択する。そして、その部分グラフ対において、対応点間のユークリッド距離がどれも1.2未満かつ、が15未満であればその部分グラフによる対応点を特徴点の対応点とする。もし条件を満たしていなければ、抽出した部分グラフのエッジ濃度より1 少ない同型な部分グラフを元の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から求め、同様の操作を条件が満たされるまで繰り返し行う。ただし、調べる部分グラフのエッジの最小値は3とし、条件を満たす部分グラフが見つからなかった場合は特徴点を対応付けずに次項で述べる処理を行い、見つかった場合は次節で述べる<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>をした後に処理を行う。大局的な部分グラフの探索によって図5の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から抽出した部分グラフを図6に示す。ただし、同色のノードが対応関係にある。</p>
+<p class="paper-paragraph">ℎ120,1) 0 1,1 3 0(6)本論文のすべての結果で 70°として計算を行った。<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の幾何構造が類似している場合、は小さい値になる。また、類似した幾何構造の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>が回転している場合、その回転角は̅に近い値になる。したがって、式(5)では、̅を引くことで、回転に影響されないペナルティを計算している。各部分グラフの組でランクを計算した後、ランクが最小の部分グラフの組を選択する。そして、その部分グラフ対において、対応点間のユークリッド距離がどれも1.2未満かつ、が15未満であればその部分グラフによる対応点を特徴点の対応点とする。もし条件を満たしていなければ、抽出した部分グラフのエッジ濃度より1 少ない同型な部分グラフを元の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から求め、同様の操作を条件が満たされるまで繰り返し行う。ただし、調べる部分グラフのエッジの最小値は3 とし、条件を満たす部分グラフが見つからなかった場合は特徴点を対応付けずに次項で述べる処理を行い、見つかった場合は次節で述べる<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>をした後に処理を行う。大局的な部分グラフの探索によって図5の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から抽出した部分グラフを図6に示す。ただし、同色のノードが対応関係にある。</p>
 <blockquote class="paper-quote"><strong>図4 大局的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の対応付けの概略</strong></blockquote>
 <blockquote class="paper-quote"><strong>Fig.4 Outline of correspond with global subgraph</strong></blockquote>
 <blockquote class="paper-quote"><strong>図5文字のグラフ化</strong></blockquote>
@@ -181,16 +181,16 @@ window.PAPERS_CONTENT = {
 <h4 class="section-title">4.1.2 局所的な部分グラフによる対応付け</h4>
 <p class="paper-paragraph">大局的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の対応付けでは対応点を求めることができない、あるいは、不完全である場合が3通りある。一つ目は<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>の連結グラフのエッジ濃度が元々2以下である文字を対象とした場合である。二つ目は得られた<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>がどれも定めた幾何条件を満たせなかった場合である。三つ目は複数の連結グラフでグラフが構成されているため、一つの連結グラフでしか対応付けが行われない、大局的な部分グラフの対応付けだけでは不完全な場合である。</p>
 <p class="paper-paragraph">これらの三つの場合でも対応付けを行うために、局所的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>による対応付けを行う。ただし、ノードの少ない<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>と部分グラフ対は膨大に存在し、幾何情報だけでは適切な対応付けができない。そこで、本来の目的である三つの場合を解決することに限定するために、対応付けられているノードが存在していない連結グラフを必ず含む対応付けを対象とする。</p>
-<p class="paper-paragraph">本項の手法の概略を図7に示し、本項で対象とする<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>対を図8に例示する。通常画像のグラフを, 、反転画像のグラフを	, 	とする。また、大域的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>で対応付けられたグラフのノード集合を、∈の隣接エッジの集合をとする。そして、 " ,  " となるグラフを定義する。つまり、はのうち対応付けられていないノードのみで構成されたグラフである。さらに、	を構成する連結グラフの中で、対応付けられたノードを含まない連結グラフ4の集合を5とする。例えば、図8(b)では、反転「に」のグラフは1, 2, 3, 4番、5, 6番、7, 8, 9番のノードからなる連結グラフから構成されており、どれも対応付けられていないため、三つのグラフが4となる。したがって、65	6=3である。このとき、から得られるエッジ濃度2の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>と4 ∈5	から得られるエッジ濃度2の部分グラフの全ての組み合わせに対し、4	ごとにランク付けを行う。つまり、と4を用いることで、本項の目的である連結グラフごとに適切な部分グラフを選択することができる。一つの4につき、得られた組み合わせが3組以上の場合は次式を用いる。</p>
-<p class="paper-paragraph">, ̅,   0.7̅, (7)subgraphただし、̅, は対応点間のユークリッド距離の平均̅を正規化したものであり、̅, は<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>間の対応エッジの角度差の平均̅を正規化したものである。</p>
+<p class="paper-paragraph">本項の手法の概略を図7に示し、本項で対象とする<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>対を図8に例示する。通常画像のグラフを, 、反転画像のグラフを	, 	とする。また、大域的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>で対応付けられたグラフのノード集合を、∈の隣接エッジの集合をとする。そして、 " ,  " となるグラフを定義する。つまり、はのうち対応付けられていないノードのみで構成されたグラフである。さらに、	を構成する連結グラフの中で、対応付けられたノードを含まない連結グラフ4	の集合を5	とする。例えば、図8(b)では、反転「に」のグラフは1, 2, 3, 4番、5, 6番、7, 8, 9番のノードからなる連結グラフから構成されており、どれも対応付けられていないため、三つのグラフが4となる。したがって、65	6=3 である。このとき、から得られるエッジ濃度2 の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>と4 ∈5	から得られるエッジ濃度2 の部分グラフの全ての組み合わせに対し、4	ごとにランク付けを行う。つまり、と4	を用いることで、本項の目的である連結グラフごとに適切な部分グラフを選択することができる。一つの4	につき、得られた組み合わせが3組以上の場合は次式を用いる。</p>
+<p class="paper-paragraph">, ̅,   0.7̅, (7)subgraph ただし、̅, は対応点間のユークリッド距離の平均̅を正規化したものであり、̅, は<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>間の対応エッジの角度差の平均̅を正規化したものである。</p>
 <p class="paper-paragraph">すべての組に対してランクを求めた後、ランクが最小の組を選択する。そして、̅が0.75未満かつ、̅が45°未満であれば、<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>のノードを対応点候補とする。この時点で対応点に決定しない理由は、65	6 3 2の場合、連結グラフ4間で、求めた対応点が重複する可能性があるからである。</p>
 <p class="paper-paragraph">得られた<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組が2組のとき、式(7)を用いると、正規化が適切に行えないため、次式で示すように正規化を施さない距離と角度差の平均を用いてランクを求める。</p>
-<p class="paper-paragraph">, ̅,   ̅, 対応<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>を求める場合には幾何特徴を優先するために、̅はそのまま用いた。また、0 : ̅ : 180であるため、180で割ることでスケールを1以下にし、角度差による影響を小さくした。同様にランクが最小の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組を選択し、̅が0.75未満かつ、̅が45°未満であれば、部分グラフのノードを対応点候補とする。</p>
-<p class="paper-paragraph">対応点候補が見つからなかった場合、エッジ濃度2の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>で行った操作をエッジ濃度1の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>でも同様に行う。さらに、反転画像の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>	の既に対応付けされているノードを含まないグラフと通常画像の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>の対応付けられたノードを含まない連結グラフ4に対しても同様の操作を行い、対応点候補を探索する。</p>
-<p class="paper-paragraph">最後に、対応点の決定を行う。まず、エッジ濃度2の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>を調べたときに対応点候補としたノードに重複があるか調べ、ない場合は対応点とし、ある場合は対応点候補からなる<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組に対し、次式で示すランク,  を与える。</p>
-<p class="paper-paragraph">, ̅, 0.75̅, 式(7)と式(8)で求めた対応点候補の拘束条件から0 : ̅)0.75かつ0∘: ̅) 45∘であり、ともに等しく評価するために̅は0.75で、̅は45で割ることで、スケールを等しくした。</p>
-<p class="paper-paragraph">ランクを各<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組で求めた後、ランクが最小の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組を選択し、対応点を決定する。同様に、エッジ濃度1の部分グラフを調べたときに対応点候補としたノードに対しても対応点の決定を行う。ただし、エッジ濃度2の部分グラフから得た対応点と重複しない対応点候補のみを探索対象とする。局所的な部分グラフの探索によって図8の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から抽出された部分グラフを図9に示す。ただし、同色の楕円で囲まれている特徴点が対応する部分グラフであり、同色のノードが対応している。</p>
-<p class="paper-paragraph">なお、対応付けは全探索処理であるが、ひらがなは特徴点数が少ないため、大多数のひらがな対における探索時間は10秒未満であった。しかし、「あ」は特徴点が20個あり、かつ、同じ文字のため同型グラフが膨大に存在する「あ」と「あ」の対応付けには約4 時間を要した。ただし、本実験では後述のとおりIntel Core i7-8650U @ 1.90GHzを用いており、並列計算は行っていない。</p>
+<p class="paper-paragraph">, ̅,   ̅, 対応<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>を求める場合には幾何特徴を優先するために、̅はそのまま用いた。また、0 : ̅ : 180であるため、180 で割ることでスケールを1以下にし、角度差による影響を小さくした。同様にランクが最小の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組を選択し、̅が0.75未満かつ、̅が45°未満であれば、部分グラフのノードを対応点候補とする。</p>
+<p class="paper-paragraph">対応点候補が見つからなかった場合、エッジ濃度2 の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>で行った操作をエッジ濃度1 の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>でも同様に行う。さらに、反転画像の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>	の既に対応付けされているノードを含まないグラフと通常画像の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>の対応付けられたノードを含まない連結グラフ4に対しても同様の操作を行い、対応点候補を探索する。</p>
+<p class="paper-paragraph">最後に、対応点の決定を行う。まず、エッジ濃度2 の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>を調べたときに対応点候補としたノードに重複があるか調べ、ない場合は対応点とし、ある場合は対応点候補からなる<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組に対し、次式で示すランク,  を与える。</p>
+<p class="paper-paragraph">, ̅, 0.75̅, 式(7)と式(8)で求めた対応点候補の拘束条件から0 : ̅)0.75かつ0∘: ̅) 45∘であり、ともに等しく評価するために̅は0.75 で、̅は45 で割ることで、スケールを等しくした。</p>
+<p class="paper-paragraph">ランクを各<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組で求めた後、ランクが最小の<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の組を選択し、対応点を決定する。同様に、エッジ濃度1 の部分グラフを調べたときに対応点候補としたノードに対しても対応点の決定を行う。ただし、エッジ濃度2 の部分グラフから得た対応点と重複しない対応点候補のみを探索対象とする。局所的な部分グラフの探索によって図8の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>から抽出された部分グラフを図9に示す。ただし、同色の楕円で囲まれている特徴点が対応する部分グラフであり、同色のノードが対応している。</p>
+<p class="paper-paragraph">なお、対応付けは全探索処理であるが、ひらがなは特徴点数が少ないため、大多数のひらがな対における探索時間は10秒未満であった。しかし、「あ」は特徴点が20個あり、かつ、同じ文字のため同型グラフが膨大に存在する「あ」と「あ」の対応付けには約4 時間を要した。ただし、本実験では後述のとおり Intel Core i7-8650U @ 1.90GHz を用いており、並列計算は行っていない。</p>
 <blockquote class="paper-quote"><strong>図7 局所的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>の対応付けの概略</strong></blockquote>
 <blockquote class="paper-quote"><strong>Fig.7 Outline of correspond with local subgraph</strong></blockquote>
 <blockquote class="paper-quote"><strong>図8 大局的な<mark class="annotated-term" data-term-id="subgraph-isomorphism">部分グラフ</mark>による対応付けができなかった例</strong></blockquote>
@@ -226,16 +226,16 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p2-sec-12" class="paper-section">
 <h2 class="section-title">6. 可読性評価</h2>
-<p class="paper-paragraph">ひらがな46文字を一対一で対応付けた1,081組のアンビグラムの可読性を、単一文字及び単語の観点から評価する。ただし、アンビグラムの生成において、本論文ではIntel Core i7-8650U @ 1.90GHzを用いている。</p>
+<p class="paper-paragraph">ひらがな46文字を一対一で対応付けた1,081組のアンビグラムの可読性を、単一文字及び単語の観点から評価する。ただし、アンビグラムの生成において、本論文では Intel Core i7-8650U @ 1.90GHz を用いている。</p>
 </section>
 <section id="p2-sec-13" class="paper-section">
 <h3 class="section-title">6.1 単一文字の可読性の評価</h3>
 </section>
 <section id="p2-sec-14" class="paper-section">
 <h4 class="section-title">6.1.1 実施方法</h4>
-<p class="paper-paragraph">被験者は図14に示したようなアンビグラムの通常画像と反転画像を並べた画像を見て、それぞれの読みを記述式で回答する。また、不可読な場合は「-」を記入する。ただし、不可読の理由については集計していない。また、後述する作成可能なアンビグラムは1組につき5 名、作成不明なアンビグラムは1組につき3 名回答が得られるように、被験者18 名を割り振ってGoogle フォーム上で回答を行う。そして、通常画像と反転画像の読みが両方正しかった場合のみ、可読とした。例えば、図14の場合は図14(a)を「も」と答え、かつ図14(b)を「お」と答えたときのみを可読とし、それ以外の誤答や読めなかった場合は、すべて不可読とした。なお、被験者には「アンビグラムは反転しても読み取れるようにした文字である」とだけ伝えており、作成経験はない。</p>
+<p class="paper-paragraph">被験者は図14に示したようなアンビグラムの通常画像と反転画像を並べた画像を見て、それぞれの読みを記述式で回答する。また、不可読な場合は「-」を記入する。ただし、不可読の理由については集計していない。また、後述する作成可能なアンビグラムは1組につき5 名、作成不明なアンビグラムは1組につき3 名回答が得られるように、被験者18 名を割り振って Google フォーム上で回答を行う。そして、通常画像と反転画像の読みが両方正しかった場合のみ、可読とした。例えば、図14の場合は図14(a)を「も」と答え、かつ図14(b)を「お」と答えたときのみを可読とし、それ以外の誤答や読めなかった場合は、すべて不可読とした。なお、被験者には「アンビグラムは反転しても読み取れるようにした文字である」とだけ伝えており、作成経験はない。</p>
 <p class="paper-paragraph">また、本論文では、文献1)に記載されていた724組のアンビグラムを作成可能なアンビグラムとし、このアンビグラムの集合をFで表す。そして、記載のない残りの357組のアンビグラムに関して、著者がアンビグラムの作成可能性を検討したが、全て作成が困難であると判断した。したがって、真にアンビグラムを作成できるか不明であるため、作成不明なアンビグラムと称する。</p>
-<p class="paper-paragraph">本論文では、アンビグラムGの<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>を、［可読と判断した人数］/［評価者数］で定義し、HGで表す。したがって、アンビグラムGを5 名中2 名が可読とした場合、HG0.4となる。そして、1文字当りの評価者が3人または5人であるため、過半数の3/5、2/3が可読であればアンビグラムは可読性があるとした。</p>
+<p class="paper-paragraph">本論文では、アンビグラムGの<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>を、［可読と判断した人数］/［評価者数］で定義し、HGで表す。したがって、アンビグラムGを5 名中2 名が可読とした場合、HG0.4となる。そして、1文字当りの評価者が3人または5人であるため、過半数の3/5、2/3 が可読であればアンビグラムは可読性があるとした。</p>
 <blockquote class="paper-quote"><strong>図14 <mark class="annotated-term" data-term-id="brush-modulation">太線化</mark>結果</strong></blockquote>
 <blockquote class="paper-quote"><strong>Fig.14 Result of fatten stroke</strong></blockquote>
 <blockquote class="paper-quote"><strong>図15 提案手法で生成したアンビグラム及びデザイナによるアンビグラム1)の比較</strong></blockquote>
@@ -244,7 +244,7 @@ window.PAPERS_CONTENT = {
 <section id="p2-sec-15" class="paper-section">
 <h4 class="section-title">6.1.2 評価結果</h4>
 <p class="paper-paragraph">作成可能なアンビグラムの評価結果を表1に示す。表1 から、作成可能なアンビグラムのうち1文字単体では半数未満の文字にしか可読性がないという結果が得られた。一方で、あったことから、著者が一つも作成できなかった組み合わせからも可読性のあるアンビグラムの生成ができたことが明らかになった。</p>
-<p class="paper-paragraph">評価したアンビグラムの一例として、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0であっ</p>
+<p class="paper-paragraph">評価したアンビグラムの一例として、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0 であっ</p>
 <p class="paper-paragraph">(a-1) 「あ」・「ま」(a-2) 「い」・「け」(a-3) 「え」・「る」(a-4) 「き」・「わ」(a-5) 「さ」・「や」</p>
 <p class="paper-paragraph">(a-1) “A” and “Ma”(a-2) “I” and “Ke”(a-3) “E” and “Ru”(a-4) “Ki” and “Wa”(a-5) “Sa” and “Ya”</p>
 <p class="paper-paragraph">(a-6) 「を」・「を」(a-7) 「せ」・「み」(a-8) 「た」・「む」(a-9) 「は」・「れ」(a-10) 「も」・「よ」</p>
@@ -253,7 +253,7 @@ window.PAPERS_CONTENT = {
 <p class="paper-paragraph">(b-1) “Se” and “Nu”(b-2) “Sa” and “Wo”(b-3) “Tsu” and “Mu”(b-4) “U” and “Nu”(b-5) “A” and “So”</p>
 <p class="paper-paragraph">(c-1) 「い」・「ね」(c-2) 「う」・「お」(c-3) 「く」・「と」(c-4) 「し」・「や」(c-5) 「せ」・「ち」(c-1) “I” and “Ne”(c-2) “U” and “O”(c-3) “Ku” and “To”(c-4) “Shi” and “Ya”(c-5) “Se” and “Chi”</p>
 <p class="paper-paragraph">(c-6) 「ね」・「へ」(c-7) 「と」・「の」(c-8) 「て」・「へ」(c-9) 「ぬ」・「ぬ」(c-10) 「ん」・「ん」</p>
-<p class="paper-paragraph">(c-6) “Ne” and “He”(c-7) “To” and “No”(c-8) “Te” and “He”(c-9) “Nu” and “Nu”(c-10) “N” and “N”可読性文字数あり325なし399可読性文字数あり93なし264認識結果文字数可読78不可読1003た提案手法で生成したアンビグラムを図15(a)に、作成不明で<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0であったアンビグラムを図15(b)に、すべての被験者が不可読であったアンビグラムを図15(c)に例示する。また、図15において、四角で囲われた文字は本研究で生成し、評価実験をした文字であり、囲われていない文字は文献1)に記載されていたデザイナが作成した文字であり、評価実験は行っていない。</p>
+<p class="paper-paragraph">(c-6) “Ne” and “He”(c-7) “To” and “No”(c-8) “Te” and “He”(c-9) “Nu” and “Nu”(c-10) “N” and “N”可読性文字数あり325なし399可読性文字数あり93なし264認識結果文字数可読78不可読1003た提案手法で生成したアンビグラムを図15(a)に、作成不明で<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0 であったアンビグラムを図15(b)に、すべての被験者が不可読であったアンビグラムを図15(c)に例示する。また、図15において、四角で囲われた文字は本研究で生成し、評価実験をした文字であり、囲われていない文字は文献1)に記載されていたデザイナが作成した文字であり、評価実験は行っていない。</p>
 <blockquote class="paper-quote"><strong>表2 から、作成不明なアンビグラムのうち26.1%で可読性が</strong></blockquote>
 <blockquote class="paper-quote"><strong>表1 作成可能なアンビグラムの評価結果</strong></blockquote>
 <blockquote class="paper-quote"><strong>Table 1 Evaluation result of Ambigrams can be given by hand crafted</strong></blockquote>
@@ -264,8 +264,8 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p2-sec-16" class="paper-section">
 <h4 class="section-title">6.1.3 デザイナの作成したアンビグラムとの比較</h4>
-<p class="paper-paragraph">まず、図15(a)に示した、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0であった提案手法で生成したアンビグラムに着目する。これらは、対応関係付けられているストロークも一致しており、<mark class="annotated-term" data-term-id="brush-modulation">ストロークの太さ</mark>も強調すべき共通部分は太く、目立たなくすべき非共通部分は細くなっている。したがって、デザイナが作成したアンビグラムと遜色ない文字が生成できているといえる。</p>
-<p class="paper-paragraph">次に、図15(b)に示した、作成不明で<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0であったアンビグラムに着目する。これらは、図15(a)に比べて非共通部分が多く見られるが、文字構造の変形が少なく、共通部分がアンビグラムの半分を占めている。例えば図15(b-4)は、「う」の文字全体が強調されており、かつ「う」と「ぬ」の形状はあまり変形されていないため、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が高くなったといえる。</p>
+<p class="paper-paragraph">まず、図15(a)に示した、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0 であった提案手法で生成したアンビグラムに着目する。これらは、対応関係付けられているストロークも一致しており、<mark class="annotated-term" data-term-id="brush-modulation">ストロークの太さ</mark>も強調すべき共通部分は太く、目立たなくすべき非共通部分は細くなっている。したがって、デザイナが作成したアンビグラムと遜色ない文字が生成できているといえる。</p>
+<p class="paper-paragraph">次に、図15(b)に示した、作成不明で<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が1.0 であったアンビグラムに着目する。これらは、図15(a)に比べて非共通部分が多く見られるが、文字構造の変形が少なく、共通部分がアンビグラムの半分を占めている。例えば図15(b-4)は、「う」の文字全体が強調されており、かつ「う」と「ぬ」の形状はあまり変形されていないため、<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が高くなったといえる。</p>
 <p class="paper-paragraph">最後に、図15(c)に示した、全ての被験者が不可読であったアンビグラムに着目する。これらは、デザイナのアンビグラムとはストロークの対応付けが異なっている。例えば図15(c-1)は、「い」の2画目が対応付けられておらず、非共通部分が多いため、不可読であった可能性が高い。さらに、図15(c-3)の対応付けはデザイナと同じであるが、非共通部分の影響によって「く」が「て」のように見える。実際、このアンビグラムは5人中5人が「く」の文字を「て」と読んでいたことから、共通部分をより太くしたり、非共通部分を変形させて目立たなくしたりするようなストロークの<mark class="annotated-term" data-term-id="brush-modulation">太線化</mark>の工夫が必要である。</p>
 <blockquote class="paper-quote"><strong>図16 認識器が可読としたアンビグラム</strong></blockquote>
 <blockquote class="paper-quote"><strong>Fig.16 Ambigram which can be read by Hiragana Recognizer</strong></blockquote>
@@ -273,7 +273,7 @@ window.PAPERS_CONTENT = {
 <section id="p2-sec-17" class="paper-section">
 <h3 class="section-title">6.2 ひらがな識別器による単一文字の可読性の評価</h3>
 <p class="paper-paragraph">前節では、アンビグラムの可読性を人の目で主観的に評価したが、文字の識別には少なからず個人差がある。そこで、ひらがな識別器を用い、定量的な<mark class="annotated-term" data-term-id="readability-experiment">可読性の評価</mark>を行う。</p>
-<p class="paper-paragraph">電子技術総合研究所が収集した手書き文字データベースETL818) から160人分の手書きひらがなを用いて、CNN(Convolutional Neural Network)で学習することで、識別器を生成した。なお、学習データに対する識別精度は0.96、誤差関数の値は0.12であり、テストデータに対する識別精度は0.99、誤差関数の値は0.01であった。ただし、誤差関数は交差エントロピーを用いている。この識別器を用いてアンビグラムの識別を行い、前節と同じく通常状態と反転状態の両方の文字を正しく読めた場合を可読とした。</p>
+<p class="paper-paragraph">電子技術総合研究所が収集した手書き文字データベース ETL818) から160人分の手書きひらがなを用いて、CNN(Convolutional Neural Network)で学習することで、識別器を生成した。なお、学習データに対する識別精度は0.96、誤差関数の値は0.12 であり、テストデータに対する識別精度は0.99、誤差関数の値は0.01 であった。ただし、誤差関数は交差エントロピーを用いている。この識別器を用いてアンビグラムの識別を行い、前節と同じく通常状態と反転状態の両方の文字を正しく読めた場合を可読とした。</p>
 <p class="paper-paragraph">識別結果を表3に示し、可読であったアンビグラムを前節で述べた人による<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>とともに図16に例示する。手書き文字と生成したアンビグラムは形状が大きく異なるため、可読と判断される文字は表1 及び表2に示す人の評価に比べて非常に少ない結果となった。また、識別器で可読と判断された78文字中、人の評価で可読性があった文字は42文字しかなかったことから、人と識別器の可読の判断に関係性はなかったといえる。</p>
 <p class="paper-paragraph">なお、デザイナの作成したアンビグラム724文字1)を識別した結果、1文字しか可読でなかった。</p>
 </section>
@@ -283,7 +283,7 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p2-sec-19" class="paper-section">
 <h4 class="section-title">6.3.1 実施方法</h4>
-<p class="paper-paragraph">まず、ひらがな4文字で構成される単語を日本語教育語彙を一つにした4文字の単語の集合をIとする。このとき、|I|2,536であった。そして、LM ∣M ∈F, 0) HM)0.6, OP ∣P ∈F, 0.6 : HMとし、次式からアンビグラムの単語集合Q∈を得る。ただし、MはMを反転させた文字を表し、正規表現に従い文字列を記述した。⊂I ∣P, P, P ∈OPM	P</p>
+<p class="paper-paragraph">まず、ひらがな4文字で構成される単語を日本語教育語彙を一つにした4文字の単語の集合をIとする。このとき、|I|2,536であった。そして、LM ∣M ∈F, 0) HM)0.6, OP ∣P ∈F, 0.6 : HMとし、次式からアンビグラムの単語集合Q∈を得る。ただし、M	はMを反転させた文字を表し、正規表現に従い文字列を記述した。⊂I ∣P, P, P ∈OPM	P</p>
 <p class="paper-paragraph">Q∈PMPP, P(13)⊂I ∣P, P, P ∈OM	PP</p>
 <p class="paper-paragraph">∪PPMP, P</p>
 <p class="paper-paragraph">そして、Q∈の要素15,474組から、調査対象とする単語対をTの要素ごとに一つ選択した。その結果、集合Lに含まれるアンビグラム252文字中246文字をそれぞれ1文字ずつ使用した通常状態と反転状態の2 単語246組を得た。</p>
@@ -295,7 +295,7 @@ window.PAPERS_CONTENT = {
 <p class="paper-paragraph">本論文では、単一文字の評価と同様にアンビグラムの単語。が可読であった<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>H.が0.6以上である場合を可読性があるとした。評価結果を表4に示し、評価単語を<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>とともに図17に例示する。ただし、通常状態と反転状態の単語二組を1 単語として表している。表4 から評価を行った246単語のうち87.8%もの単語が可読であったことから、可読性可読性単語数あり216なし30</p>
 <p class="paper-paragraph">（「あきれる」と「おおゆき」）（「かみきれ」と「たようか」）</p>
 <p class="paper-paragraph">(“Akireru” and “Ohyuki”)(“Kamikire” and “Tayoka”)が低い文字が含まれていたとしても、単語にすることで可読性が向上することが確認できた。</p>
-<p class="paper-paragraph">また、単語を構成する文字の可読性が単語の可読に影響を及ぼしているかについて考察する。評価を行った246 単語について、単語を構成する文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせごとに評価単語数及び可読性がある単語数を集計し、「可読性がある単語の割合」を［可読性がある単語数］/［評価単語数］で定義する。文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせごとに集計した結果を表5に示す。ただし、括弧内は［可読性がある単語数］/［評価単語数］を表す。表5において、可読性がない1文字の可読率が「0.2」、可読性がある3文字の可読率の組み合わせが「0.8と1.0」の場合、単語を構成する4文字の可読率が(0.2, 0.8, 0.8,1.0)のように構成されていることを示している。以下、データ数が一つしかない「0.6と0.8」の列を除いて考察をする。</p>
+<p class="paper-paragraph">また、単語を構成する文字の可読性が単語の可読に影響を及ぼしているかについて考察する。評価を行った246 単語について、単語を構成する文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせごとに評価単語数及び可読性がある単語数を集計し、「可読性がある単語の割合」を［可読性がある単語数］/［評価単語数］で定義する。文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせごとに集計した結果を表5に示す。ただし、括弧内は［可読性がある単語数］/［評価単語数］を表す。表5において、可読性がない1文字の可読率が「0.2」、可読性がある3文字の可読率の組み合わせが「0.8と1.0」の場合、単語を構成する4文字の可読率が(0.2, 0.8, 0.8,1.0)のように構成されていることを示している。以下、データ数が一つしかない「0.6 と0.8」の列を除いて考察をする。</p>
 <p class="paper-paragraph">まず、表5の「0.2」と「0.4」の行を比較すると、残りの3文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>によらず「0.4」を含む単語の方が、可読性がある単語の割合が高いことがわかる。したがって、4文字の単語の場合、1文字の非可読性が単語の可読に悪影響を及ぼすことが推察される。次に、表5の列に着目すると、3文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が上がるほど可読性がある単語の割合が高くなっていることがわかる。したがって、1文字では読みにくい文字が単語に含まれていたとしても、他に読める文字が多いほど単語が読める可能性が上がることが推察される。</p>
 <blockquote class="paper-quote"><strong>表4 アンビグラムの単語の評価結果</strong></blockquote>
 <blockquote class="paper-quote"><strong>Table 4 Evaluation result of Ambigram word</strong></blockquote>
@@ -307,19 +307,19 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p2-sec-22" class="paper-section">
 <h3 class="section-title">7.1 共通部分との相関</h3>
-<p class="paper-paragraph">6.1.3においてデザイナの作成したアンビグラムと比較することで、共通部分が多いアンビグラムは<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が高く、非共通部分が多いアンビグラムは<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が低くなる傾向にあることを定性的に示した。本節では、共通部分と可読性の関係を定量的に検証する。</p>
-<p class="paper-paragraph">特徴点を<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>した結果、重なり合うエッジの長さの総和をU、各<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>の全エッジの長さの総和をそれぞれU, Uとすると、共通部分の割合は次式で与えられる。readability可読性がある3文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせ0.6と0.8 0.8のみ0.8と1.0 1.0のみ0.2 1.00 0.57 0.80 0.92</p>
+<p class="paper-paragraph">6.1.3 においてデザイナの作成したアンビグラムと比較することで、共通部分が多いアンビグラムは<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が高く、非共通部分が多いアンビグラムは<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>が低くなる傾向にあることを定性的に示した。本節では、共通部分と可読性の関係を定量的に検証する。</p>
+<p class="paper-paragraph">特徴点を<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>した結果、重なり合うエッジの長さの総和をU、各<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>の全エッジの長さの総和をそれぞれU, U	とすると、共通部分の割合は次式で与えられる。readability 可読性がある3文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせ0.6 と0.8 0.8のみ0.8 と1.0 1.0のみ0.2 1.00 0.57 0.80 0.92</p>
 <p class="paper-paragraph">可読性がない(1/1)(4/7)(78/97)(22/24)</p>
 <p class="paper-paragraph">1文字の<mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>0.96 0.95(11/13)(79/82)(21/22)</p>
 <p class="paper-paragraph">可読性がある文字の割合63/126</p>
 <p class="paper-paragraph">0.8 30/49</p>
 <p class="paper-paragraph">0.6</p>
 <p class="paper-paragraph">0.4</p>
-<p class="paper-paragraph">0.2[0.0,0.1)[0.1,0.2)[0.2,0.3)[0.3,0.4)[0.4,0.5)[0.5,0.6)[0.6,0.7)[0.7,0.8)[0.8,0.9)[0.9,1.0]共通部分の割合readable words</p>
+<p class="paper-paragraph">0.2[0.0,0.1)[0.1,0.2)[0.2,0.3)[0.3,0.4)[0.4,0.5)[0.5,0.6)[0.6,0.7)[0.7,0.8)[0.8,0.9)[0.9,1.0]共通部分の割合 readable words</p>
 <p class="paper-paragraph">H 0.2, V 0.09 H 0.2, V 0.14</p>
 <p class="paper-paragraph">H 1.0, V 0.63 H 1.0, V 0.60</p>
 <p class="paper-paragraph">U U  U " U(11)式(11)を用いて共通部分の割合を計算し、割合ごとに可読性がある文字の割合を求めた結果を図18に示す。ただし、棒グラフの上部の数値は、［可読性がある文字数］/［評価文字数］を表す。グラフが示すように、共通部分の割合が増加するほど、可読性がある文字の割合も上昇することが明らかになった。したがって、共通部分の割合と可読性には相関があるといえる。では、なぜそのような相関が得られるのかを視覚的にも考0.6</p>
-<p class="paper-paragraph">可読性がある文字の割合0.5 13/37 0.4 12/43 2/7 0.3 28/114 3/19 0.2 0.1[0.0,0.1)[0.1,0.2)[0.2,0.3)[0.3,0.4)[0.4,0.5)[0.5,0.6)[0.6,0.7)[0.7,0.8)[0.8,0.9)[0.9,1.0]エッジの平均角度差関係and proportion of readable words察するために、図19に共通部分が少ないアンビグラムを、通部分の割合をVで表している。細いストロークが通常状態の文字と反転状態の文字のどちらに属するか判別できなくなり、結果的にそれぞれの文字の構造を区別できなくなったため可読性が低くなった推察する。一方で図20を見ると、太いストロークが多いことから、共通部分だけで何の文字かを判断することができ、結果的に非共通部分の可読に対する悪影響が小さくなり可読性が高くなったと推察する。</p>
+<p class="paper-paragraph">可読性がある文字の割合0.5 13/37 0.4 12/43 2/7 0.3 28/114 3/19 0.2 0.1[0.0,0.1)[0.1,0.2)[0.2,0.3)[0.3,0.4)[0.4,0.5)[0.5,0.6)[0.6,0.7)[0.7,0.8)[0.8,0.9)[0.9,1.0]エッジの平均角度差関係 and proportion of readable words 察するために、図19に共通部分が少ないアンビグラムを、通部分の割合をVで表している。細いストロークが通常状態の文字と反転状態の文字のどちらに属するか判別できなくなり、結果的にそれぞれの文字の構造を区別できなくなったため可読性が低くなった推察する。一方で図20を見ると、太いストロークが多いことから、共通部分だけで何の文字かを判断することができ、結果的に非共通部分の可読に対する悪影響が小さくなり可読性が高くなったと推察する。</p>
 <blockquote class="paper-quote"><strong>表5 <mark class="annotated-term" data-term-id="readability-experiment">可読率</mark>の組み合わせごとの可読性がある単語の割合</strong></blockquote>
 <blockquote class="paper-quote"><strong>Table 5 Proportion of readable words for each combination of</strong></blockquote>
 <blockquote class="paper-quote"><strong>図18 共通部分の割合と可読性がある文字の割合との関係</strong></blockquote>
@@ -335,7 +335,7 @@ window.PAPERS_CONTENT = {
 </section>
 <section id="p2-sec-23" class="paper-section">
 <h3 class="section-title">7.2 形状変化との相関</h3>
-<p class="paper-paragraph">次に、形状変化と可読性に相関があるか検証する。形状変化に関する要素をしては、エッジの傾きの変化が挙げられる。そこで、本節では<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>前後の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>のエッジの平均角度差が可読性と相関があるか調べる。まず、エッジの平均角度差を［エッジの角度差の和］/［エッジ数］とする。ただし、平均角度差は1文字ごとに求めており、エッジの角度差は0°以上180°以下になるように求めている。そして、エッジの平均角度差を最小値0、最大値1になるように正規化し、各範囲で可読性がある文字の割合を求めた結果を図21に示す。ただし、図21の上部の数値は［可読性がある文字数］/［評価文字数］を表す。性に明確な相関は見られなかった。したがって、前節の共通部分の割合と可読性の顕著な相関を踏まえると、形状変化が大きくても共通部分の割合が多ければ、可読となることが期待できる。一方で、図15(c-1)のように、形状変化が小さくても共通部分の割合が少なければ、不可読となる可能性が高いと推察する。では、なぜエッジの平均角度差と可読性に相関が得られな</p>
+<p class="paper-paragraph">次に、形状変化と可読性に相関があるか検証する。形状変化に関する要素をしては、エッジの傾きの変化が挙げられる。そこで、本節では<mark class="annotated-term" data-term-id="affine-transformation">アフィン変換</mark>前後の<mark class="annotated-term" data-term-id="skeleton-graph">文字グラフ</mark>のエッジの平均角度差が可読性と相関があるか調べる。まず、エッジの平均角度差を［エッジの角度差の和］/［エッジ数］とする。ただし、平均角度差は1文字ごとに求めており、エッジの角度差は0°以上180°以下になるように求めている。そして、エッジの平均角度差を最小値0、最大値1 になるように正規化し、各範囲で可読性がある文字の割合を求めた結果を図21に示す。ただし、図21の上部の数値は［可読性がある文字数］/［評価文字数］を表す。性に明確な相関は見られなかった。したがって、前節の共通部分の割合と可読性の顕著な相関を踏まえると、形状変化が大きくても共通部分の割合が多ければ、可読となることが期待できる。一方で、図15(c-1)のように、形状変化が小さくても共通部分の割合が少なければ、不可読となる可能性が高いと推察する。では、なぜエッジの平均角度差と可読性に相関が得られな</p>
 <p class="paper-paragraph">H 0.2, M 0.16, V 0.21 H 1.0, M 0.14, V 0.40</p>
 <p class="paper-paragraph">H 0.2, M 0.70, V 0.48 H 1.0, M 0.57, V 0.56かったのかを視覚的にも考察するために、図22に平均角度差が小さいアンビグラムを、図23に平均角度差が大きいアンビグラムを例示する。なお、平均角度差を前述のとおり正規化した値をMで表している。</p>
 <p class="paper-paragraph">共通部分の割合は元々の文字構造の違いに依存するため、図22に示すように平均角度差が等しく小さい場合でも共通部分の割合は異なる。したがって、平均角度差と共通部分の割合には相関がないため、可読性とも相関がないと推察する。</p>
@@ -375,7 +375,7 @@ window.PAPERS_CONTENT = {
 <section id="p2-sec-28" class="paper-section">
 <h2 class="section-title">10. むすび</h2>
 <p class="paper-paragraph">文字構造の共通部分の抽出、特徴点の適切な対応付け、<mark class="annotated-term" data-term-id="brush-modulation">太線化</mark>を行うアンビグラム生成手法を提案した。アンビグラム作家が制作した724文字をすべて含み、新たな357文字を加えた1,081文字のアンビグラムを生成した。</p>
-<p class="paper-paragraph">被験者による<mark class="annotated-term" data-term-id="readability-experiment">可読性の評価</mark>により、作成可能なアンビグラムのうち半数以上で可読性がないという結果となったが、単一文字のときは可読性がなかった1文字を含む単語に対する<mark class="annotated-term" data-term-id="readability-experiment">可読性の評価</mark>を行った結果、87.8%の単語に可読性があったことから、単語にすることによる可読性の向上がみられた。さらに、著者が作成困難と判断した357の文字対からも適切に文字の共通部分を検出し、可読性があるアンビグラムを93文字生成できた。</p>
+<p class="paper-paragraph">被験者による<mark class="annotated-term" data-term-id="readability-experiment">可読性の評価</mark>により、作成可能なアンビグラムのうち半数以上で可読性がないという結果となったが、単一文字のときは可読性がなかった1文字を含む単語に対する<mark class="annotated-term" data-term-id="readability-experiment">可読性の評価</mark>を行った結果、87.8%の単語に可読性があったことから、単語にすることによる可読性の向上がみられた。さらに、著者が作成困難と判断した357 の文字対からも適切に文字の共通部分を検出し、可読性があるアンビグラムを93文字生成できた。</p>
 <p class="paper-paragraph">可読性と共通部分及び形状変化に相関があるか検証した結果、ストロークが重なり合う部分の割合が大きいほど可読性が向上することが確認でき、形状変化の大小は可読性に影響しないと推察した。</p>
 <p class="paper-paragraph">そして、別のグラフマッチング手法との比較により、提案手法の有効性を検証し、ひらがな以外のアンビグラムを本手法により生成することで、適用範囲の検証を行った。</p>
 <p class="paper-paragraph">しかし、可読性の観点から文字表現の向上が必要である。「く」や「へ」といった特徴点の少ない文字や、特徴点が多くても対応点が少ない場合は変形が足りないため、非共通部分をより目立たなくする変形方法と<mark class="annotated-term" data-term-id="brush-modulation">太線化</mark>を検討する。</p>
@@ -391,7 +391,7 @@ window.PAPERS_CONTENT = {
 <p class="paper-paragraph paper-ref-item">[7] S. Schaefer, T. McPhail, J. Warren: “Image Deformation Using Moving Least Squares”, ACM Trans. Graph, Vol.25, No.3, pp.533–540 (2006).</p>
 <p class="paper-paragraph paper-ref-item">[8] N. D. F. Campbell, J. Kautz: “Learning a Manifold of Fonts”, ACM Trans. on Graphics, Vol.33, No.4, pp.91:1–91:11 (2014).</p>
 <p class="paper-paragraph paper-ref-item">[9] Y. Fujita, H. Xie, K. Miyata: “Perceptual Font Manifold from Generative Model”, Nicograph International (NicoInt), pp. 41–48 (2019).</p>
-<p class="paper-paragraph paper-ref-item">[10] 成沢淳史、柳井啓司: “Neural Style Transferと Cycle GANを利用したフォント変換”、画像の認識・理解シンポジウム(MIRU), pp. PS2–26 (2017).</p>
+<p class="paper-paragraph paper-ref-item">[10] 成沢淳史、柳井啓司: “Neural Style Transfer と Cycle GAN を利用したフォント変換”、画像の認識・理解シンポジウム(MIRU), pp. PS2–26 (2017).</p>
 <p class="paper-paragraph paper-ref-item">[11] L. A. Gatys, A. S. Ecker, M. Bethge: “Image Style Transfer Using Convolutional Neural Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).</p>
 <p class="paper-paragraph paper-ref-item">[12] J.-Y. Zhu, T. Park, P. Isola, A. A. Efros: “Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks”, Proc. of IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp.2414–2423 (2016).</p>
 <p class="paper-paragraph paper-ref-item">[13] 島崎早智、多田信洋、藤岡寛之、日高章理: “ニューラル画像対画像変換による毛筆体文字の生成”、第81回全国大会講演論文集、Vol.2019、No.1、pp.189–190 (2019).</p>
