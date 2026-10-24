@@ -87,5 +87,69 @@ window.APP_CODE_MODULES = [
         "line": 31
       }
     ]
+  },
+  {
+    "id": "mod-morphology-engine",
+    "title": "手法A: 論理積 ＋ モルフォロジー膨張・共通対称核抽出",
+    "file": "backend/generators/morphology_engine.py",
+    "related_paper": "論文②: 井上・高橋 (2020) §3「細線化」 / §5「ストロークの太線化」",
+    "why": "正位置と180度回転文字のピクセル論理積 (AND) を『共通対称核』として抽出し、モルフォロジー膨張 (Dilation) と平滑化によって二重線を解消した滑らかな単一ストロークを生成する。",
+    "symbols": [
+      {
+        "type": "class",
+        "name": "MorphologyAmbigramEngine",
+        "docstring": "手法A: 論理積 (AND) ＋ モルフォロジー膨張・平滑化 Engine\n正位置と180度回転文字のピクセル論理積 (AND) を『共通対称核』として抽出し、\nモルフォロジー膨張 (Dilation) と平滑化によって二重線を解消した滑らかな単一ストロークを生成する。\nマルチフォント自動最適化 & 重心微小シフト補正に対応。",
+        "snippet": "class MorphologyAmbigramEngine(BaseAmbigramGenerator):\n    \"\"\"\n    手法A: 論理積 (AND) ＋ モルフォロジー膨張・平滑化 Engine\n    正位置と180度回転文字のピクセル論理積 (AND) を『共通対称核』として抽出し、\n    モルフォロジー膨張 (Dilation) と平滑化によって二重線を解消した滑らかな単一ストロークを生成する。\n    マルチフォント自動最適化 & 重心微小シフト補正に対応。\n    \"\"\"\n    def __init__(self):\n        pass\n\n    def render_glyph_bitmap(self, char: str, size: int = 512, font_path: Optional[Path] = None) -> np.ndarray:\n        \"\"\"指定文字を高解像度ビットマップとしてレンダリング (0: 背景, 255: 文字)\"\"\"\n        path = font_path or font_manager.get_font_path(\"zen_maru\")\n        img = Image.new(\"L\", (size, size), 0)\n        draw = ImageDraw.Draw(img)\n        try:\n            font = ImageFont.truetype(str(path), int(size * 0.72))\n        except Exception:\n            font = ImageFont.load_default()\n\n        bbox = draw.textbbox((0, 0), char, font=font)\n        w = bbox[2] - bbox[0]\n        h = bbox[3] - bbox[1]\n        x = (size - w) // 2 - bbox[0]\n        y = (size - h) // 2 - bbox[1]\n\n        draw.text((x, y), char, fill=255, font=font)\n        u8 = np.array(img, dtype=np.uint8)\n\n        # 実インク（非ゼロ画素）のバウンディングボックス中心による精密幾何中央揃え\n        # 「一」などの特殊アスペクト比グリフで上下にズレて回転対称性が崩れるのを防止\n        y_idx, x_idx = np.where(u8 > 30)\n        if len(y_idx) > 0:\n            cy = (y_idx.min() + y_idx.max()) / 2.0\n            cx = (x_idx.min() + x_idx.max()) / 2.0\n            shift_x = int(round(size / 2.0 - cx))\n            shift_y = int(round(size / 2.0 - cy))\n            if shift_x != 0 or shift_y != 0:\n                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])\n                u8 = cv2.warpAffine(u8, M, (size, size))",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "id": "mod-vector-engine",
+    "title": "手法D: ベクター幾何・三次ベジェ曲線のアウトライン融合",
+    "file": "backend/generators/vector_engine.py",
+    "related_paper": "石崎ほか (2024)「MOjiULE / G-FITs」 / 論文② §4「アフィン変形」",
+    "why": "フォントのTrueTypeベクターアウトライン（三次ベジェ曲線）を直接抽出し、正位置と180度回転文字を幾何学的に融合して無限解像度SVGを生成する。",
+    "symbols": [
+      {
+        "type": "class",
+        "name": "VectorAmbigramEngine",
+        "docstring": "手法1: ベクター / 幾何学的合成 Engine\nフォントのベクターアウトラインを抽出し、正位置の文字と180度回転した対称文字を幾何学的に融合してSVGを生成する。\nマルチフォント自動最適化に対応。",
+        "snippet": "class VectorAmbigramEngine(BaseAmbigramGenerator):\n    \"\"\"\n    手法1: ベクター / 幾何学的合成 Engine\n    フォントのベクターアウトラインを抽出し、正位置の文字と180度回転した対称文字を幾何学的に融合してSVGを生成する。\n    マルチフォント自動最適化に対応。\n    \"\"\"\n    def __init__(self):\n        self._font_cache: dict[str, dict[str, Any]] = {}\n\n    def _get_font_data(self, font_id: str) -> dict[str, Any]:\n        if font_id in self._font_cache:\n            return self._font_cache[font_id]\n        \n        font_path = font_manager.get_font_path(font_id)\n        ttfont = TTFont(str(font_path))\n        data = {\n            \"ttfont\": ttfont,\n            \"glyph_set\": ttfont.getGlyphSet(),\n            \"cmap\": ttfont.getBestCmap(),\n            \"units_per_em\": ttfont[\"head\"].unitsPerEm,\n        }\n        self._font_cache[font_id] = data\n        return data\n\n    def get_glyph_path(self, char: str, font_id: str = \"zen_maru\") -> tuple[str, float]:\n        \"\"\"文字のSVGパス文字列とadvance widthを取得\"\"\"\n        fdata = self._get_font_data(font_id)\n        codepoint = ord(char)\n        if codepoint not in fdata[\"cmap\"]:\n            return \"\", fdata[\"units_per_em\"]\n        glyph_name = fdata[\"cmap\"][codepoint]\n        glyph = fdata[\"glyph_set\"][glyph_name]\n        \n        pen = SVGPathPen(fdata[\"glyph_set\"])\n        glyph.draw(pen)\n        return pen.getCommands(), glyph.width\n\n    def generate(\n        self,\n        word: str,",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "id": "mod-bitmap-engine",
+    "title": "手法C: ビットマップ論理演算・エネルギー場アルファブレンド合成",
+    "file": "backend/generators/bitmap_engine.py",
+    "related_paper": "論文⑤: 魏・山口 (2023) §2.1「生成器モデル」",
+    "why": "OpenCVとNumPyを用いて、正位置文字と180度回転文字の重なり・差分エネルギーを最適化し、滑らかな2値/グレースケールアンビグラム画像を高速生成する。",
+    "symbols": [
+      {
+        "type": "class",
+        "name": "BitmapAmbigramEngine",
+        "docstring": "手法2: ビットマップ画像最適化 Engine\nOpenCVとNumPyを用いて、正位置文字と180度回転文字の重なり・差分エネルギーを最適化し、\n滑らかな2値/グレースケールアンビグラム画像を生成する",
+        "snippet": "class BitmapAmbigramEngine(BaseAmbigramGenerator):\n    \"\"\"\n    手法2: ビットマップ画像最適化 Engine\n    OpenCVとNumPyを用いて、正位置文字と180度回転文字の重なり・差分エネルギーを最適化し、\n    滑らかな2値/グレースケールアンビグラム画像を生成する\n    \"\"\"\n    def __init__(self, font_path: Optional[Path] = None):\n        self.font_path = font_path\n\n    def render_glyph_bitmap(self, char: str, size: int = 512, font_path: Optional[Path] = None) -> np.ndarray:\n        \"\"\"指定文字を高解像度ビットマップとしてレンダリング (0: 背景, 255: 文字)\"\"\"\n        fpath = font_path or self.font_path or font_manager.get_font_path(\"zen_maru\")\n        img = Image.new(\"L\", (size, size), 0)\n        draw = ImageDraw.Draw(img)\n        try:\n            font = ImageFont.truetype(str(fpath), int(size * 0.72))\n        except Exception:\n            font = ImageFont.load_default()\n\n        bbox = draw.textbbox((0, 0), char, font=font)\n        w = bbox[2] - bbox[0]\n        h = bbox[3] - bbox[1]\n        x = (size - w) // 2 - bbox[0]\n        y = (size - h) // 2 - bbox[1]\n\n        draw.text((x, y), char, fill=255, font=font)\n        u8 = np.array(img, dtype=np.uint8)\n\n        # 実インク（非ゼロ画素）のバウンディングボックス中心による精密幾何中央揃え\n        y_idx, x_idx = np.where(u8 > 30)\n        if len(y_idx) > 0:\n            cy = (y_idx.min() + y_idx.max()) / 2.0\n            cx = (x_idx.min() + x_idx.max()) / 2.0\n            shift_x = int(round(size / 2.0 - cx))\n            shift_y = int(round(size / 2.0 - cy))\n            if shift_x != 0 or shift_y != 0:\n                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])\n                u8 = cv2.warpAffine(u8, M, (size, size))\n\n        return u8",
+        "line": 12
+      }
+    ]
+  },
+  {
+    "id": "mod-dictionary-search",
+    "title": "単語ペア回転探索エンジン & 語彙親密度DFS枝刈り木探索",
+    "file": "backend/search/finder.py",
+    "related_paper": "論文②: 井上・高橋 (2020) §4.3「アンビグラムの探索」 / §6.1「単語可読性実験」",
+    "why": "数万語の日本語辞書（JMdict / 常用語カタログ）から、180度回転時に別の有意義な単語（または同語）となるペアを逆引きプレフィックス木・バックトラッキングDFS探索によって高速抽出する。",
+    "symbols": [
+      {
+        "type": "class",
+        "name": "AmbigramFinder",
+        "docstring": "",
+        "snippet": "class AmbigramFinder:\n    def __init__(self, words_path: Path = WORDS_PATH, matrix_path: Path = MATRIX_PATH):\n        print(f\"探索エンジン初期化中... (辞書: {words_path.name})\")\n        with open(words_path, \"r\", encoding=\"utf-8\") as f:\n            self.words: list[dict[str, Any]] = json.load(f)\n            \n        with open(matrix_path, \"r\", encoding=\"utf-8\") as f:\n            self.matrix: dict[str, dict[str, float]] = json.load(f)\n\n        # 評価結果のインメモリキャッシュ\n        self.eval_cache: dict[str, dict[str, Any]] = {}\n            \n        # 漢字表記およびカタカナ表記からの高速インデックス作成\n        self.kanji_to_word: dict[str, dict[str, Any]] = {}\n        self.katakana_to_word: dict[str, dict[str, Any]] = {}\n\n        # リアルタイム高速検索用の長さ別・常用語別インデックス\n        self.words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)\n        self.common_words_by_len: dict[int, list[dict[str, Any]]] = defaultdict(list)\n\n        is_flat_catalog = bool(self.words and \"word\" in self.words[0])\n\n        if is_flat_catalog:\n            # 新形式 (words_catalog.json): 単語・表記ベースのフラット辞書\n            for w in self.words:\n                w_str = w.get(\"word\", \"\")\n                reading = w.get(\"reading\", \"\")\n                w_type = w.get(\"type\", \"kanji\")\n                is_common = w.get(\"common\", True)\n                w_len = w.get(\"length\", len(w_str))\n\n                self.words_by_len[w_len].append(w)\n                if is_common:\n                    self.common_words_by_len[w_len].append(w)\n\n                if w_type == \"kanji\" or w_type == \"phrase\":\n                    self.kanji_to_word[w_str] = w\n                elif w_type == \"katakana\":\n                    self.katakana_to_word[w_str] = w\n                ",
+        "line": 104
+      }
+    ]
   }
 ];
