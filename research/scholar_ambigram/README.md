@@ -34,6 +34,7 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 | 14 | [教員養成教育における美術教育指導の授業のあり方をめぐって](./14_art_education_ambigram/) | 高木厚子 | 2017 | 兵庫教育大学研究紀要 | **あり** (`paper.pdf`, 8.9MB) |
 | 15 | [1 は赤い. そして世界は緑と青でできている](./15_one_is_red_book/) | 望月菜南子 | 2020 | 光文社（単行本） | 書籍 |
 | 16 | [2023 年度 (第 76 回) 電気・情報関係学会九州支部連合大会プログラム](./16_jceeek_program_2023/) | 電気・情報関係学会九州支部連合大会 | 2023 | 大会プログラム | **あり** (`paper.pdf`, 450KB) |
+| 17 | [Principal Warps: Thin-Plate Splines and the Decomposition of Deformations](./17_tps_principal_warps_bookstein/) | Fred L. Bookstein | 1989 | IEEE TPAMI | **あり** (`paper.pdf`, 1.6MB) |
 
 ---
 
@@ -57,6 +58,12 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 ### ④ 「MOjiULE」「G-FITs」「ひらがな~ る」-文字形状に着目した日本語作品の報告（石崎ほか, 2024）
 - **ファイル**: `09_mojiule_gfits_hiraganaru/paper.pdf`
 - **概要**: 日本語ひらがなの字形要素・モジュールを分解し、幾何学的なパズルや回転・反転による文字認識の境界を探求したデザイン研究。
+- **活用性**: 非剛体局所変形やストローク分解によるアンビグラムの認知心理的境界の分析。
+
+### ⑤ Principal Warps: Thin-Plate Splines and the Decomposition of Deformations（Bookstein, 1989）
+- **ファイル**: `17_tps_principal_warps_bookstein/paper.pdf`
+- **概要**: 2Dランドマーク点群に基づく薄板スプライン（TPS）弾性補間変形（Warping）の原著論文。
+- **活用性**: 本リポジトリの「近接ストローク吸引・局所非剛体スナップ（`snap_warper.py`）」における曲げエネルギー最小化・弾性変形場の数理理論基盤。
 
 ---
 
