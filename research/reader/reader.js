@@ -209,6 +209,7 @@
     });
 
     sheetEl.innerHTML = metaHeader + contentHtml;
+    renderMath(sheetEl);
 
     if (tocListEl) {
       tocListEl.innerHTML = tocHtml;
@@ -399,6 +400,9 @@
         openInspector(termId); // 再描画
       });
     }
+
+    // インスペクター内の数式をKaTeX自動レンダリング
+    renderMath(inspectorArea);
   }
 
   function escapeHtml(str) {
