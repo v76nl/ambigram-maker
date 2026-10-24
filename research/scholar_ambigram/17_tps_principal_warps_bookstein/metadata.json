@@ -1,0 +1,22 @@
+{
+  "id": 17,
+  "title": "Principal Warps: Thin-Plate Splines and the Decomposition of Deformations",
+  "queries": [
+    "Thin Plate Spline",
+    "Principal Warps"
+  ],
+  "authors": [
+    "Fred L. Bookstein"
+  ],
+  "year": "1989",
+  "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol. 11, No. 6, pp. 567-585",
+  "doi": "10.1109/34.24792",
+  "url": "https://doi.org/10.1109/34.24792",
+  "pdf_url": "https://user.engineering.uiowa.edu/~aip/papers/bookstein-89.pdf",
+  "pdf_downloaded": true,
+  "pdf_size_bytes": 1653944,
+  "notes": "TPS（Thin Plate Spline：薄板スプライン）弾性曲げエネルギー最小化による非剛体画像変形・ランドマークワープの原著論文。本プロジェクトにおける近接ストローク吸引・局所非剛体スナップ（snap_warper.py）の理論的基盤。",
+  "abstract": "The thin-plate spline is the natural 2D generalization of the standard cubic spline in 1D. It minimizes bending energy over all interpolating functions between paired point sets (landmarks). This paper introduces principal warps as eigenfunctions of the bending energy matrix, providing an algebraically orthogonal decomposition of deformations into components of decreasing spatial scale.",
+  "meta_tags": {},
+  "references": []
+}
