@@ -594,5 +594,358 @@ EMPIRICAL_UNREADABLE_PAIRS = {
     ("う", "お"): 0.15,
 }`
     }
+  },
+
+  // ===========================================================================
+  // 論文17: Bookstein (1989) & 論文09: 石崎ほか (2024) & 実装拡張キーワード
+  // ===========================================================================
+
+  "tps-deformation": {
+    term: "Thin-Plate Splines (薄板スプライン弾性変形)",
+    reading: "シンプレートスプラインだんせいへんけい",
+    category: "数理幾何・非剛体変形",
+    difficulty: "★★★",
+    papers: ["paper17", "paper09", "paper02"],
+    acronyms: [
+      {
+        abbr: "TPS",
+        expansion: "Thin-Plate Splines",
+        literalTranslation: "薄板スプライン（無限薄板曲げ弾性スプライン）",
+        note: "無限に薄い金属板の物理的たわみエネルギーを最小化する滑らかな2次元補間写像"
+      },
+      {
+        abbr: "RBF",
+        expansion: "Radial Basis Function",
+        literalTranslation: "放射基底関数（中心点からのユークリッド距離のみに依存する基底）",
+        note: "2次元薄板スプラインの基本解カーネル U(r) = r^2 ln r"
+      }
+    ],
+    shortSummary: "無限薄板（金属板）の曲げ弾性エネルギー $I_f$ を最小化し、ランドマーク間を滑らかに変形するTPS（Thin-Plate Splines：直訳『薄板スプライン』）。",
+    intuitiveAnalogy: "「薄いゴムシート」や「鋼板」に複数の画鋲（ピン）を刺して上下させると、ピンの周りだけが自然にたわみ、離れた場所には滑らかに影響が減衰して折れ目が一切できません。高橋・井上（2020）論文②の『ドロネー三角形分割アフィン変換』では三角形の境界で線がカクッと折れ曲がって文字が崩れる問題がありましたが、TPSを使えば無限階微分可能な超スムーズな吸引変形が可能になります。",
+    paperRole: "論文17 (Bookstein 1989) の主題。曲げエネルギー汎関数 $I_f = \iint_{\\mathbb{R}^2} [ (\\frac{\\partial^2 f}{\\partial x^2})^2 + 2(\\frac{\\partial^2 f}{\\partial x \\partial y})^2 + (\\frac{\\partial^2 f}{\\partial y^2})^2 ] dx dy$ の最小解として連立方程式 $L \begin{bmatrix} W \\ A \end{bmatrix} = \begin{bmatrix} Y \\ O \end{bmatrix}$ を導出。論文09 (石崎 2024) でも非剛体モーフィングの数理的背景として活用。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py",
+      functionName: "StrokeSnapWarper.compute_snap_displacement_fields()",
+      description: "本アプリの近接ストローク吸引エンジン。外周一致領域を固定ピン（アンカー拘束）しつつ、中央にズレて存在する内側ストローク（『の』の縦棒、『き』の横線など）のみを中間回転対称軸へTPS弾性吸引スナップさせる。",
+      codeSnippet: `# 2画像の細線化中心線から中間軸へのTPS弾性引力変位場 (dx, dy) を算出
+skel1 = extract_skeleton_u8(img1)
+skel2 = extract_skeleton_u8(img2_rot)
+# 固定アンカー拘束 (すでに一致している共通対称核は変位 0 で固定)
+overlap = cv2.bitwise_and((img1 > 100).astype(np.uint8), (img2_rot > 100).astype(np.uint8))
+overlap_dilated = cv2.dilate(overlap, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+# 距離場勾配による引き寄せとガウス・スプライン平滑化拡散
+disp_x = cv2.GaussianBlur(raw_force_x, (0, 0), sigmaX=smooth_sigma)
+disp_y = cv2.GaussianBlur(raw_force_y, (0, 0), sigmaX=smooth_sigma)`
+    }
+  },
+
+  "principal-warps": {
+    term: "Principal Warps (主歪曲・固有歪曲モード分解)",
+    reading: "プリンシパルワープス / しゅわいきょく",
+    category: "数理幾何・線形代数",
+    difficulty: "★★★",
+    papers: ["paper17"],
+    acronyms: [
+      {
+        abbr: "PW",
+        expansion: "Principal Warps",
+        literalTranslation: "主歪曲（曲げエネルギー行列の固有歪曲モード）",
+        note: "変形を大域的アフィン変形（0次）から局所微小変形（高周波固有値）へと幾何直交分解する数理"
+      }
+    ],
+    shortSummary: "幾何ランドマーク間の歪曲エネルギー行列を固有値分解し、大域的アフィン歪みから局所微小変形までスケール別に直交分解するPW（Principal Warps：直訳『主歪曲』）。",
+    intuitiveAnalogy: "音を「低音（ベース）」「中音（ボーカル）」「高音（ハイハット）」にイコライザーで周波数分解するように、文字の変形を「全体的な傾きや拡大縮小（低周波・アフィン変形）」から「ストローク先端のミリ単位の微小調整（高周波・局所歪曲）」へと完全に分解して独立操作できる数理技術です。",
+    paperRole: "論文17 (Bookstein 1989) §III「Principal Warps」にて定義。曲げエネルギー行列 $K$ の一般化固有値問題 $(K + P Q^T) v_k = \lambda_k v_k$ を解くことで、曲げ剛性 $\\lambda_k$ に応じた幾何直交基底を構成。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py / backend/generators/skeleton_engine.py",
+      functionName: "compute_snap_displacement_fields() / max_distance フィルタ",
+      description: "本アプリでは低周波の大域アフィン補正（重心中央揃え・アスペクト比正規化）と、高周波の局所ストロークスナップ（max_distance以内の近接引力のみを弾性結合）を二段階で完全に直交分離して適用している。",
+      codeSnippet: `# 大域補正（低次モード: 実インクBBによる重心アライメント）
+cy = (y_idx.min() + y_idx.max()) / 2.0
+cx = (x_idx.min() + x_idx.max()) / 2.0
+shift_x = int(round(size / 2.0 - cx))
+shift_y = int(round(size / 2.0 - cy))
+# 局所補正（高次モード: 近接ストローク限定の弾性スナップ）
+mask_close = (d2 <= max_distance) & (d2 > 0.5)`
+    }
+  },
+
+  "radial-basis-function": {
+    term: "放射基底関数 (Radial Basis Function / RBF)",
+    reading: "ほうしゃきていかんすう",
+    category: "応用数学・補間法",
+    difficulty: "★★☆",
+    papers: ["paper17"],
+    acronyms: [
+      {
+        abbr: "RBF",
+        expansion: "Radial Basis Function",
+        literalTranslation: "放射基底関数",
+        note: "中心点からのユークリッド距離 r のみに依存する球対称な基底関数 \\phi(r)"
+      }
+    ],
+    shortSummary: "空間内の基準点からの距離 $r$ のみに依存し、等方的に同心円状に広がる補間基底RBF（Radial Basis Function：直訳『放射基底関数』）。",
+    intuitiveAnalogy: "静かな水面に小石をポチャンと落とした時に広がる「同心円状の波紋」です。どの方向に進んでも距離 $r$ さえ同じなら高さも同じになるため、二次元グリフのあらゆる方向の歪みを公平かつ自然に滑らか補間できます。",
+    paperRole: "論文17 (Bookstein 1989) §II にて薄板のたわみ方程式 $\\Delta^2 U = 0$ のグリーン関数として $U(r) = r^2 \\ln r$（$r=0$ で 0）を採用。二次元座標写像 $f(x, y) = \\sum w_i U(\\|(x,y)-P_i\\|) + \\mathbf{a}^T \\mathbf{x}$ を構成。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py",
+      functionName: "cv2.GaussianBlur / Sobel距離勾配場",
+      description: "2Dグリッド上でRBFカーネルを高速演算するため、距離変換画像に対するSobel空間勾配とガウシアン核（RBFの代表例）による畳み込み補間を融合し、リアルタイムでの弾性変形場生成を達成。",
+      codeSnippet: `# ガウスRBF核による変位ベクトルの等方的拡散平滑化
+disp_x = cv2.GaussianBlur(raw_force_x, (0, 0), sigmaX=smooth_sigma)
+disp_y = cv2.GaussianBlur(raw_force_y, (0, 0), sigmaX=smooth_sigma)`
+    }
+  },
+
+  "glyph-modularization": {
+    term: "文字骨格モジュール化 (MOjiULE / Glyph Modularization)",
+    reading: "もじゅーる / もじこっかくモジュールか",
+    category: "文字設計・形態工学",
+    difficulty: "★★☆",
+    papers: ["paper09"],
+    acronyms: [
+      {
+        abbr: "MOjiULE",
+        expansion: "Moji Module (石崎ら 2024 作品名)",
+        literalTranslation: "文字モジュール構造体",
+        note: "文字の幾何学的構成要素（直線、円弧、ループ）をモジュール化し、回転不変パーツとして共有する設計"
+      }
+    ],
+    shortSummary: "ひらがなや英字のストロークを幾何学的モジュール（直線・円弧・交差）に分解し、180度回転時に別文字のパーツとして共有化するMOjiULE（文字モジュール工学）。",
+    intuitiveAnalogy: "「文字のレゴブロック」です。一見まったく違う形の『あ』と『ま』でも、骨格を『共通の十字交差モジュール』『右下の円弧モジュール』『終端ハネモジュール』に分解すると、多くのブロックを反転共有できることがわかります。",
+    paperRole: "論文09 (石崎ほか 2024) §1〜§2 にて発表。文字を単なる画像ではなく幾何学的モジュールの集合として捉え、文字の可読性を保ったまま部品単位で再構成する革新的な設計パラダイムを提示。",
+    appImplementation: {
+      filePath: "backend/generators/skeleton_engine.py / backend/generators/font_manager.py",
+      functionName: "SkeletonAmbigramEngine / font_manager.get_font_path",
+      description: "本アプリの骨格中心線アプローチ。文字グリフから骨格トポロジー（交差点・端点・ストローク線分）を抽出し、回転対称モジュール核として再編成する設計基盤に直結している。",
+      codeSnippet: `# 骨格モジュール抽出と中心線距離場マッピング
+skel1 = extract_skeleton_u8(img1)
+skel2 = extract_skeleton_u8(img2_rot)
+# 共通対称核（両方の文字が共有可能な骨格モジュール）の抽出
+overlap_skel = cv2.bitwise_and(skel1, skel2)`
+    }
+  },
+
+  "geometric-fitting": {
+    term: "幾何嵌合・ストローク間隙最適化 (G-FITs / Geometric Fitting)",
+    reading: "ジーフィッツ / きかかんごう",
+    category: "幾何配置・パズル工学",
+    difficulty: "★★☆",
+    papers: ["paper09"],
+    acronyms: [
+      {
+        abbr: "G-FITs",
+        expansion: "Geometric Fitting System (石崎ら 2024 作品名)",
+        literalTranslation: "幾何学的嵌合システム",
+        note: "ストローク同士が衝突せず互いの間隙（ネガティブスペース）に噛み合う幾何適合度を最大化する設計"
+      }
+    ],
+    shortSummary: "2つの文字を180度反転して重ねた際、ストローク同士が互いの余白・間隙（ネガティブスペース）に美しく噛み合う幾何配置最適化G-FITs（幾何嵌合工学）。",
+    intuitiveAnalogy: "「ジグソーパズルの凹凸」です。文字Aのストロークが出っ張っている部分に、文字Bの空白（余白）がぴったりハマれば、余計な二重線や黒い塊を作らずにスッキリとした1文字に合体できます。",
+    paperRole: "論文09 (石崎ほか 2024) §3 にて提示。文字の輪郭線やストローク配置の凹凸を幾何学的にインターロッキング（相互嵌合）させることで、視覚的ノイズを極小化するアンビグラム造形技術。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py",
+      functionName: "StrokeSnapWarper.compute_snap_displacement_fields()",
+      description: "ストローク間の距離変換場と勾配ベクトルを用い、過剰な衝突を回避しながら互いの空白ポケットへとストロークを誘導・スナップさせる嵌合変形アルゴリズムを実現。",
+      codeSnippet: `# ストローク間の衝突を回避しつつ間隙へ誘導するベクトル場
+force_x = (grad2_x - grad1_x) * 0.5 * snap_strength
+force_y = (grad2_y - grad1_y) * 0.5 * snap_strength`
+    }
+  },
+
+  "reversible-morphing": {
+    term: "可逆モーフィング・知覚閾値境界 (ひらがな~る / Reversible Morphing)",
+    reading: "かぎゃくモーフィング / ちかくしきいちきょうかい",
+    category: "認知心理学・視覚モーフィング",
+    difficulty: "★★☆",
+    papers: ["paper09"],
+    acronyms: [
+      {
+        abbr: "RM",
+        expansion: "Reversible Morphing",
+        literalTranslation: "可逆モーフィング（双方向認知変形）",
+        note: "パラメータ t \\in [0, 1] を連続変化させたときに文字Aから文字Bへと脳内認識が突然反転する知覚閾値の解明"
+      }
+    ],
+    shortSummary: "文字Aから180度反転した文字Bへと連続変形させた際、人間の脳が『別の文字だ！』と認識を切り替える知覚閾値境界の工学的解明（石崎ら 2024『ひらがな~る』）。",
+    intuitiveAnalogy: "「ルビンの壺」（壺に見えるか2人の横顔に見えるかが一瞬でカチッと入れ替わる多義図形）の文字版です。変形スライダーを0%から100%に動かしていくと、50%前後のどこかで脳内のゲシュタルト崩壊と再構築が起き、文字認識がジャンプします。",
+    paperRole: "論文09 (石崎ほか 2024) §4 にて報告されたインタラクティブ作品『ひらがな~る』の根幹概念。中間変形段階における視覚的可読性の推移を実験的に探求。",
+    appImplementation: {
+      filePath: "backend/evaluation/recognizer.py",
+      functionName: "CharacterRecognizer.evaluate_ambigram()",
+      description: "本アプリのAI文字認識エンジン。正位置スコア $P(c_1)$ と180度反転スコア $P(c_2)$ を独立測定し、双方が知覚閾値（$P \\ge 0.5$）を超える最適なバランス点を調和平均でリアルタイム判定。",
+      codeSnippet: `# 双方向の知覚閾値突破を判定する調和平均可読性
+score_c1 = recognizer.predict_char(img, target_char=c1)
+score_c2 = recognizer.predict_char(img_rot, target_char=c2)
+hm_readability = (2.0 * score_c1 * score_c2) / (score_c1 + score_c2 + 1e-6)`
+    }
+  },
+
+  "distance-transform-gradient": {
+    term: "距離変換場勾配引力場 (Distance Transform Gradient Field)",
+    reading: "きょりへんかんばこうばいいんりょくば",
+    category: "画像処理・ベクトル解析",
+    difficulty: "★★☆",
+    papers: ["paper05", "paper17", "paper02"],
+    acronyms: [
+      {
+        abbr: "DTGF",
+        expansion: "Distance Transform Gradient Field",
+        literalTranslation: "距離変換勾配場（最短距離ポテンシャル勾配ベクトル）",
+        note: "骨格からのユークリッド距離場 D(x, y) の空間微分 -\\nabla D(x, y) により生じる吸引ベクトル"
+      }
+    ],
+    shortSummary: "文字の骨格線を中心とした『すり鉢状のポテンシャル場』を作り、その傾斜ベクトル $-\\nabla D(x, y)$ によって近接ストロークを磁石のように引き寄せるDTGF（距離勾配引力場）。",
+    intuitiveAnalogy: "「すり鉢状のすべり台」や「重力場」です。すり鉢の中心に文字骨格があり、近くに置かれたボール（別の文字のストローク）は傾斜に沿って自然と中心へと滑り落ち、ピタッと重なります。",
+    paperRole: "論文05 (魏・山口 2023) §2.1 や論文17 (Bookstein 1989) の変形エネルギー場に応用。Sobelオペレータによる空間偏微分 $(\\frac{\\partial D}{\\partial x}, \\frac{\\partial D}{\\partial y})$ から吸引力を算出。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py",
+      functionName: "compute_snap_displacement_fields()",
+      description: "OpenCVの cv2.distanceTransform と cv2.Sobel を組み合わせ、近接ストロークを中間回転対称軸へ滑らかに引き込む局所変位場をミリ秒オーダーで高速演算。",
+      codeSnippet: `# 距離変換場からSobel空間勾配ベクトルを算出
+d2 = cv2.distanceTransform((skel2 == 0).astype(np.uint8), cv2.DIST_L2, 5)
+grad2_x = cv2.Sobel(d2, cv2.CV_32F, 1, 0, ksize=3)
+grad2_y = cv2.Sobel(d2, cv2.CV_32F, 0, 1, ksize=3)`
+    }
+  },
+
+  "mathematical-morphology": {
+    term: "数理モルフォロジー演算 (Mathematical Morphology)",
+    reading: "すうりモルフォロジーえんざん",
+    category: "デジタル画像処理・集合論",
+    difficulty: "★★☆",
+    papers: ["paper02", "paper05"],
+    acronyms: [
+      {
+        abbr: "MM",
+        expansion: "Mathematical Morphology",
+        literalTranslation: "数理形態学（集合論に基づく画像幾何処理）",
+        note: "構造要素 B による膨張 (\\oplus)、収縮 (\\ominus)、オープニング (\\circ)、クロージング (\\bullet)"
+      }
+    ],
+    shortSummary: "集合論とミンコフスキー和・差に基づき、画像の形状を太らせる（膨張）・細らせる（収縮）・平滑化するMM（数理モルフォロジー演算）。",
+    intuitiveAnalogy: "「サンドペーパーや彫刻刀」のようなものです。ザラザラしたバリ（突起）を丸めたり、細いヒゲ毛を取り除いたり、欠けた窪みを埋めることで、整った文字輪郭へと磨き上げます。",
+    paperRole: "論文② (井上・高橋 2020) §3「細線化」および §5「太線化」にて核心技術として利用。ストローク骨格の太さ制御や二値論理積との組み合わせによる共通領域抽出に不可欠。",
+    appImplementation: {
+      filePath: "backend/generators/morphology_engine.py",
+      functionName: "MorphologyAmbigramEngine.generate_slot()",
+      description: "本アプリの手法A（モルフォロジーEngine）。ピクセル論理積で抽出した共通対称核を cv2.dilate / cv2.erode / cv2.morphologyEx で滑らかに膨張・一体化させて単一ストローク化する。",
+      codeSnippet: `# 共通核のモルフォロジー膨張と平滑化
+kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+dilated = cv2.dilate(common_core, kernel, iterations=1)
+smoothed = cv2.GaussianBlur(dilated, (5, 5), 0)`
+    }
+  },
+
+  "convex-combination": {
+    term: "凸結合重み付け正規化 (Convex Combination Weighting)",
+    reading: "とつけつごうおもみづけせいきか",
+    category: "最適化数学・スコア設計",
+    difficulty: "★★☆",
+    papers: ["paper02"],
+    acronyms: [
+      {
+        abbr: "CC",
+        expansion: "Convex Combination",
+        literalTranslation: "凸結合（非負かつ総和が1となる重み付き線形結合）",
+        note: "w_geom + w_min = 1.0 (w_i \\ge 0) の制約により値が [0, 1] から絶対にはみ出さない数学的保証"
+      }
+    ],
+    shortSummary: "複数の評価指標を $w_1 + w_2 = 1.0$ の正規化重みでブレンドし、スコアの飽和・発散を防ぎながら大域と局所のバランスをとるCC（Convex Combination：直訳『凸結合』）。",
+    intuitiveAnalogy: "「絵の具を混ぜる比率（70% : 30%）」です。比率の合計が100%になっていれば、絵の具がパレットから溢れたり色が狂ったりしません。安易な『1.1倍ゲイン乗算』のようなバグを生む恣意的係数を廃止し、数学的に安定した評価を実現します。",
+    paperRole: "論文② (井上・高橋 2020) §6.2 の単語可読性スコア定式化の発展・改良。幾何平均スコアとボトルネック最小値スコアを単語長と文脈冗長度に応じて適応的に配分。",
+    appImplementation: {
+      filePath: "backend/generators/font_manager.py",
+      functionName: "compute_word_cognitive_score()",
+      description: "文脈認知補完スコア計算において、w_geom + w_min = 1.0 の凸結合を採用。単語長が長く文脈補完が効く場合はボトルネック重み w_min を適応的に減衰させ、常に 0.0〜1.0 の安定スコアを出力。",
+      codeSnippet: `# 凸結合重みの適応的計算 (総和は厳密に 1.0)
+w_min = 0.25 * (1.0 - 0.80 * reduction)
+w_geom = 1.0 - w_min
+final_score = w_geom * geom_mean + w_min * min_score`
+    }
+  },
+
+  "cubic-bezier-deformation": {
+    term: "三次ベジェ曲線幾何変形 (Cubic Bézier Deformation)",
+    reading: "さんじベジェきょくせんきかへんけい",
+    category: "コンピュータグラフィックス・ベクター幾何",
+    difficulty: "★★☆",
+    papers: ["paper09", "paper02"],
+    acronyms: [
+      {
+        abbr: "CBD",
+        expansion: "Cubic Bézier Deformation",
+        literalTranslation: "三次ベジェ曲線変形",
+        note: "始点・終点と2つの方向制御点 P_0, P_1, P_2, P_3 で定義される滑らかなパラメトリック曲線"
+      }
+    ],
+    shortSummary: "フォントのTrueTypeアウトラインを構成する三次ベジェ曲線 $B(t)$ を直接幾何学的に操作し、無限解像度SVGを生成するCBD（Cubic Bézier Deformation）。",
+    intuitiveAnalogy: "Illustrator や Figma のペンツールで引く「方向線ハンドル付きのゴム線」です。ビットマップのようなギザギザ（ジャギー）が一切出ず、看板サイズに超拡大印刷しても美しい極限の輪郭美を保ちます。",
+    paperRole: "論文09 (石崎ほか 2024) のベクター作品表現や、論文② (井上・高橋 2020) のアウトライン輪郭抽出の発展形。ピクセルグリッドに依存しない幾何変形を実現。",
+    appImplementation: {
+      filePath: "backend/generators/vector_engine.py",
+      functionName: "VectorAmbigramEngine.get_glyph_path()",
+      description: "fontTools ライブラリを用いてフォントファイル（TTF/OTF）からベジェコマンドを直接抽出し、180度反転マトリクスと重ね合わせてSVGベクターパスを高速生成。",
+      codeSnippet: `pen = SVGPathPen(fdata["glyph_set"])
+glyph.draw(pen)
+return pen.getCommands(), glyph.width`
+    }
+  },
+
+  "backtracking-dictionary-search": {
+    term: "深さ優先枝刈り木探索 (Backtracking Tree Search with Pruning)",
+    reading: "ふかさゆうせんえだかりき adventureたんさく",
+    category: "アルゴリズム・離散最適化",
+    difficulty: "★★☆",
+    papers: ["paper02"],
+    acronyms: [
+      {
+        abbr: "DFS / CSP",
+        expansion: "Depth-First Search / Constraint Satisfaction Problem",
+        literalTranslation: "深さ優先探索 / 制約充足問題",
+        note: "先頭文字ペアの回転適性が低い時点で後続探索を打ち切る（枝刈り）高速木探索"
+      }
+    ],
+    shortSummary: "数万語の日本語辞書からアンビグラム成立ペアを探す際、見込みのない候補を即座に切り捨てる（枝刈り）高速バックトラッキングDFS探索法。",
+    intuitiveAnalogy: "「将棋の名人の読み」です。何千通りもある指し手のうち、『初手が悪手なら、その先の何億手も読む価値がない』と瞬時に切り捨てることで、何手も先の最善手を一瞬で見つけ出します。",
+    paperRole: "論文② (井上・高橋 2020) §4.3「アンビグラムの探索」にて提案。単語アンビグラム探索を制約充足問題（CSP）として定式化し、前方一致・後方一致インデックス逆引きと枝刈りを統合。",
+    appImplementation: {
+      filePath: "backend/search/finder.py",
+      functionName: "AmbigramFinder.find_pairs()",
+      description: "数万語の日本語単語カタログから、語頭と語末の文字ペア適性を先読み判定し、スコア閾値以下の単語組み合わせをミリ秒単位で高速枝刈り。",
+      codeSnippet: `# 枝刈り条件: 語頭 c1 と語末 c2_rot のペア適性が閾値未満なら即時スキップ
+if pair_compatibility < threshold:
+    continue`
+    }
+  },
+
+  "landmark-pinning": {
+    term: "外周一致保持・ランドマーク固定拘束 (Landmark Pinning Constraint)",
+    reading: "がいしゅういっちほじ / ランドマークこていこうそく",
+    category: "境界値問題・幾何拘束",
+    difficulty: "★★☆",
+    papers: ["paper17", "paper09"],
+    acronyms: [
+      {
+        abbr: "LPC",
+        expansion: "Landmark Pinning Constraint",
+        literalTranslation: "ランドマーク固定拘束（ディリクレゼロ変位境界条件）",
+        note: "変形時に対称核領域の変位ベクトルを厳密に u(x) = 0 にピン留めする境界条件"
+      }
+    ],
+    shortSummary: "正位置と反転文字ですでに重なり合っている『共通の輪郭線』を画鋲で固定（ピン留め）し、ズレているストロークだけを安全に変形させるLPC（固定拘束）。",
+    intuitiveAnalogy: "「ポスターの四隅を画鋲で壁に留めたまま、中央のたるみだけを手で撫でてピンと張る」作業です。四隅が固定されているため、引っ張ってもポスター全体が歪んだり位置がズレたりしません。",
+    paperRole: "論文17 (Bookstein 1989) §II におけるランドマーク補間方程式 $f(P_i) = Y_i$ の拘束条件。論文09 (石崎ほか 2024) でも文字外周の幾何学的同一性を担保する要として機能。",
+    appImplementation: {
+      filePath: "backend/generators/snap_warper.py",
+      functionName: "compute_snap_displacement_fields()",
+      description: "共通領域（overlap）を膨張させたマスク overlap_dilated 上の変位ベクトルをゼロクリアし、外周の幾何学的対称性を 100% 保護。",
+      codeSnippet: `# 固定アンカー拘束: 共通核領域は変位 0 でピン留め
+overlap = cv2.bitwise_and((img1 > 100).astype(np.uint8), (img2_rot > 100).astype(np.uint8))
+overlap_dilated = cv2.dilate(overlap, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+force_x[overlap_dilated > 0] = 0.0
+force_y[overlap_dilated > 0] = 0.0`
+    }
   }
+
 };
