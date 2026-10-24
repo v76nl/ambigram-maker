@@ -29,47 +29,8 @@
         <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
       </svg>
       <span class="brand-label">Ambigram Inspector</span>
+      <span class="brand-sublabel">先行研究数理・コード解読リーダー</span>
     </div>
-
-    <!-- Paper & Code Switch Tabs -->
-    <nav class="paper-tabs" aria-label="コンテンツ選択">
-      <button class="tab-btn active" data-paper-id="paper05">
-        <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-        </svg>
-        <span class="tab-label-main">論文 05 (魏・山口)</span>
-      </button>
-      <button class="tab-btn" data-paper-id="paper02">
-        <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
-        <span class="tab-label-main">論文 02 (井上・高橋)</span>
-      </button>
-      <button class="tab-btn" data-paper-id="paper09">
-        <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 8v8"></path>
-          <path d="M8 12h8"></path>
-        </svg>
-        <span class="tab-label-main">論文 09 (石崎ほか・ひらがな~る)</span>
-      </button>
-      <button class="tab-btn" data-paper-id="paper17">
-        <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-        </svg>
-        <span class="tab-label-main">論文 17 (Bookstein・TPS原典)</span>
-      </button>
-      <button class="tab-btn" data-paper-id="app_code">
-        <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-        <span class="tab-label-main">アプリ実装コード</span>
-      </button>
-    </nav>
 
     <!-- Header Actions -->
     <div class="header-actions">
@@ -80,15 +41,40 @@
         </svg>
         <span>実装対応のみ</span>
       </button>
-      <span id="progress-pill" class="progress-pill">習得 0/14</span>
+      <span id="progress-pill" class="progress-pill">習得 0/28</span>
     </div>
   </header>
 
   <!-- Workspace: 3 Columns -->
   <main class="reader-workspace">
     
-    <!-- 1. Left: TOC Navigation -->
-    <aside class="toc-sidebar" aria-label="目次">
+    <!-- 1. Left: Navigation Sidebar (Document Dropdown + TOC) -->
+    <aside class="toc-sidebar" aria-label="ナビゲーション">
+      
+      <!-- 論文・コード選択ドロップダウン -->
+      <div class="sidebar-selector-wrapper">
+        <label for="paper-select" class="sidebar-selector-label">対象ドキュメント</label>
+        <div class="custom-select-container">
+          <select id="paper-select" class="paper-select-dropdown" aria-label="対象論文・コード選択">
+            <optgroup label="先行研究 論文">
+              <option value="paper05">論文 05 (魏・山口 2023)</option>
+              <option value="paper02">論文 02 (高橋・井上 2020)</option>
+              <option value="paper09">論文 09 (石崎ほか 2024)</option>
+              <option value="paper17">論文 17 (Bookstein 1989 TPS)</option>
+            </optgroup>
+            <optgroup label="システム実装">
+              <option value="app_code">アプリ実装コード (全9モジュール)</option>
+            </optgroup>
+          </select>
+          <span class="select-arrow-icon" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- 目次セクション -->
       <div class="toc-header">目次</div>
       <ul id="toc-list" class="toc-list">
         <!-- JSで動的生成 -->
