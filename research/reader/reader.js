@@ -71,10 +71,11 @@
   function loadPaper(paperId) {
     currentPaperId = paperId;
 
-    // タブのアクティブ更新
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.paperId === paperId);
-    });
+    // 左サイドバーのドロップダウン選択を同期
+    const paperSelect = document.getElementById("paper-select");
+    if (paperSelect && paperSelect.value !== paperId) {
+      paperSelect.value = paperId;
+    }
 
     if (paperId === "app_code") {
       loadCodeArchitecture();
@@ -486,12 +487,13 @@
       }
     });
 
-    // タブ切り替え
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        loadPaper(btn.dataset.paperId);
+    // 左サイドバードロップダウンによるドキュメント切り替え
+    const paperSelect = document.getElementById("paper-select");
+    if (paperSelect) {
+      paperSelect.addEventListener("change", (e) => {
+        loadPaper(e.target.value);
       });
-    });
+    }
 
     // コード連動フィルター
     const filterBtn = document.getElementById("toggle-code-filter-btn");
