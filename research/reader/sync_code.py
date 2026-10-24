@@ -55,6 +55,39 @@ MODULES_METADATA = [
         "related_paper": "論文⑤: 魏・山口 (2023) §2.2「評価手法」",
         "why": "製作者の主観的思い込みを排除し、0°と180°の双方でAI文字認識モデル（JIS第1水準漢字＋仮名）が認識できる確率P(c1), P(c2)から、調和平均可読性をリアルタイム算出する。",
         "target_classes": ["CharacterRecognizer"]
+    },
+    {
+        "id": "mod-morphology-engine",
+        "title": "手法A: 論理積 ＋ モルフォロジー膨張・共通対称核抽出",
+        "file": "backend/generators/morphology_engine.py",
+        "related_paper": "論文②: 井上・高橋 (2020) §3「細線化」 / §5「ストロークの太線化」",
+        "why": "正位置と180度回転文字のピクセル論理積 (AND) を『共通対称核』として抽出し、モルフォロジー膨張 (Dilation) と平滑化によって二重線を解消した滑らかな単一ストロークを生成する。",
+        "target_classes": ["MorphologyAmbigramEngine"]
+    },
+    {
+        "id": "mod-vector-engine",
+        "title": "手法D: ベクター幾何・三次ベジェ曲線のアウトライン融合",
+        "file": "backend/generators/vector_engine.py",
+        "related_paper": "石崎ほか (2024)「MOjiULE / G-FITs」 / 論文② §4「アフィン変形」",
+        "why": "フォントのTrueTypeベクターアウトライン（三次ベジェ曲線）を直接抽出し、正位置と180度回転文字を幾何学的に融合して無限解像度SVGを生成する。",
+        "target_classes": ["VectorAmbigramEngine"],
+        "target_functions": ["get_glyph_path"]
+    },
+    {
+        "id": "mod-bitmap-engine",
+        "title": "手法C: ビットマップ論理演算・エネルギー場アルファブレンド合成",
+        "file": "backend/generators/bitmap_engine.py",
+        "related_paper": "論文⑤: 魏・山口 (2023) §2.1「生成器モデル」",
+        "why": "OpenCVとNumPyを用いて、正位置文字と180度回転文字の重なり・差分エネルギーを最適化し、滑らかな2値/グレースケールアンビグラム画像を高速生成する。",
+        "target_classes": ["BitmapAmbigramEngine"]
+    },
+    {
+        "id": "mod-dictionary-search",
+        "title": "単語ペア回転探索エンジン & 語彙親密度DFS枝刈り木探索",
+        "file": "backend/search/finder.py",
+        "related_paper": "論文②: 井上・高橋 (2020) §4.3「アンビグラムの探索」 / §6.1「単語可読性実験」",
+        "why": "数万語の日本語辞書（JMdict / 常用語カタログ）から、180度回転時に別の有意義な単語（または同語）となるペアを逆引きプレフィックス木・バックトラッキングDFS探索によって高速抽出する。",
+        "target_classes": ["AmbigramFinder"]
     }
 ]
 
