@@ -578,6 +578,10 @@
       } else if (e.key === "2") {
         loadPaper("paper02");
       } else if (e.key === "3") {
+        loadPaper("paper09");
+      } else if (e.key === "4") {
+        loadPaper("paper17");
+      } else if (e.key === "5") {
         loadPaper("app_code");
       } else if (e.key === "Escape") {
         hideTooltip();
