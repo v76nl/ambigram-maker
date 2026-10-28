@@ -72,7 +72,8 @@ Google Scholar（Googleスカラー）および CiNii Research において「am
 
 ## 4. ディレクトリ構成
 
-各文献ディレクトリ内には以下のファイルが格納されています：
 - `metadata.json`: タイトル、著者、出版年、DOI、URL、抄録、メタタグ、参考文献などの機械可読データ
 - `paper_details.md`: 論文・文献の詳細サマリー、抄録、参考文献リスト
 - `paper.pdf`: 入手可能な全文PDFファイル（オープンアクセスおよびプレプリント等）
+- `paper_transcript_en.md`: 論文PDFから抽出した英語原文マークダウン（主要英語論文）
+- `paper_translation_ja.md`: 学術的で精緻な日本語全訳マークダウン（主要英語論文）

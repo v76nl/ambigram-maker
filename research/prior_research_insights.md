@@ -10,8 +10,8 @@
 |:---:|:---|:---|:---:|:---|:---:|
 | **[P01]** | **パーティクルとボリュームデータによるアンビグラムのデザイン手法** | 大津 沙耶香, 伊藤 智也, 竹島 由里子, 菊池 司 | 2022 | 画像電子学会研究会講演予稿 21.04 pp.87-90<br>[DOI: 10.11371/wiieej.21.04.0_87](https://doi.org/10.11371/wiieej.21.04.0_87) | ★★★★★ (漢字アンビグラム目的の先駆研究) |
 | **[P02]** | **文字構造特徴を用いたひらがなアンビグラムの生成** | 井上 和輝, 高橋 裕樹 | 2020 | 画像電子学会誌 49巻 4号 pp.301-314<br>[DOI: 10.11371/iieej.49.301](https://doi.org/10.11371/iieej.49.301) | ★★★★★ (最重要・骨格グラフ) |
-| **[P19]** | **Ambigram Generation by a Diffusion Model** | Takahiro Shirakawa, Seiichi Uchida | 2023 | ICDAR 2023, Springer LNCS vol.14189 pp.314-330<br>[DOI: 10.1007/978-3-031-41676-7_20](https://doi.org/10.1007/978-3-031-41676-7_20) | ★★★★★ (世界最高峰会議・Ambigramability指標) |
-| **[P20]** | **AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model** | Boheng Zhao, Rana Hanocka, Raymond A. Yeh | 2024 | CVPR 2024, IEEE<br>[arXiv: 2311.17112](https://arxiv.org/abs/2311.17112) | ★★★★★ (最先端・ベクター輪郭最適化) |
+| **[P19]** | **Ambigram Generation by a Diffusion Model** | Takahiro Shirakawa, Seiichi Uchida | 2023 | ICDAR 2023, Springer LNCS vol.14189 pp.314-330<br>[DOI: 10.1007/978-3-031-41676-7_20](https://doi.org/10.1007/978-3-031-41676-7_20)<br>[日本語全訳](./scholar_ambigram/19_ambigram_diffusion_icdar2023/paper_translation_ja.md) | ★★★★★ (世界最高峰会議・Ambigramability指標) |
+| **[P20]** | **AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model** | Boheng Zhao, Rana Hanocka, Raymond A. Yeh | 2024 | CVPR 2024, IEEE<br>[arXiv: 2312.02967](https://arxiv.org/abs/2312.02967)<br>[日本語全訳](./scholar_ambigram/20_ambigen_diffusion_cvpr2024/paper_translation_ja.md) | ★★★★★ (最先端・ベクター輪郭最適化) |
 | **[P05]** | **多目的最適化 GAN によるアンビグラム生成** | 魏 延輝, 山口 裕 | 2023 | 電気関係学会九州支部連合大会講演論文集 p.39<br>[DOI: 10.11527/jceeek.2023.0_39](https://doi.org/10.11527/jceeek.2023.0_39) | ★★★★☆ (評価指標・調和平均) |
 | **[P18]** | **既存書体の合成を手法とした漢字書体作成の実験** | 野宮 謙吾 | 2023 | デザイン学研究特集号 30巻 2号 pp.56-61<br>[CiNii: 1520579919135956608](https://cir.nii.ac.jp/crid/1520579919135956608) | ★★★★☆ (漢字フォント合成・融合) |
 | **[P06]** | **アンビグラムの自動生成手法の提案と評価** | 近藤 圭, 小林 慧, 水野 真, 長谷川 達人 | 2020 | 電気・情報関係学会北陸支部連合大会 | ★★★☆☆ (評価系) |

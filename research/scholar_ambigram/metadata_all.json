@@ -771,9 +771,9 @@
       "Raymond A. Yeh"
     ],
     "year": "2024",
-    "journal": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR 2024)",
+    "journal": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW 2024)",
     "publisher": "IEEE",
-    "arxiv_url": "https://arxiv.org/abs/2311.17112",
+    "arxiv_url": "https://arxiv.org/abs/2312.02967",
     "pdf_downloaded": true,
     "pdf_size_bytes": 1681064,
     "notes": "コンピュータビジョン最高峰学会 CVPR 2024採録論文。大規模拡散モデルの構造事前分布を蒸留し、文字アウトライン（ベクター輪郭）の直接最適化によるアンビグラム生成手法。",
