@@ -1,6 +1,6 @@
-# Google Scholar 文献調査: アンビグラム (Ambigram)
+# Google Scholar / CiNii 文献調査: アンビグラム (Ambigram)
 
-Google Scholar（Googleスカラー）において「ambigram」「アンビグラム」に関する文献を調査した結果および、ダウンロード可能な全文PDF・メタデータの一覧です。
+Google Scholar（Googleスカラー）および CiNii Research において「ambigram」「アンビグラム」に関する文献を調査した結果、およびダウンロード可能な全文PDF・メタデータの一覧です。
 
 ## 1. 検索結果統計
 
@@ -8,9 +8,8 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 |---|---|---|
 | `ambigram アンビグラム` | **4件** | ユーザー指定クエリ（100件以下の条件に合致） |
 | `アンビグラム` | **16件** | 日本語文献全体の網羅（上記4件を包含、100件以下） |
-| `ambigram` | 約372件 | 英語圏を含む全体 |
-
-ユーザー指示の「100件以下なら全文とメタデータを適切なディレクトリを作成してその下に保存して」に基づき、`ambigram アンビグラム` でヒットした全4件を含む、日本語のアンビグラム研究・関連文献**全16件**のメタデータおよびオープンアクセスで入手可能な**全文PDF（9件）**を本ディレクトリに保存しました。
+| `CiNii Research アンビグラム` | **14件** | CiNii Research登録の国内全論文・図書 |
+| `ambigram` (国際会議等) | 約372件 | 英語圏を含む全体（ICDAR 2023, CVPR 2024等の最重要論文を追加） |
 
 ---
 
@@ -18,7 +17,7 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 
 | No | タイトル | 著者 | 発行年 | 掲載誌 / 会議 | 全文PDF |
 |:---:|:---|:---|:---:|:---|:---:|
-| 1 | [パーティクルとボリュームデータによるアンビグラムのデザイン手法](./01_particle_volume_ambigram/) | 大津沙耶香，伊藤智也，竹島由里子，菊池司 | 2022 | 画像電子学会研究会講演予稿 | 会員限定 |
+| 1 | [パーティクルとボリュームデータによるアンビグラムのデザイン手法](./01_particle_volume_ambigram/) | 大津沙耶香，伊藤智也，竹島由里子，菊池司 | 2022 | 画像電子学会研究会講演予稿 | CiNii詳細抄録あり (J-STAGE限定) |
 | 2 | [文字構造特徴を用いたひらがなアンビグラムの生成](./02_hiragana_ambigram_features/) | 井上和輝，高橋裕樹 | 2020 | 画像電子学会誌 | **あり** (`paper.pdf`, 2.8MB) |
 | 3 | [つくろうよ! アンビグラム= Let's try ambigram](./03_lets_try_ambigram_nomura/) | 野村一晟 | 2018 | 飛鳥新社（単行本） | 書籍 |
 | 4 | [複数の指向性画像を同時表示可能な 3 次元オブジェクト](./04_directional_images_3d_object/) | 平山竜士，中山弘敬，白木厚司 ほか | 2015 | 映像情報メディア学会技術報告 | **あり** (`paper.pdf`, 11MB) |
@@ -35,35 +34,39 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 | 15 | [1 は赤い. そして世界は緑と青でできている](./15_one_is_red_book/) | 望月菜南子 | 2020 | 光文社（単行本） | 書籍 |
 | 16 | [2023 年度 (第 76 回) 電気・情報関係学会九州支部連合大会プログラム](./16_jceeek_program_2023/) | 電気・情報関係学会九州支部連合大会 | 2023 | 大会プログラム | **あり** (`paper.pdf`, 450KB) |
 | 17 | [Principal Warps: Thin-Plate Splines and the Decomposition of Deformations](./17_tps_principal_warps_bookstein/) | Fred L. Bookstein | 1989 | IEEE TPAMI | **あり** (`paper.pdf`, 1.6MB) |
+| 18 | [既存書体の合成を手法とした漢字書体作成の実験](./18_kanji_font_synthesis_nomiya/) | 野宮謙吾 | 2023 | 日本デザイン学会 デザイン学研究特集号 | CiNii詳細メタデータ |
+| 19 | [Ambigram Generation by a Diffusion Model](./19_ambigram_diffusion_icdar2023/) | Takahiro Shirakawa, Seiichi Uchida | 2023 | ICDAR 2023 (Springer LNCS) | **あり** (`paper.pdf`, 3.6MB) |
+| 20 | [AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model](./20_ambigen_diffusion_cvpr2024/) | Boheng Zhao, Rana Hanocka, Raymond A. Yeh | 2024 | CVPR 2024 (IEEE) | **あり** (`paper.pdf`, 1.68MB) |
+| 21 | [漢字タイポグラフィの立体化に関する研究](./21_3d_kanji_typography_yue/) | 岳汉 | 2019 | 大阪芸術大学 博士論文 | CiNii/国会図書館 |
 
 ---
 
 ## 3. 本プロジェクト（ambigram-maker）に直結する重要文献の要約
 
-### ① 文字構造特徴を用いたひらがなアンビグラムの生成（井上・高橋, 2020）
+### ① パーティクルとボリュームデータによるアンビグラムのデザイン手法（大津ら, 2022）
+- **ファイル**: `01_particle_volume_ambigram/paper_details.md`
+- **概要**: 漢字アンビグラムの作成を目的として明記した国内初の論文。「漢字のような複雑な文字でのアンビグラムは困難とされていた」という問題提起に対し、3次元ボリュームと粒子を用いた立体デザイン手法を提案。
+- **本プロジェクトでの活用**: 3次元的アプローチをとる大津らに対し、本研究が「2次元タイポグラフィ・辞書探索・TPS非剛体変形・毛筆抑揚・HCD制作支援環境」という実用的タイポグラフィの観点から漢字アンビグラムを実現する独自性の対比として位置づけられる。
+
+### ② 文字構造特徴を用いたひらがなアンビグラムの生成（井上・高橋, 2020）
 - **ファイル**: `02_hiragana_ambigram_features/paper.pdf`
-- **概要**: ひらがな文字ペアの180度回転アンビグラム自動生成を目的とした研究。
-- **手法**: 文字画像から細線化とストローク分割により「文字骨格グラフ」を抽出。2文字間の部分グラフ同型判定やアフィン変換を用いて文字間の対応付けを行い、モーフィングと最適化によって両方向から読めるアンビグラム字形を合成。
-- **活用性**: 本リポジトリにおけるひらがなマッチング・ストローク合成アルゴリズムの設計に極めて有用。
+- **概要**: ひらがな文字ペアの180度回転アンビグラム自動生成を目的とした研究。文字骨格グラフ、アフィン変換、太線化筆文字化、1,081ペアの被験者可読性評価実験。
 
-### ② 多目的最適化 GAN によるアンビグラム生成（魏・山口, 2023）
+### ③ 多目的最適化 GAN によるアンビグラム生成（魏・山口, 2023）
 - **ファイル**: `05_gan_ambigram_generation/paper.pdf`
-- **概要**: 敵対的生成ネットワーク（GAN）と多目的最適化を組み合わせたアンビグラム字形生成。
-- **手法**: 正方向の文字認識率と180度回転時の文字認識率を損失関数として同時に最大化し、潜在空間から自然なアンビグラムを探索・生成。
+- **概要**: 敵対的生成ネットワーク（GAN）と多目的最適化を組み合わせたアンビグラム字形生成。正立認識率と倒立認識率の「調和平均（Harmonic Mean）」を評価関数として導入。
 
-### ③ アンビグラムの自動生成手法の提案と評価（近藤・小林・水野・長谷川, 2020）
-- **ファイル**: `06_automatic_ambigram_fukui/paper_details.md`
-- **概要**: 福井大学によるアンビグラムの自動設計アルゴリズムの提案と可読性評価実験。
+### ④ Ambigram Generation by a Diffusion Model（Shirakawa & Uchida, ICDAR 2023）
+- **ファイル**: `19_ambigram_diffusion_icdar2023/paper.pdf`
+- **概要**: 文字認識最高峰学会 ICDAR 2023 採録。拡散モデルによるアンビグラム生成と、文字ペアごとの成立可能性を客観評価する指標「Ambigramability」の提唱。
 
-### ④ 「MOjiULE」「G-FITs」「ひらがな~ る」-文字形状に着目した日本語作品の報告（石崎ほか, 2024）
-- **ファイル**: `09_mojiule_gfits_hiraganaru/paper.pdf`
-- **概要**: 日本語ひらがなの字形要素・モジュールを分解し、幾何学的なパズルや回転・反転による文字認識の境界を探求したデザイン研究。
-- **活用性**: 非剛体局所変形やストローク分解によるアンビグラムの認知心理的境界の分析。
+### ⑤ AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model（Zhao et al., CVPR 2024）
+- **ファイル**: `20_ambigen_diffusion_cvpr2024/paper.pdf`
+- **概要**: CVPR 2024 採録。文字アウトライン（ベクター輪郭）の直接最適化によるアンビグラム生成。
 
-### ⑤ Principal Warps: Thin-Plate Splines and the Decomposition of Deformations（Bookstein, 1989）
+### ⑥ Principal Warps: Thin-Plate Splines and the Decomposition of Deformations（Bookstein, 1989）
 - **ファイル**: `17_tps_principal_warps_bookstein/paper.pdf`
-- **概要**: 2Dランドマーク点群に基づく薄板スプライン（TPS）弾性補間変形（Warping）の原著論文。
-- **活用性**: 本リポジトリの「近接ストローク吸引・局所非剛体スナップ（`snap_warper.py`）」における曲げエネルギー最小化・弾性変形場の数理理論基盤。
+- **概要**: 薄板スプライン（TPS）弾性補間変形の原著論文。曲げエネルギー最小化による近接ストローク吸引・非剛体スナップの理論基盤。
 
 ---
 
@@ -72,4 +75,4 @@ Google Scholar（Googleスカラー）において「ambigram」「アンビグ�
 各文献ディレクトリ内には以下のファイルが格納されています：
 - `metadata.json`: タイトル、著者、出版年、DOI、URL、抄録、メタタグ、参考文献などの機械可読データ
 - `paper_details.md`: 論文・文献の詳細サマリー、抄録、参考文献リスト
-- `paper.pdf`: オープンアクセスで入手可能な全文PDFファイル（入手可能な文献のみ）
+- `paper.pdf`: 入手可能な全文PDFファイル（オープンアクセスおよびプレプリント等）
