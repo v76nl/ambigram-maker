@@ -8,6 +8,8 @@
 - **DOI**: [10.1007/978-3-031-41676-7_20](https://doi.org/10.1007/978-3-031-41676-7_20)
 - **arXiv**: [arXiv:2306.12049](https://arxiv.org/abs/2306.12049)
 - **全文PDF**: **あり** (`paper.pdf`, 3.6MB)
+- **英語抽出テキスト**: [paper_transcript_en.md](./paper_transcript_en.md)
+- **日本語全訳**: [paper_translation_ja.md](./paper_translation_ja.md)
 
 ## 抄録 (Abstract)
 An ambigram is a calligraphic design that has multiple interpretations when viewed from different directions, such as upside down (i.e., 180-degree rotation). Designing ambigrams is a creative and difficult task, even for professional calligraphers and type designers. In this paper, we propose a novel framework for generating ambigrams using a diffusion model. By specifying a pair of letter classes, the proposed model generates an image that represents the first letter in the normal orientation and the second letter in the upside-down orientation. We also propose an objective metric called 'ambigramability' to evaluate how easily a pair of letters can form an ambigram.
