@@ -3,7 +3,8 @@
   "title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
   "queries": [
     "ambigram アンビグラム",
-    "アンビグラム"
+    "アンビグラム",
+    "CiNii Research"
   ],
   "authors": [
     "大津 沙耶香",
@@ -15,11 +16,12 @@
   "journal": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿",
   "doi": "10.11371/wiieej.21.04.0_87",
   "url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_article/-char/ja/",
+  "cinii_url": "https://cir.nii.ac.jp/crid/1390014128339907584",
   "pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
   "pdf_downloaded": false,
   "pdf_size_bytes": 0,
-  "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。抄録・メタデータを保存。",
-  "abstract": null,
+  "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。CiNii Researchより詳細抄録を保存。",
+  "abstract": "アンビグラムとは文字を与えられた向きだけではなく，異なる方向からも読み取れるようにした文字である．現在，アンビグラムはデザインの専門技術に近い扱いであり，人の手で作成する手法が主流となっている．ディープラーニングを使った文字の変換方法や，ひらがなの文字構造特徴に注目してアンビグラムを作成する方法が従来手法として存在するが，漢字といった複雑な文字におけるアンビグラム作成は難しいと考えられていた．そこで本研究ではボリュームデータとパーティクルを用いて文字同士を適正に変形し，文字として識別可能な漢字のアンビグラムを生成することを目的として手法の提案と研究を行う．",
   "meta_tags": {
     "citation_publisher": "一般社団法人 画像電子学会",
     "citation_author": [

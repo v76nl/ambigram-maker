@@ -4,7 +4,8 @@
     "title": "パーティクルとボリュームデータによるアンビグラムのデザイン手法",
     "queries": [
       "ambigram アンビグラム",
-      "アンビグラム"
+      "アンビグラム",
+      "CiNii Research"
     ],
     "authors": [
       "大津 沙耶香",
@@ -16,11 +17,12 @@
     "journal": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿",
     "doi": "10.11371/wiieej.21.04.0_87",
     "url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_article/-char/ja/",
+    "cinii_url": "https://cir.nii.ac.jp/crid/1390014128339907584",
     "pdf_url": "https://www.jstage.jst.go.jp/article/wiieej/21.04/0/21.04_87/_pdf",
     "pdf_downloaded": false,
     "pdf_size_bytes": 0,
-    "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。抄録・メタデータを保存。",
-    "abstract": null,
+    "notes": "J-STAGE研究会予稿。会員認証が必要なためPDFは制限付き。CiNii Researchより詳細抄録を保存。",
+    "abstract": "アンビグラムとは文字を与えられた向きだけではなく，異なる方向からも読み取れるようにした文字である．現在，アンビグラムはデザインの専門技術に近い扱いであり，人の手で作成する手法が主流となっている．ディープラーニングを使った文字の変換方法や，ひらがなの文字構造特徴に注目してアンビグラムを作成する方法が従来手法として存在するが，漢字といった複雑な文字におけるアンビグラム作成は難しいと考えられていた．そこで本研究ではボリュームデータとパーティクルを用いて文字同士を適正に変形し，文字として識別可能な漢字のアンビグラムを生成することを目的として手法の提案と研究を行う．",
     "meta_tags": {
       "citation_publisher": "一般社団法人 画像電子学会",
       "citation_author": [
@@ -59,7 +61,8 @@
       ],
       "citation_conference_title": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿"
     },
-    "references": []
+    "references": [],
+    "dir_name": "01_particle_volume_ambigram"
   },
   {
     "id": 2,
@@ -172,7 +175,8 @@
       "22) X. Bai, L. J. Latecki: “Path Similarity Skeleton Graph Matching”, IEEE Trans. on Pattern Analysis and Machine Intelligence, Vol.30, No.7, pp.1282–1292 (2008).",
       "23) M. Cho, J. Lee, K. M. Lee: “Reweighted Random Walks for Graph Matching”, Proc. of European Conference on Computer Vision (ECCV), Vol.6315, pp.492–505 (2010).",
       "24) K. Riesen, H. Bunke: “Approximate Graph Edit Distance Computation by Means of Bipartite Graph Matching”, Image and Vision Computing, Vol.27, pp.950–959 (2009)."
-    ]
+    ],
+    "dir_name": "02_hiragana_ambigram_features"
   },
   {
     "id": 3,
@@ -194,7 +198,8 @@
     "notes": "著名なアンビグラム作家・野村一晟氏によるアンビグラム制作技法解説書籍。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "03_lets_try_ambigram_nomura"
   },
   {
     "id": 4,
@@ -263,7 +268,8 @@
       ],
       "citation_conference_title": "映像情報メディア学会技術報告 39.14"
     },
-    "references": []
+    "references": [],
+    "dir_name": "04_directional_images_3d_object"
   },
   {
     "id": 5,
@@ -305,7 +311,8 @@
       "citation_language": "ja",
       "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
     },
-    "references": []
+    "references": [],
+    "dir_name": "05_gan_ambigram_generation"
   },
   {
     "id": 6,
@@ -342,7 +349,8 @@
       "citation_language": "Japanese",
       "citation_conference_title": "2020年度電気・情報関係学会北陸支部連合大会"
     },
-    "references": []
+    "references": [],
+    "dir_name": "06_automatic_ambigram_fukui"
   },
   {
     "id": 7,
@@ -363,7 +371,8 @@
     "notes": "日本におけるアンビグラムの先駆的作品集。逆さ読文字の豊富な実例を収録。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "07_upside_down_book_igarashi"
   },
   {
     "id": 8,
@@ -384,7 +393,8 @@
     "notes": "法政大学国際文化学部オープンセミナーの記録論文。文化・認知・デザインの観点からのアンビグラムの分析。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "08_fic_seminar_ambigram_world"
   },
   {
     "id": 9,
@@ -410,7 +420,8 @@
     "notes": "ひらがなの形状特徴に着目したデザイン作品「ひらがな〜る」等の開発・展示報告。オープンアクセスPDF取得。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "09_mojiule_gfits_hiraganaru"
   },
   {
     "id": 10,
@@ -453,7 +464,8 @@
       ],
       "citation_language": "ja"
     },
-    "references": []
+    "references": [],
+    "dir_name": "10_vcws2019_report"
   },
   {
     "id": 11,
@@ -480,7 +492,8 @@
     "notes": "視点に応じた指向性画像表示（3Dアンビグラム）の解像度向上に関する論文。オープンアクセスPDF取得。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "11_directional_volume_fit2016"
   },
   {
     "id": 12,
@@ -538,7 +551,8 @@
       "citation_language": "ja",
       "citation_conference_title": "三次元画像コンファレンス講演論文集 3次元画像コンファレンス2017"
     },
-    "references": []
+    "references": [],
+    "dir_name": "12_directional_volume_projection"
   },
   {
     "id": 13,
@@ -579,7 +593,8 @@
       ],
       "citation_language": "ja"
     },
-    "references": []
+    "references": [],
+    "dir_name": "13_visual_computing_editorial"
   },
   {
     "id": 14,
@@ -600,7 +615,8 @@
     "notes": "大学の美術教育においてアンビグラム制作を取り入れた授業実践と学生の造形認識の考察。オープンアクセスPDF取得。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "14_art_education_ambigram"
   },
   {
     "id": 15,
@@ -621,7 +637,8 @@
     "notes": "共感覚や文字の認知、視覚認知におけるアンビグラムの言及を含む書籍。",
     "abstract": null,
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "15_one_is_red_book"
   },
   {
     "id": 16,
@@ -660,7 +677,8 @@
       ],
       "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
     },
-    "references": []
+    "references": [],
+    "dir_name": "16_jceeek_program_2023"
   },
   {
     "id": 17,
@@ -682,6 +700,109 @@
     "notes": "TPS（Thin Plate Spline：薄板スプライン）弾性曲げエネルギー最小化による非剛体画像変形・ランドマークワープの原著論文。本プロジェクトにおける近接ストローク吸引・局所非剛体スナップ（snap_warper.py）の理論的基盤。",
     "abstract": "The thin-plate spline is the natural 2D generalization of the standard cubic spline in 1D. It minimizes bending energy over all interpolating functions between paired point sets (landmarks). This paper introduces principal warps as eigenfunctions of the bending energy matrix, providing an algebraically orthogonal decomposition of deformations into components of decreasing spatial scale.",
     "meta_tags": {},
-    "references": []
+    "references": [],
+    "dir_name": "17_tps_principal_warps_bookstein"
+  },
+  {
+    "id": 18,
+    "title": "既存書体の合成を手法とした漢字書体作成の実験",
+    "queries": [
+      "CiNii Research",
+      "漢字 タイポグラフィ",
+      "書体合成"
+    ],
+    "authors": [
+      "野宮 謙吾"
+    ],
+    "year": "2023",
+    "journal": "デザイン学研究特集号 = Special issue of Japanese Society for the Science of Design : 日本デザイン学会誌",
+    "volume": "30",
+    "number": "2",
+    "pages": "56-61",
+    "issn": "09196803",
+    "doi": null,
+    "url": "https://cir.nii.ac.jp/crid/1520579919135956608",
+    "cinii_crid": "1520579919135956608",
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "CiNii Research登録文献。既存の複数書体を幾何学的に合成・融合して新たな漢字書体を生成するデザイン工学研究。",
+    "abstract": "既存の複数の漢字書体を幾何学的に合成・融合させることで、新たな表情や機能性を持つ漢字書体を設計・生成する実験的アプローチを提案・検証した研究。",
+    "references": [],
+    "dir_name": "18_kanji_font_synthesis_nomiya"
+  },
+  {
+    "id": 19,
+    "title": "Ambigram Generation by a Diffusion Model",
+    "queries": [
+      "Ambigram Generation by a Diffusion Model",
+      "ICDAR 2023",
+      "Shirakawa Uchida"
+    ],
+    "authors": [
+      "Takahiro Shirakawa",
+      "Seiichi Uchida"
+    ],
+    "year": "2023",
+    "journal": "Document Analysis and Recognition – ICDAR 2023, Lecture Notes in Computer Science (LNCS)",
+    "volume": "14189",
+    "pages": "314-330",
+    "publisher": "Springer",
+    "doi": "10.1007/978-3-031-41676-7_20",
+    "url": "https://doi.org/10.1007/978-3-031-41676-7_20",
+    "arxiv_url": "https://arxiv.org/abs/2306.12049",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 3667985,
+    "notes": "文字認識の世界最高峰国際会議 ICDAR 2023採録論文。拡散モデルによるアンビグラム生成および成立可能性指標『Ambigramability』の提唱。",
+    "abstract": "An ambigram is a calligraphic design that has multiple interpretations when viewed from different directions, such as upside down (i.e., 180-degree rotation). Designing ambigrams is a creative and difficult task, even for professional calligraphers and type designers. In this paper, we propose a novel framework for generating ambigrams using a diffusion model. By specifying a pair of letter classes, the proposed model generates an image that represents the first letter in the normal orientation and the second letter in the upside-down orientation. We also propose an objective metric called 'ambigramability' to evaluate how easily a pair of letters can form an ambigram.",
+    "references": [],
+    "dir_name": "19_ambigram_diffusion_icdar2023"
+  },
+  {
+    "id": 20,
+    "title": "AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model",
+    "queries": [
+      "AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model",
+      "CVPR 2024",
+      "Boheng Zhao"
+    ],
+    "authors": [
+      "Boheng Zhao",
+      "Rana Hanocka",
+      "Raymond A. Yeh"
+    ],
+    "year": "2024",
+    "journal": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR 2024)",
+    "publisher": "IEEE",
+    "arxiv_url": "https://arxiv.org/abs/2311.17112",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 1681064,
+    "notes": "コンピュータビジョン最高峰学会 CVPR 2024採録論文。大規模拡散モデルの構造事前分布を蒸留し、文字アウトライン（ベクター輪郭）の直接最適化によるアンビグラム生成手法。",
+    "abstract": "An ambigram is a visual art form of calligraphy that can be viewed and read from multiple perspectives, typically under a 180-degree rotation. Creating ambigrams requires both artistic creativity and immense manual effort to satisfy the dual readability constraints. In this paper, we propose AmbiGen, an automated approach to generate calligraphic ambigrams by distilling knowledge from pre-trained diffusion models. Specifically, we optimize character outlines to balance readability and aesthetic quality across dual views.",
+    "references": [],
+    "dir_name": "20_ambigen_diffusion_cvpr2024"
+  },
+  {
+    "id": 21,
+    "title": "漢字タイポグラフィの立体化に関する研究",
+    "queries": [
+      "CiNii Research",
+      "漢字 タイポグラフィ",
+      "立体化"
+    ],
+    "authors": [
+      "岳 汉"
+    ],
+    "year": "2019",
+    "journal": "大阪芸術大学 博士学位論文",
+    "dissertation_number": "甲第54号",
+    "url": "https://cir.nii.ac.jp/crid/1940020909351720448",
+    "cinii_crid": "1940020909351720448",
+    "ndl_url": "https://dl.ndl.go.jp/pid/11288475",
+    "pdf_downloaded": false,
+    "pdf_size_bytes": 0,
+    "notes": "CiNii Research / 国立国会図書館デジタルコレクション登録文献。漢字タイポグラフィを3次元空間・多角的視点から再構成する造形芸術研究。",
+    "abstract": "漢字という2次元の文字言語・書体造形を、3次元空間における立体物や多角的視線に対応するタイポグラフィとして変容・拡張させる原理と表現手法を探求した博士論文。",
+    "references": [],
+    "dir_name": "21_3d_kanji_typography_yue"
   }
 ]
