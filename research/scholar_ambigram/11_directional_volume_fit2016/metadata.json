@@ -23,5 +23,7 @@
   "notes": "視点に応じた指向性画像表示（3Dアンビグラム）の解像度向上に関する論文。オープンアクセスPDF取得。",
   "abstract": null,
   "meta_tags": {},
-  "references": []
+  "references": [],
+  "transcript_available": false,
+  "translation_ja_available": false
 }
