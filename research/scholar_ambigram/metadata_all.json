@@ -62,7 +62,8 @@
       "citation_conference_title": "画像電子学会研究会講演予稿 画像電子学会第300回研究会講演予稿"
     },
     "references": [],
-    "dir_name": "01_particle_volume_ambigram"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 2,
@@ -176,7 +177,8 @@
       "23) M. Cho, J. Lee, K. M. Lee: “Reweighted Random Walks for Graph Matching”, Proc. of European Conference on Computer Vision (ECCV), Vol.6315, pp.492–505 (2010).",
       "24) K. Riesen, H. Bunke: “Approximate Graph Edit Distance Computation by Means of Bipartite Graph Matching”, Image and Vision Computing, Vol.27, pp.950–959 (2009)."
     ],
-    "dir_name": "02_hiragana_ambigram_features"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 3,
@@ -199,7 +201,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "03_lets_try_ambigram_nomura"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 4,
@@ -269,7 +272,8 @@
       "citation_conference_title": "映像情報メディア学会技術報告 39.14"
     },
     "references": [],
-    "dir_name": "04_directional_images_3d_object"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 5,
@@ -312,7 +316,8 @@
       "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
     },
     "references": [],
-    "dir_name": "05_gan_ambigram_generation"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 6,
@@ -350,7 +355,8 @@
       "citation_conference_title": "2020年度電気・情報関係学会北陸支部連合大会"
     },
     "references": [],
-    "dir_name": "06_automatic_ambigram_fukui"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 7,
@@ -372,7 +378,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "07_upside_down_book_igarashi"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 8,
@@ -394,7 +401,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "08_fic_seminar_ambigram_world"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 9,
@@ -421,7 +429,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "09_mojiule_gfits_hiraganaru"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 10,
@@ -465,7 +474,8 @@
       "citation_language": "ja"
     },
     "references": [],
-    "dir_name": "10_vcws2019_report"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 11,
@@ -493,7 +503,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "11_directional_volume_fit2016"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 12,
@@ -552,7 +563,8 @@
       "citation_conference_title": "三次元画像コンファレンス講演論文集 3次元画像コンファレンス2017"
     },
     "references": [],
-    "dir_name": "12_directional_volume_projection"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 13,
@@ -594,7 +606,8 @@
       "citation_language": "ja"
     },
     "references": [],
-    "dir_name": "13_visual_computing_editorial"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 14,
@@ -616,7 +629,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "14_art_education_ambigram"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 15,
@@ -638,7 +652,8 @@
     "abstract": null,
     "meta_tags": {},
     "references": [],
-    "dir_name": "15_one_is_red_book"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 16,
@@ -678,7 +693,8 @@
       "citation_conference_title": "電気関係学会九州支部連合大会講演論文集 2023年度電気・情報関係学会九州支部連合大会（第76回連合大会）講演論文集"
     },
     "references": [],
-    "dir_name": "16_jceeek_program_2023"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 17,
@@ -701,7 +717,8 @@
     "abstract": "The thin-plate spline is the natural 2D generalization of the standard cubic spline in 1D. It minimizes bending energy over all interpolating functions between paired point sets (landmarks). This paper introduces principal warps as eigenfunctions of the bending energy matrix, providing an algebraically orthogonal decomposition of deformations into components of decreasing spatial scale.",
     "meta_tags": {},
     "references": [],
-    "dir_name": "17_tps_principal_warps_bookstein"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 18,
@@ -728,7 +745,8 @@
     "notes": "CiNii Research登録文献。既存の複数書体を幾何学的に合成・融合して新たな漢字書体を生成するデザイン工学研究。",
     "abstract": "既存の複数の漢字書体を幾何学的に合成・融合させることで、新たな表情や機能性を持つ漢字書体を設計・生成する実験的アプローチを提案・検証した研究。",
     "references": [],
-    "dir_name": "18_kanji_font_synthesis_nomiya"
+    "transcript_available": false,
+    "translation_ja_available": false
   },
   {
     "id": 19,
@@ -755,7 +773,8 @@
     "notes": "文字認識の世界最高峰国際会議 ICDAR 2023採録論文。拡散モデルによるアンビグラム生成および成立可能性指標『Ambigramability』の提唱。",
     "abstract": "An ambigram is a calligraphic design that has multiple interpretations when viewed from different directions, such as upside down (i.e., 180-degree rotation). Designing ambigrams is a creative and difficult task, even for professional calligraphers and type designers. In this paper, we propose a novel framework for generating ambigrams using a diffusion model. By specifying a pair of letter classes, the proposed model generates an image that represents the first letter in the normal orientation and the second letter in the upside-down orientation. We also propose an objective metric called 'ambigramability' to evaluate how easily a pair of letters can form an ambigram.",
     "references": [],
-    "dir_name": "19_ambigram_diffusion_icdar2023"
+    "transcript_available": true,
+    "translation_ja_available": true
   },
   {
     "id": 20,
@@ -775,11 +794,12 @@
     "publisher": "IEEE",
     "arxiv_url": "https://arxiv.org/abs/2312.02967",
     "pdf_downloaded": true,
-    "pdf_size_bytes": 1681064,
+    "pdf_size_bytes": 4639644,
     "notes": "コンピュータビジョン最高峰学会 CVPR 2024採録論文。大規模拡散モデルの構造事前分布を蒸留し、文字アウトライン（ベクター輪郭）の直接最適化によるアンビグラム生成手法。",
     "abstract": "An ambigram is a visual art form of calligraphy that can be viewed and read from multiple perspectives, typically under a 180-degree rotation. Creating ambigrams requires both artistic creativity and immense manual effort to satisfy the dual readability constraints. In this paper, we propose AmbiGen, an automated approach to generate calligraphic ambigrams by distilling knowledge from pre-trained diffusion models. Specifically, we optimize character outlines to balance readability and aesthetic quality across dual views.",
     "references": [],
-    "dir_name": "20_ambigen_diffusion_cvpr2024"
+    "transcript_available": true,
+    "translation_ja_available": true
   },
   {
     "id": 21,
@@ -798,11 +818,12 @@
     "url": "https://cir.nii.ac.jp/crid/1940020909351720448",
     "cinii_crid": "1940020909351720448",
     "ndl_url": "https://dl.ndl.go.jp/pid/11288475",
-    "pdf_downloaded": false,
-    "pdf_size_bytes": 0,
-    "notes": "CiNii Research / 国立国会図書館デジタルコレクション登録文献。漢字タイポグラフィを3次元空間・多角的視点から再構成する造形芸術研究。",
+    "pdf_downloaded": true,
+    "pdf_size_bytes": 322774,
+    "notes": "大阪芸術大学博士論文の公式審査結果要旨・研究内容詳細PDF（322KB）。漢字タイポグラフィを3次元空間・多角的視点から再構成する造形芸術研究。",
     "abstract": "漢字という2次元の文字言語・書体造形を、3次元空間における立体物や多角的視線に対応するタイポグラフィとして変容・拡張させる原理と表現手法を探求した博士論文。",
     "references": [],
-    "dir_name": "21_3d_kanji_typography_yue"
+    "transcript_available": false,
+    "translation_ja_available": false
   }
 ]

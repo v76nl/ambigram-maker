@@ -19,5 +19,7 @@
   "pdf_size_bytes": 322774,
   "notes": "大阪芸術大学博士論文の公式審査結果要旨・研究内容詳細PDF（322KB）。漢字タイポグラフィを3次元空間・多角的視点から再構成する造形芸術研究。",
   "abstract": "漢字という2次元の文字言語・書体造形を、3次元空間における立体物や多角的視線に対応するタイポグラフィとして変容・拡張させる原理と表現手法を探求した博士論文。",
-  "references": []
+  "references": [],
+  "transcript_available": false,
+  "translation_ja_available": false
 }

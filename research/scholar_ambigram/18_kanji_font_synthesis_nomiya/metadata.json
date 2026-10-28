@@ -22,5 +22,7 @@
   "pdf_size_bytes": 0,
   "notes": "CiNii Research登録文献。既存の複数書体を幾何学的に合成・融合して新たな漢字書体を生成するデザイン工学研究。",
   "abstract": "既存の複数の漢字書体を幾何学的に合成・融合させることで、新たな表情や機能性を持つ漢字書体を設計・生成する実験的アプローチを提案・検証した研究。",
-  "references": []
+  "references": [],
+  "transcript_available": false,
+  "translation_ja_available": false
 }

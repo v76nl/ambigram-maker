@@ -18,5 +18,7 @@
   "notes": "TPS（Thin Plate Spline：薄板スプライン）弾性曲げエネルギー最小化による非剛体画像変形・ランドマークワープの原著論文。本プロジェクトにおける近接ストローク吸引・局所非剛体スナップ（snap_warper.py）の理論的基盤。",
   "abstract": "The thin-plate spline is the natural 2D generalization of the standard cubic spline in 1D. It minimizes bending energy over all interpolating functions between paired point sets (landmarks). This paper introduces principal warps as eigenfunctions of the bending energy matrix, providing an algebraically orthogonal decomposition of deformations into components of decreasing spatial scale.",
   "meta_tags": {},
-  "references": []
+  "references": [],
+  "transcript_available": false,
+  "translation_ja_available": false
 }

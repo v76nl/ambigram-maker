@@ -22,5 +22,7 @@
   "pdf_size_bytes": 3667985,
   "notes": "文字認識の世界最高峰国際会議 ICDAR 2023採録論文。拡散モデルによるアンビグラム生成および成立可能性指標『Ambigramability』の提唱。",
   "abstract": "An ambigram is a calligraphic design that has multiple interpretations when viewed from different directions, such as upside down (i.e., 180-degree rotation). Designing ambigrams is a creative and difficult task, even for professional calligraphers and type designers. In this paper, we propose a novel framework for generating ambigrams using a diffusion model. By specifying a pair of letter classes, the proposed model generates an image that represents the first letter in the normal orientation and the second letter in the upside-down orientation. We also propose an objective metric called 'ambigramability' to evaluate how easily a pair of letters can form an ambigram.",
-  "references": []
+  "references": [],
+  "transcript_available": true,
+  "translation_ja_available": true
 }

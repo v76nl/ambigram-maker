@@ -109,5 +109,7 @@
     "22) X. Bai, L. J. Latecki: “Path Similarity Skeleton Graph Matching”, IEEE Trans. on Pattern Analysis and Machine Intelligence, Vol.30, No.7, pp.1282–1292 (2008).",
     "23) M. Cho, J. Lee, K. M. Lee: “Reweighted Random Walks for Graph Matching”, Proc. of European Conference on Computer Vision (ECCV), Vol.6315, pp.492–505 (2010).",
     "24) K. Riesen, H. Bunke: “Approximate Graph Edit Distance Computation by Means of Bipartite Graph Matching”, Image and Vision Computing, Vol.27, pp.950–959 (2009)."
-  ]
+  ],
+  "transcript_available": false,
+  "translation_ja_available": false
 }
