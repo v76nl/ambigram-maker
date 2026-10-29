@@ -83,7 +83,7 @@
 ## 参考文献
 
 大垣瑠奏, 飯尾淳: タイポグリセミア度と認知処理時間; 人間中心設計, Vol. 22, No. 1, pp. 49-55 (2026). [https://doi.org/10.34404/hcd.22.1_49](https://doi.org/10.34404/hcd.22.1_49)
-橋本葵, 飯尾淳: リポグラム生成プログラムの開発および評価分析; 第61回サイバーワールド研究会, CW2025-08, 石川 野々市 (2025). [https://iiojun.com/publications/](https://iiojun.com/publications/)
+橋本葵, 飯尾淳: リポグラム生成プログラムの開発および評価分析; 第61回サイバーワールド研究会, CW2025-08, 石川 野々市 (2025). [https://lab.iiojun.com/wp/publications/](https://lab.iiojun.com/wp/publications/)
 井上和輝, 高橋裕樹: 文字構造特徴を用いたひらがなアンビグラムの生成; 画像電子学会誌, Vol. 49, No. 4, pp. 301-314 (2020). [https://doi.org/10.11371/iieej.49.301](https://doi.org/10.11371/iieej.49.301)
 魏延輝, 山口裕: 多目的最適化GANによるアンビグラム生成; 2023年度電気関係学会九州支部連合大会講演論文集, p. 39 (2023). [https://doi.org/10.11527/jceeek.2023.0_39](https://doi.org/10.11527/jceeek.2023.0_39)
 Bookstein, F. L.: Principal Warps: Thin-Plate Splines and the Decompositions of Deformations; IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol. 11, No. 6, pp. 567-585 (1989). [https://doi.org/10.1109/34.24792](https://doi.org/10.1109/34.24792)
