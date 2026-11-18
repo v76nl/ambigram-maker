@@ -82,8 +82,21 @@
       return;
     }
 
-    const paper = window.PAPERS_CONTENT[paperId];
-    if (!paper) return;
+    // 論文本文は著作権に配慮してリポジトリに含めず、手元にある場合だけ読み込む
+    const paper = (window.PAPERS_CONTENT || {})[paperId];
+    if (!paper) {
+      document.getElementById("paper-sheet").innerHTML = `
+        <div class="paper-meta-header">
+          <h1 class="paper-main-title">論文本文はこのリポジトリに含まれていません</h1>
+          <div class="paper-authors">著作権に配慮し、本文と図版はローカル環境でのみ扱います。</div>
+          <div class="paper-source-info">
+            <span>手元に research/reader/papers_content.js を配置すると表示できます。</span>
+          </div>
+        </div>
+      `;
+      if (tocListEl) tocListEl.innerHTML = "";
+      return;
+    }
 
     // メタ情報ヘッダー
     const metaHeader = `

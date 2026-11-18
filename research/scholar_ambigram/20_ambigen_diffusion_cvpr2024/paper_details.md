@@ -8,8 +8,8 @@
 - **arXiv**: [arXiv:2312.02967](https://arxiv.org/abs/2312.02967)
 - **プロジェクトページ**: [https://ambigen.github.io/](https://ambigen.github.io/)
 - **全文PDF**: **あり** (`paper.pdf`, 1.68MB)
-- **英語抽出テキスト**: [paper_transcript_en.md](./paper_transcript_en.md)
-- **日本語全訳**: [paper_translation_ja.md](./paper_translation_ja.md)
+- **本文の抽出テキスト・日本語訳**: ローカル専用 (Git管理外)
+- **原文の参照先**: 上記の arXiv
 
 ## 抄録 (Abstract)
 An ambigram is a visual art form of calligraphy that can be viewed and read from multiple perspectives, typically under a 180-degree rotation. Creating ambigrams requires both artistic creativity and immense manual effort to satisfy the dual readability constraints. In this paper, we propose AmbiGen, an automated approach to generate calligraphic ambigrams by distilling knowledge from pre-trained diffusion models. Specifically, we optimize character outlines to balance readability and aesthetic quality across dual views.

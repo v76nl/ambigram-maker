@@ -8,6 +8,8 @@
 
 ブラウザで直接開くだけで動作します (サーバー不要・完全オフライン対応)。
 
+論文の本文 (`papers_content.js`) と図版 (`images/paper*/`) は、著作権に配慮してリポジトリに含めていません。これらのファイルが手元にない場合、論文タブには案内が表示され、アプリ実装の解説だけを閲覧できます。
+
 | 実行環境 | 起動コマンド | 備考 |
 |:---|:---|:---|
 | Windows (PowerShell) | `start research/reader/index.html` | デフォルトブラウザで直接開く |
@@ -24,7 +26,7 @@ research/reader/
 ├── reader.css            # スタイルシート (ライトテーマ・白黒+オレンジ1色・シャープ角丸)
 ├── reader.js             # 画面制御 (タブ切替・TOCスクロール・インスペクター表示・習得度記録)
 ├── annotations.js        # 用語データ (直感解説・論文役割・コード実装マッピング)
-├── papers_content.js     # 論文構造化HTML (論文⑤ 魏・山口 2023 / 論文② 井上・高橋 2020)
+├── papers_content.js     # 論文構造化HTML (ローカル専用・Git管理外)
 ├── code_content.js       # アプリ実装解説データ (AST自動抽出により生成)
 ├── sync_code.py          # コード変更同期スクリプト (Python astによる自動抽出)
 └── README.md             # 本ドキュメント

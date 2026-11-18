@@ -75,6 +75,9 @@ reference
 # Research & Academic Papers (Avoid committing copyrighted papers to Git)
 *.pdf
 research/**/*.pdf
-research/**/paper_transcript.md
+research/**/paper_transcript*.md
+research/**/paper_translation*.md
+research/reader/papers_content.js
+research/reader/images/paper*/
 
 scratch/

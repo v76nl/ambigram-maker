@@ -35,8 +35,8 @@ Google Scholar（Googleスカラー）および CiNii Research において「am
 | 16 | [2023 年度 (第 76 回) 電気・情報関係学会九州支部連合大会プログラム](./16_jceeek_program_2023/) | 電気・情報関係学会九州支部連合大会 | 2023 | 大会プログラム | **あり** (`paper.pdf`, 3.2MB) | - |
 | 17 | [Principal Warps: Thin-Plate Splines and the Decomposition of Deformations](./17_tps_principal_warps_bookstein/) | Fred L. Bookstein | 1989 | IEEE TPAMI | **あり** (`paper.pdf`, 1.6MB) | - |
 | 18 | [既存書体の合成を手法とした漢字書体作成の実験](./18_kanji_font_synthesis_nomiya/) | 野宮謙吾 | 2023 | 日本デザイン学会 デザイン学研究特集号 | CiNii詳細メタデータ | - |
-| 19 | [Ambigram Generation by a Diffusion Model](./19_ambigram_diffusion_icdar2023/) | Takahiro Shirakawa, Seiichi Uchida | 2023 | ICDAR 2023 (Springer LNCS) | **あり** (`paper.pdf`, 3.6MB) | [原文](./19_ambigram_diffusion_icdar2023/paper_transcript_en.md) / [全訳](./19_ambigram_diffusion_icdar2023/paper_translation_ja.md) |
-| 20 | [AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model](./20_ambigen_diffusion_cvpr2024/) | Boheng Zhao, Rana Hanocka, Raymond A. Yeh | 2024 | CVPR 2024 (IEEE) | **あり** (`paper.pdf`, 4.5MB) | [原文](./20_ambigen_diffusion_cvpr2024/paper_transcript_en.md) / [全訳](./20_ambigen_diffusion_cvpr2024/paper_translation_ja.md) |
+| 19 | [Ambigram Generation by a Diffusion Model](./19_ambigram_diffusion_icdar2023/) | Takahiro Shirakawa, Seiichi Uchida | 2023 | ICDAR 2023 (Springer LNCS) | **あり** (`paper.pdf`, 3.6MB) | ローカル専用 |
+| 20 | [AmbiGen: Generating Ambigrams from Pre-trained Diffusion Model](./20_ambigen_diffusion_cvpr2024/) | Boheng Zhao, Rana Hanocka, Raymond A. Yeh | 2024 | CVPR 2024 (IEEE) | **あり** (`paper.pdf`, 4.5MB) | ローカル専用 |
 | 21 | [漢字タイポグラフィの立体化に関する研究](./21_3d_kanji_typography_yue/) | 岳汉 | 2019 | 大阪芸術大学 博士論文 (甲博制第54号) | **あり** (`paper.pdf`, 315KB) | - |
 
 ---
@@ -75,9 +75,9 @@ Google Scholar（Googleスカラー）および CiNii Research において「am
 各文献ディレクトリ内には以下のファイルが格納されています:
 - `metadata.json`: タイトル，著者，出版年，DOI，URL，抄録，メタタグ，参考文献などの機械可読データ
 - `paper_details.md`: 論文・文献の詳細サマリー，抄録，参考文献リスト
-- `paper.pdf`: 入手可能な全文PDFファイル (オープンアクセスおよびプレプリント等)
-- `paper_transcript_en.md`: 論文PDFから抽出した英語原文マークダウン (主要英語論文)
-- `paper_translation_ja.md`: 学術的で精緻な日本語全訳マークダウン (主要英語論文)
+- `paper.pdf`: 入手可能な全文PDFファイル (ローカル専用・Git管理外)
+- `paper_transcript_en.md`: 論文PDFから抽出した英語原文マークダウン (ローカル専用・Git管理外)
+- `paper_translation_ja.md`: 日本語訳マークダウン (ローカル専用・Git管理外)
 
 ---
 
