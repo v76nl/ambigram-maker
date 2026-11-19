@@ -128,6 +128,12 @@ ambigram-maker/
 │   │   ├── annotations.js          - 数理用語・実装コード解説アノテーション
 │   │   └── code_content.js         - 対応コードブロックデータ
 │   └── scholar_ambigram/           - 収集文献の書誌情報と要約 (PDF・本文はローカル専用)
+├── site/                           - GitHub Pages 用の解説サイト (Astro)
+│   ├── src/pages/index.astro       - 解説ページ
+│   ├── src/data/site-data.json     - 書き出した作例・工程画像の一覧
+│   └── public/generated/           - 書き出した作例・工程画像
+├── scripts/
+│   └── export_site_data.py         - 解説サイト用の作例・工程画像の書き出し
 ├── slides/                         - 研究発表スライド環境 (Marp)
 └── docs/                           - 数理設計・最適化アルゴリズム仕様書
 ```
@@ -150,6 +156,12 @@ ambigram-maker/
 | `pnpm test` | `frontend/` | フロントエンド単体テストの実行 |
 | `pnpm slides:serve` | ルート | 研究発表スライドのローカル確認サーバー起動 (ポート: 8080) |
 | `pnpm slides:build` | ルート | スライド原稿から全形式 (HTML, PDF, PPTX) を一括ビルド |
+| `pnpm --dir site dev` | ルート | 解説サイトのローカル確認サーバー起動 (`http://127.0.0.1:4321/ambigram-maker/`) |
+| `uv run --project backend python scripts/export_site_data.py` | ルート | 解説サイトの作例・工程画像を生成エンジンから書き出し |
+
+解説サイトは、`main` に `site/` の変更を push すると GitHub Actions でビルドされ、GitHub Pages に公開されます。  
+作例は `output/` に保存した作品画像を使い、工程画像と吸引の比較画像は TPS 方式で生成します。  
+未発表の評価スコアと、第三者論文の本文・図版はサイトに載せません。
 
 ---
 
