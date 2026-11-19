@@ -26,6 +26,7 @@ from generators.gemini_engine import GeminiAmbigramEngine
 from generators.morphology_engine import MorphologyAmbigramEngine
 from generators.skeleton_engine import SkeletonAmbigramEngine
 from generators.font_manager import font_manager
+from generators.snap_warper import normalize_warp_method
 from evaluation.recognizer import char_recognizer
 from cancellation import gen_manager
 
@@ -85,7 +86,9 @@ class GenerateRequest(BaseModel):
     diff_blend: Optional[float] = 0.35
     pre_bold: Optional[int] = 4  # 事前太らせ量 (近接縦棒の結合力強化)
     enable_snap: Optional[bool] = True  # 近接ストローク吸引・局所非剛体変形 (後方互換性用)
-    snap_strength: Optional[float] = 0.75  # Thin Plate Spline 吸引強度 (0.0〜1.0)
+    snap_strength: Optional[float] = 0.75  # 近接ストローク吸引強度 (0.0〜1.0)
+    # 変形方式: "gaussian" (従来の平滑化方式) または "tps" (薄板スプライン)。未指定は互換性のため "gaussian"
+    warp_method: Optional[str] = None
     # ビットマップ用パラメータ
     blend_weight: Optional[float] = 0.65
     smoothness: Optional[int] = 7
@@ -330,6 +333,10 @@ def generate_ambigram(req: GenerateRequest):
     """指定した単語のアンビグラムを本来の表記（漢字・カタカナ・ひらがな）で生成"""
     if not req.word:
         raise HTTPException(status_code=400, detail="単語を指定してください")
+    try:
+        warp_method = normalize_warp_method(req.warp_method)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     cancel_event = gen_manager.start_generation()
     t0 = time.time()
@@ -381,6 +388,7 @@ def generate_ambigram(req: GenerateRequest):
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             enable_snap=(snap_val > 0.0),
             snap_strength=snap_val,
+            warp_method=warp_method,
             font_id=font_id,
             custom_offsets=req.custom_offsets,
             cancel_event=cancel_event,
@@ -407,6 +415,7 @@ def generate_ambigram(req: GenerateRequest):
             pre_bold=req.pre_bold if req.pre_bold is not None else 4,
             enable_snap=(snap_val > 0.0),
             snap_strength=snap_val,
+            warp_method=warp_method,
             font_id=font_id,
             brush_style=req.brush_style or "calligraphic",
             stroke_modulation=req.stroke_modulation if req.stroke_modulation is not None else True,
