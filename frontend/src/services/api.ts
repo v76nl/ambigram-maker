@@ -71,6 +71,9 @@ export interface WordFontsEval {
   font_scores: FontScoreItem[];
 }
 
+/** 近接ストローク吸引の変形方式。gaussian: 従来の平滑化方式 / tps: 薄板スプライン */
+export type WarpMethod = "gaussian" | "tps";
+
 export interface GenerateParams {
   word: string;
   engine?: "vector" | "morphology" | "skeleton" | "bitmap" | "gemini" | "all";
@@ -85,6 +88,7 @@ export interface GenerateParams {
   strokeModulation?: boolean;
   enableSnap?: boolean;
   snapStrength?: number;
+  warpMethod?: WarpMethod;
   diffBlend?: number;
   preBold?: number;
   blendWeight?: number;
@@ -292,6 +296,7 @@ export async function generateAmbigram(
       stroke_modulation: params.strokeModulation,
       enable_snap: params.enableSnap,
       snap_strength: params.snapStrength,
+      warp_method: params.warpMethod,
       diff_blend: params.diffBlend,
       pre_bold: params.preBold,
       blend_weight: params.blendWeight,

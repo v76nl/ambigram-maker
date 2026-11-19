@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import type { ParsedAmbigramConfig } from "../utils/configParser";
+import type { WarpMethod } from "../services/api";
 
 export interface AmbigramParams {
   // ベクター
@@ -15,6 +16,7 @@ export interface AmbigramParams {
   diffBlend: number;
   preBold: number;
   snapStrength: number;
+  warpMethod: WarpMethod;
   // ビットマップ
   blendWeight: number;
   smoothness: number;
@@ -34,6 +36,8 @@ export function useAmbigramParams() {
   const [diffBlend, setDiffBlend] = useState<number>(0.35);
   const [preBold, setPreBold] = useState<number>(4);
   const [snapStrength, setSnapStrength] = useState<number>(0.75);
+  // 新規の生成は薄板スプライン。方式の記録がない保存済み設定は従来方式で復元する
+  const [warpMethod, setWarpMethod] = useState<WarpMethod>("tps");
   const [blendWeight, setBlendWeight] = useState<number>(0.65);
   const [smoothness, setSmoothness] = useState<number>(7);
   const [thresholdVal, setThresholdVal] = useState<number>(110);
@@ -54,6 +58,7 @@ export function useAmbigramParams() {
     if (p.preBold !== undefined) setPreBold(p.preBold);
     if (p.snapStrength !== undefined) setSnapStrength(p.snapStrength);
     else if (p.enableSnap !== undefined) setSnapStrength(p.enableSnap ? 0.75 : 0.0);
+    setWarpMethod(p.warpMethod ?? "gaussian");
     if (p.blendWeight !== undefined) setBlendWeight(p.blendWeight);
     if (p.smoothness !== undefined) setSmoothness(p.smoothness);
     if (p.thresholdVal !== undefined) setThresholdVal(p.thresholdVal);
@@ -70,6 +75,7 @@ export function useAmbigramParams() {
       diffBlend,
       preBold,
       snapStrength,
+      warpMethod,
       blendWeight,
       smoothness,
       thresholdVal,
@@ -86,6 +92,7 @@ export function useAmbigramParams() {
       diffBlend,
       preBold,
       snapStrength,
+      warpMethod,
       blendWeight,
       smoothness,
       thresholdVal,
@@ -105,6 +112,7 @@ export function useAmbigramParams() {
     setDiffBlend,
     setPreBold,
     setSnapStrength,
+    setWarpMethod,
     setBlendWeight,
     setSmoothness,
     setThresholdVal,

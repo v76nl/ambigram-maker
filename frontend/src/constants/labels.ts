@@ -37,12 +37,19 @@ export const PARAM_LABELS = {
     hint: "▲増: 各文字の個別形状を尊重したいとき / ▼減: 共通骨格に寄せて対称性を高めたいとき",
   },
   enableSnap: {
-    title: "Thin Plate Spline 近接吸引スナップ",
-    hint: "薄板スプライン(Thin Plate Spline)弾性変形により、近接ストローク同士を中間の回転対称軸へ滑らかに吸着・一本化",
+    title: "近接吸引スナップ",
+    hint: "近接ストローク同士を中間の回転対称軸へ滑らかに吸着・一本化",
   },
   snapStrength: {
-    title: "Thin Plate Spline 吸引強度",
+    title: "近接吸引の強さ",
     hint: "▲増: 相手ストロークへ強く引き寄せて一体化 / ▼減: 原型の文字形状を維持 (0%で無変形)",
+  },
+  warpMethod: {
+    title: "変形方式",
+    tps: "TPS",
+    gaussian: "従来",
+    tpsHint: "薄板スプラインで、曲げエネルギーが最小になるように変形します",
+    gaussianHint: "移動量をガウシアン平滑化で周囲へ広げます。以前の作品と同じ結果になります",
   },
 
   // ベクター合成

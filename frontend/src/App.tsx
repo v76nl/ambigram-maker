@@ -83,6 +83,7 @@ export const App: React.FC = () => {
     setDiffBlend,
     setPreBold,
     setSnapStrength,
+    setWarpMethod,
     setBlendWeight,
     setSmoothness,
     setThresholdVal,
@@ -133,6 +134,7 @@ export const App: React.FC = () => {
           diffBlend: p.diffBlend,
           preBold: p.preBold,
           snapStrength: p.snapStrength,
+          warpMethod: p.warpMethod,
           blendWeight: p.blendWeight,
           smoothness: p.smoothness,
           thresholdVal: p.thresholdVal,
@@ -182,6 +184,7 @@ export const App: React.FC = () => {
             strokeModulation: params.strokeModulation,
             enableSnap: params.snapStrength > 0,
             snapStrength: params.snapStrength,
+            warpMethod: params.warpMethod,
             diffBlend: params.diffBlend,
             preBold: params.preBold,
             blendWeight: params.blendWeight,
@@ -658,6 +661,8 @@ export const App: React.FC = () => {
             onEnableSnapChange={(val) => setSnapStrength(val ? 0.75 : 0.0)}
             snapStrength={params.snapStrength}
             onSnapStrengthChange={setSnapStrength}
+            warpMethod={params.warpMethod}
+            onWarpMethodChange={setWarpMethod}
             blendWeight={params.blendWeight}
             onBlendWeightChange={setBlendWeight}
             smoothness={params.smoothness}
@@ -688,6 +693,7 @@ export const App: React.FC = () => {
             strokeModulation={params.strokeModulation}
             enableSnap={params.snapStrength > 0}
             snapStrength={params.snapStrength}
+            warpMethod={params.warpMethod}
             blendRatio={params.blendRatio}
             blendWeight={params.blendWeight}
             smoothness={params.smoothness}

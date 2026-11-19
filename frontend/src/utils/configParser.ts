@@ -1,3 +1,5 @@
+import type { WarpMethod } from "../services/api";
+
 export interface ParsedAmbigramConfig {
   word: string;
   engine: string;
@@ -12,6 +14,7 @@ export interface ParsedAmbigramConfig {
     strokeModulation?: boolean;
     enableSnap?: boolean;
     snapStrength?: number;
+    warpMethod?: WarpMethod;
     blendRatio?: number;
     highlightMode?: boolean;
     blendWeight?: number;
@@ -96,6 +99,10 @@ export function parseAmbigramConfig(data: any): ParsedAmbigramConfig {
   }
   if (rawParams.snap_strength !== undefined || rawParams.snapStrength !== undefined) {
     params.snapStrength = Number(rawParams.snap_strength ?? rawParams.snapStrength);
+  }
+  const rawWarp = rawParams.warp_method ?? rawParams.warpMethod;
+  if (rawWarp === "gaussian" || rawWarp === "tps") {
+    params.warpMethod = rawWarp;
   }
   if (rawParams.blend_ratio !== undefined || rawParams.blendRatio !== undefined) {
     params.blendRatio = Number(rawParams.blend_ratio ?? rawParams.blendRatio);

@@ -61,6 +61,18 @@ describe("Frontend API Service", () => {
     expect(body.font).toBe("zen_maru");
   });
 
+  it("generateAmbigram should send the warp method", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ word: "長寿", results: {} }),
+    } as Response);
+
+    await generateAmbigram({ word: "長寿", engine: "skeleton", warpMethod: "tps" });
+
+    const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+    expect(body.warp_method).toBe("tps");
+  });
+
   it("evaluateWord should send word to /words/evaluate", async () => {
     const mockWordItem = { word: "日の目", reading: "ひのめ", score: 0.95, length: 3, common: true, kanji: ["日", "目"], pairs: [] };
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Download, FileCode, FileImage, FileJson, CheckSquare, Square, Info, Upload } from "lucide-react";
-import type { WordItem, EngineResult, ReadabilityResponse } from "../services/api";
+import type { WordItem, EngineResult, ReadabilityResponse, WarpMethod } from "../services/api";
 
 interface ExportBarProps {
   wordItem: WordItem | null;
@@ -20,6 +20,7 @@ interface ExportBarProps {
   strokeModulation?: boolean;
   enableSnap?: boolean;
   snapStrength?: number;
+  warpMethod?: WarpMethod;
   blendWeight?: number;
   smoothness?: number;
   thresholdVal?: number;
@@ -45,6 +46,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
   strokeModulation = true,
   enableSnap = true,
   snapStrength = 0.75,
+  warpMethod = "tps",
   blendWeight = 0.65,
   smoothness = 7,
   thresholdVal = 110,
@@ -164,6 +166,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
       engineParams.stroke_modulation = strokeModulation;
       engineParams.enable_snap = enableSnap;
       engineParams.snap_strength = snapStrength;
+      engineParams.warp_method = warpMethod;
     } else if (activeEngine === "morphology") {
       engineParams.dilation_size = dilationSize;
       engineParams.smoothness = smoothness;
@@ -171,6 +174,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({
       engineParams.pre_bold = preBold;
       engineParams.enable_snap = enableSnap;
       engineParams.snap_strength = snapStrength;
+      engineParams.warp_method = warpMethod;
     } else if (activeEngine === "vector") {
       engineParams.blend_ratio = blendRatio;
       engineParams.stroke_width = strokeWidth;

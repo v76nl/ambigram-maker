@@ -1,6 +1,6 @@
 import React from "react";
 import { RefreshCw } from "lucide-react";
-import type { EngineResult, FontMeta } from "../services/api";
+import type { EngineResult, FontMeta, WarpMethod } from "../services/api";
 import { PARAM_LABELS } from "../constants/labels";
 
 interface EngineCompareProps {
@@ -32,6 +32,8 @@ interface EngineCompareProps {
   onEnableSnapChange?: (val: boolean) => void;
   snapStrength?: number;
   onSnapStrengthChange?: (val: number) => void;
+  warpMethod?: WarpMethod;
+  onWarpMethodChange?: (val: WarpMethod) => void;
   blendRatio: number;
   onBlendRatioChange: (val: number) => void;
   blendWeight: number;
@@ -67,6 +69,8 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
   onEnableSnapChange,
   snapStrength = 0.75,
   onSnapStrengthChange,
+  warpMethod = "tps",
+  onWarpMethodChange,
   blendRatio,
   onBlendRatioChange,
   blendWeight,
@@ -172,7 +176,7 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
               {(onSnapStrengthChange || onEnableSnapChange) && (
                 <div className="swiss-slider-group">
                   <div className="swiss-slider-header">
-                    <span>{PARAM_LABELS.snapStrength?.title || "Thin Plate Spline 吸引強度"}</span>
+                    <span>{PARAM_LABELS.snapStrength.title}</span>
                     <span className="swiss-slider-val">{Math.round(snapStrength * 100)}%</span>
                   </div>
                   <input
@@ -188,8 +192,32 @@ export const EngineCompare: React.FC<EngineCompareProps> = ({
                       if (onEnableSnapChange) onEnableSnapChange(val > 0);
                     }}
                   />
+                  <span className="swiss-slider-hint">{PARAM_LABELS.snapStrength.hint}</span>
+                </div>
+              )}
+
+              {onWarpMethodChange && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
+                  <span id="warp-method-label" style={{ fontSize: "0.74rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    {PARAM_LABELS.warpMethod.title}
+                  </span>
+                  <div className="swiss-segmented" role="radiogroup" aria-labelledby="warp-method-label" style={{ display: "flex", width: "100%" }}>
+                    {(["tps", "gaussian"] as const).map((method) => (
+                      <button
+                        key={method}
+                        type="button"
+                        role="radio"
+                        aria-checked={warpMethod === method}
+                        className={`swiss-segmented-btn ${warpMethod === method ? "active" : ""}`}
+                        onClick={() => onWarpMethodChange(method)}
+                        style={{ flex: 1, padding: "0.3rem 0.2rem", fontSize: "0.72rem" }}
+                      >
+                        {PARAM_LABELS.warpMethod[method]}
+                      </button>
+                    ))}
+                  </div>
                   <span className="swiss-slider-hint">
-                    {PARAM_LABELS.snapStrength?.hint || "薄板スプライン弾性変形による近接ストロークの中間対称軸への引き寄せ吸着度合 (0%で無効)"}
+                    {warpMethod === "tps" ? PARAM_LABELS.warpMethod.tpsHint : PARAM_LABELS.warpMethod.gaussianHint}
                   </span>
                 </div>
               )}
