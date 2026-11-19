@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from .base import BaseAmbigramGenerator, array_to_png_data_uri, make_bicolor_overlay
 from .font_manager import font_manager
-from .snap_warper import snap_warper
+from .snap_warper import DEFAULT_WARP_METHOD, WARP_STEP_TEXT, normalize_warp_method, snap_warper
 
 class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     """
@@ -19,7 +19,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     マルチフォント自動最適化 & 重心微小シフト補正に対応。
     """
     def __init__(self):
-        # スロット画像キャッシュ: (c1, c2, size, stroke_thickness, diff_blend, pre_bold, str(font_path), shift, brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates) -> (result, intermediates)
+        # スロット画像キャッシュ: (c1, c2, size, stroke_thickness, diff_blend, pre_bold, str(font_path), shift, brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates, warp_method) -> (result, intermediates)
         self._slot_cache: dict[tuple, Any] = {}
 
     def render_glyph_bitmap(self, char: str, size: int = 512, font_path: Optional[Path] = None) -> np.ndarray:
@@ -86,6 +86,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         enable_snap: bool = True,
         snap_strength: float = 0.75,
         return_intermediates: bool = False,
+        warp_method: str = DEFAULT_WARP_METHOD,
     ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
@@ -97,13 +98,14 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - shift: 重心微小シフト (dx, dy)
         - brush_style: 'calligraphic' (毛筆楕円ブラシ: 筆先角度135度) または 'uniform' (均一円形)
         - stroke_modulation: 井上・高橋(2020)§5に基づくストローク太さ変調 (共通部強調・固有部細線化)
-        - enable_snap: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        - enable_snap: 近接ストローク吸引・局所非剛体変形 (gaussian: 従来の平滑化方式 / tps: 薄板スプライン)
         - return_intermediates: 中間ステップ画像（バイカラー、距離場、骨格線等）を辞書で返すか
         """
         cache_key = (
             c1, c2, size, stroke_thickness, diff_blend, pre_bold,
             str(font_path) if font_path else "", shift,
-            brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates
+            brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates,
+            normalize_warp_method(warp_method),
         )
         if cache_key in self._slot_cache:
             cached_val = self._slot_cache[cache_key]
@@ -149,7 +151,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
 
         step3_overlay = make_bicolor_overlay(p_img1_pre, p_img2_rot_pre)
 
-        # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (Skeleton Attraction & TPS Warping)
+        # 中間ステップ4: 近接ストローク吸引・局所非剛体変形 (gaussian: 従来の平滑化方式 / tps: 薄板スプライン)
         if enable_snap and snap_strength > 0.0:
             p_img1, p_img2_rot, _ = snap_warper.snap_and_warp(
                 p_img1_pre,
@@ -158,6 +160,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 guide_img2=img2_rot,
                 max_distance=40,
                 snap_strength=snap_strength,
+                warp_method=warp_method,
             )
         else:
             p_img1 = p_img1_pre
@@ -289,6 +292,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         stroke_modulation: bool = True,
         enable_snap: bool = True,
         snap_strength: float = 0.75,
+        warp_method: str = DEFAULT_WARP_METHOD,
         cancel_event: Any = None,
         **params,
     ) -> dict[str, Any]:
@@ -307,6 +311,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         snap_strength = float(params.get("snap_strength", snap_strength))
         if not enable_snap:
             snap_strength = 0.0
+        warp_method = normalize_warp_method(params.get("warp_method", warp_method))
 
         # 適用フォントの決定および幾何評価 (font_id指定時は単一フォントのみ高速評価)
         if font_id and font_id != "auto":
@@ -365,6 +370,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 enable_snap=(snap_strength > 0.0),
                 snap_strength=snap_strength,
                 return_intermediates=True,
+                warp_method=warp_method,
             )
             slots[i] = slot_img
             slot_intermediates[i] = inter
@@ -436,8 +442,8 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
             },
             {
                 "step": 4,
-                "title": "Thin Plate Spline (薄板スプライン非剛体変形)",
-                "description": "薄板の弾性曲げエネルギー最小化モデル(Thin Plate Spline)により、文字輪郭を崩さず近接するストローク同士を中心対称軸へ滑らかに引き寄せて一体化",
+                "title": WARP_STEP_TEXT[warp_method]["title"],
+                "description": WARP_STEP_TEXT[warp_method]["description"],
                 "image": array_to_png_data_uri(step4_img, color_mode="raw", add_padding=True),
             },
             {
@@ -475,6 +481,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "stroke_modulation": stroke_modulation,
                 "enable_snap": (snap_strength > 0.0),
                 "snap_strength": snap_strength,
+                "warp_method": warp_method,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",
