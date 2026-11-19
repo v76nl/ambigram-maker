@@ -1,0 +1,338 @@
+---
+import "@fontsource-variable/noto-sans-jp/wght.css";
+import "../styles/global.css";
+import data from "../data/site-data.json";
+
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const asset = (src: string) => `${base}${src}`;
+
+const repository = "https://github.com/v76nl/ambigram-maker";
+const title = "逆さにしても、同じ言葉。";
+const description = "180度回転しても同じ単語として読める日本語アンビグラムの制作を、辞書探索とフォント骨格の変形で支援するシステムの解説です。";
+
+const hero = data.gallery[0];
+const snapDefault = data.snap.levels.findIndex((level) => level.value === 0.75);
+
+const steps = [
+  { title: "正反を重ねる", text: "文字と、対になる文字を180度回転した形を、同じ位置に重ねます。" },
+  { title: "位置を合わせる", text: "2つの形がよく重なるように、互いの位置を少しずらします。" },
+  { title: "線を太らせる", text: "線を太らせて、近くにある線どうしの隙間を縮めます。" },
+  { title: "線を引き寄せる", text: "近くにある線を互いの骨格へ向けて動かし、周囲は曲げが最も小さくなるように薄板スプラインで変形します。" },
+  { title: "中心を求める", text: "2つの形の輪郭からの距離を調和平均し、両方の線の内側にあたる場所を強く残します。" },
+  { title: "骨格を取り出す", text: "残した領域を細線化して、線の中心を通る骨格を取り出します。" },
+  { title: "線を描き直す", text: "骨格に沿って、重なる部分は太く、片方だけの線は細く描き直します。" },
+];
+
+const fonts = [
+  { name: "Zen Maru Gothic", owner: "The Zen Maru Gothic Project Authors" },
+  { name: "Shippori Mincho", owner: "The Shippori Mincho Project Authors" },
+  { name: "M PLUS 1p", owner: "The M+ FONT PROJECT Authors" },
+  { name: "Klee One", owner: "The Klee Project Authors" },
+];
+
+const command = `git clone ${repository}.git
+cd ambigram-maker
+pnpm install
+pnpm --prefix frontend install
+pnpm dev`;
+
+const payload = JSON.stringify({
+  pipeline: data.pipeline.map((item) => item.steps.map((step) => asset(step.src))),
+  snap: data.snap.levels.map((level) => ({
+    value: level.value,
+    result: asset(level.result.src),
+    overlay: asset(level.overlay.src),
+  })),
+}).replace(/</g, "\\u003c");
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href={asset("favicon.svg")} type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#main">本文へ移動</a>
+
+    <nav class="nav" aria-label="ページ内">
+      <div class="wrap nav-inner">
+        <a href="#how">仕組み</a>
+        <a href="#snap">変形</a>
+        <a href="#works">作例</a>
+        <a href="#run">動かす</a>
+        <a class="icon-link" href={repository} aria-label="GitHub リポジトリ">
+          <svg class="icon icon-solid" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z" />
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <main id="main">
+      <header class="hero wrap">
+        <button class="hero-stage" type="button" id="hero-turn" aria-label={`「${hero.word}」を180度回転する`}>
+          <img class="turnable" src={asset(hero.image.src)} width={hero.image.width} height={hero.image.height} alt={`「${hero.word}」のアンビグラム`} fetchpriority="high" />
+          <span class="hero-turn" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 3v5h-5" /></svg>
+          </span>
+        </button>
+        <h1><span class="phrase">逆さにしても、</span><span class="phrase">同じ言葉。</span></h1>
+      </header>
+
+      <section class="section" id="how" aria-labelledby="how-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="how-title"><span class="phrase">2つの文字を、</span><span class="phrase">1つの形にする</span></h2>
+            <p>単語の前半の文字と、後半の文字を180度回転した形を融合します。後半は前半を回転して作るため、完成した図形は必ず点対称になります。</p>
+          </div>
+
+          <dl class="facts">
+            <div><dt>回転</dt><dd>180<small>度</small></dd></div>
+            <div><dt>辞書</dt><dd>20<small>万語以上</small></dd></div>
+            <div><dt>書体</dt><dd>9<small>種類</small></dd></div>
+          </dl>
+
+          <div class="pipeline">
+            <div class="stage">
+              <div class="frame" id="step-panel" role="tabpanel" aria-labelledby="step-tab-0" tabindex="0">
+                <img id="step-image" src={asset(data.pipeline[0].steps[0].src)} width={data.pipeline[0].steps[0].width} height={data.pipeline[0].steps[0].height} alt={`「${data.pipeline[0].word}」の工程1: ${steps[0].title}`} />
+              </div>
+              <div class="stage-bar">
+                <fieldset class="words" aria-label="単語">
+                  {data.pipeline.map((item, index) => (
+                    <label>
+                      <input type="radio" name="pipeline-word" value={index} data-word={item.word} checked={index === 0} />
+                      {item.word}
+                    </label>
+                  ))}
+                </fieldset>
+                <ul class="legend" id="step-legend">
+                  <li><i style="--swatch: var(--muted)"></i>正位置</li>
+                  <li><i style="--swatch: var(--accent)"></i>180度回転</li>
+                  <li><i style="--swatch: var(--ink)"></i>重なり</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="steps" role="tablist" aria-orientation="vertical" aria-label="生成工程">
+              {steps.map((step, index) => (
+                <button class="step" type="button" role="tab" id={`step-tab-${index}`} aria-controls="step-panel" aria-selected={index === 0 ? "true" : "false"} tabindex={index === 0 ? 0 : -1} data-title={step.title}>
+                  <span class="step-no">{index + 1}</span>
+                  <span class="step-title">{step.title}</span>
+                  <span class="step-text">{step.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="snap" aria-labelledby="snap-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="snap-title"><span class="phrase">線を、</span><span class="phrase">どこまで引き寄せるか</span></h2>
+            <p>引き寄せる力を強めると、ずれていた線が重なり、1本の線にまとまっていきます。強さは制作画面のスライダーで調整できます。</p>
+          </div>
+
+          <div class="compare">
+            <figure>
+              <div class="frame"><img id="snap-overlay" src={asset(data.snap.levels[snapDefault].overlay.src)} width={data.snap.levels[snapDefault].overlay.width} height={data.snap.levels[snapDefault].overlay.height} alt="引き寄せた後の線の重なり" /></div>
+              <figcaption>線の重なり</figcaption>
+            </figure>
+            <figure>
+              <div class="frame"><img id="snap-result" src={asset(data.snap.levels[snapDefault].result.src)} width={data.snap.levels[snapDefault].result.width} height={data.snap.levels[snapDefault].result.height} alt={`「${data.snap.word}」の生成結果`} /></div>
+              <figcaption>生成結果</figcaption>
+            </figure>
+          </div>
+
+          <div class="slider-row">
+            <input class="slider" id="snap-slider" type="range" min="0" max={data.snap.levels.length - 1} step="1" value={snapDefault} aria-label="引き寄せる強さ" />
+            <output class="slider-value" id="snap-value" for="snap-slider">{data.snap.levels[snapDefault].value * 100}%</output>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="works" aria-labelledby="works-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="works-title">回して読む</h2>
+            <p>システムで生成し、書体や線の太さ、位置を人が調整した作例です。</p>
+          </div>
+
+          <div class="gallery">
+            {data.gallery.map((work) => (
+              <figure class="work">
+                <button type="button" data-turn aria-label={`「${work.word}」を180度回転する`}>
+                  <img class="turnable" src={asset(work.image.src)} width={work.image.width} height={work.image.height} alt={`「${work.word}」のアンビグラム`} loading="lazy" />
+                </button>
+                <figcaption>{work.word}<span>{work.font}</span></figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="run" aria-labelledby="run-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="run-title">手元で動かす</h2>
+            <p>単語の探索と生成は Python のサーバーで動くため、制作画面はローカルで起動します。起動後に、ブラウザで 127.0.0.1:5173 を開いてください。</p>
+          </div>
+
+          <div class="run">
+            <ul class="run-needs" aria-label="必要な環境">
+              <li>Python 3.11 以上</li>
+              <li>uv</li>
+              <li>Node.js</li>
+              <li>pnpm</li>
+            </ul>
+            <div class="code">
+              <pre id="run-command" tabindex="0"><code>{command}</code></pre>
+              <button class="copy" type="button" id="copy-command" aria-label="コマンドをコピー">
+                <svg class="icon icon-copy" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9h11v11H9zM5 15H4V4h11v1" /></svg>
+                <svg class="icon icon-done" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap credits">
+        <div>
+          <h2>辞書</h2>
+          <p><a href="https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project">JMdict</a> © Electronic Dictionary Research and Development Group. <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 4.0</a></p>
+        </div>
+        <div>
+          <h2>作例の書体</h2>
+          <ul>
+            {fonts.map((font) => <li>{font.name} © {font.owner}. <a href="https://openfontlicense.org/">SIL OFL 1.1</a></li>)}
+          </ul>
+        </div>
+        <div>
+          <h2>参考文献</h2>
+          <ul>
+            <li>井上 和輝, 高橋 裕樹. 文字構造特徴を用いたひらがなアンビグラムの生成. 画像電子学会誌, 49(4), 2020. <a href="https://doi.org/10.11371/iieej.49.301">DOI</a></li>
+            <li>魏 延輝, 山口 裕. 多目的最適化 GAN によるアンビグラム生成. 電気・情報関係学会九州支部連合大会, 2023. <a href="https://doi.org/10.11527/jceeek.2023.0_39">DOI</a></li>
+            <li>F. L. Bookstein. Principal Warps: Thin-Plate Splines and the Decomposition of Deformations. IEEE TPAMI, 11(6), 1989. <a href="https://doi.org/10.1109/34.24792">DOI</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+    <script type="application/json" id="site-data" set:html={payload}></script>
+    <script>
+      const data = JSON.parse(document.getElementById("site-data")!.textContent!);
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function turn(image: HTMLElement) {
+        const next = Number(image.dataset.turn ?? 0) + 180;
+        image.dataset.turn = String(next);
+        image.style.setProperty("--turn", `${next}deg`);
+      }
+
+      const heroButton = document.getElementById("hero-turn")!;
+      const heroImage = heroButton.querySelector<HTMLElement>("img")!;
+      heroButton.addEventListener("click", () => turn(heroImage));
+      if (!reduceMotion) window.setTimeout(() => turn(heroImage), 1200);
+
+      document.querySelectorAll<HTMLButtonElement>("[data-turn]").forEach((button) => {
+        const image = button.querySelector<HTMLElement>("img")!;
+        button.addEventListener("click", () => turn(image));
+      });
+
+      const tabs = [...document.querySelectorAll<HTMLButtonElement>(".step")];
+      const words = [...document.querySelectorAll<HTMLInputElement>('input[name="pipeline-word"]')];
+      const stepImage = document.getElementById("step-image") as HTMLImageElement;
+      const stepPanel = document.getElementById("step-panel")!;
+      const legend = document.getElementById("step-legend")!;
+      let activeStep = 0;
+      let activeWord = 0;
+
+      function renderStep() {
+        stepImage.src = data.pipeline[activeWord][activeStep];
+        stepImage.alt = `「${words[activeWord].dataset.word}」の工程${activeStep + 1}: ${tabs[activeStep].dataset.title}`;
+        stepPanel.setAttribute("aria-labelledby", tabs[activeStep].id);
+        legend.hidden = activeStep > 3;
+        tabs.forEach((tab, index) => {
+          const selected = index === activeStep;
+          tab.setAttribute("aria-selected", String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+        });
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => {
+          activeStep = index;
+          renderStep();
+        });
+        tab.addEventListener("keydown", (event) => {
+          const moves: Record<string, number> = {
+            ArrowDown: (index + 1) % tabs.length,
+            ArrowUp: (index - 1 + tabs.length) % tabs.length,
+            Home: 0,
+            End: tabs.length - 1,
+          };
+          if (!(event.key in moves)) return;
+          event.preventDefault();
+          activeStep = moves[event.key];
+          renderStep();
+          tabs[activeStep].focus();
+        });
+      });
+
+      words.forEach((word, index) => {
+        word.addEventListener("change", () => {
+          activeWord = index;
+          renderStep();
+        });
+      });
+
+      const slider = document.getElementById("snap-slider") as HTMLInputElement;
+      const snapValue = document.getElementById("snap-value")!;
+      const snapOverlay = document.getElementById("snap-overlay") as HTMLImageElement;
+      const snapResult = document.getElementById("snap-result") as HTMLImageElement;
+
+      function renderSnap() {
+        const index = Number(slider.value);
+        const level = data.snap[index];
+        const percent = `${Math.round(level.value * 100)}%`;
+        snapOverlay.src = level.overlay;
+        snapResult.src = level.result;
+        snapValue.textContent = percent;
+        slider.setAttribute("aria-valuetext", percent);
+        slider.style.setProperty("--p", `${(index / (data.snap.length - 1)) * 100}%`);
+      }
+
+      slider.addEventListener("input", renderSnap);
+      renderSnap();
+      data.snap.forEach((level: { overlay: string; result: string }) => {
+        new Image().src = level.overlay;
+        new Image().src = level.result;
+      });
+
+      const copyButton = document.getElementById("copy-command")!;
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(document.getElementById("run-command")!.textContent!);
+          copyButton.dataset.done = "";
+          copyButton.setAttribute("aria-label", "コピーしました");
+          window.setTimeout(() => {
+            delete copyButton.dataset.done;
+            copyButton.setAttribute("aria-label", "コマンドをコピー");
+          }, 1600);
+        } catch {
+          copyButton.setAttribute("aria-label", "コピーできませんでした");
+        }
+      });
+    </script>
+  </body>
+</html>
