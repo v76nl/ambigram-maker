@@ -1,0 +1,305 @@
+{
+  "warpMethod": "tps",
+  "gallery": [
+    {
+      "word": "長寿",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-00.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "日曜日",
+      "font": "Shippori Mincho",
+      "image": {
+        "src": "generated/work-01.webp",
+        "width": 1400,
+        "height": 551
+      }
+    },
+    {
+      "word": "奥歯",
+      "font": "M PLUS 1p Bold",
+      "image": {
+        "src": "generated/work-02.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "垂直",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-03.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "聖職者",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-04.webp",
+        "width": 1400,
+        "height": 551
+      }
+    },
+    {
+      "word": "蜘蛛",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-05.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "概論",
+      "font": "Klee One",
+      "image": {
+        "src": "generated/work-06.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "留置場",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-07.webp",
+        "width": 1400,
+        "height": 551
+      }
+    },
+    {
+      "word": "秋桜",
+      "font": "Shippori Mincho",
+      "image": {
+        "src": "generated/work-08.webp",
+        "width": 1176,
+        "height": 664
+      }
+    },
+    {
+      "word": "折り紙",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-09.webp",
+        "width": 1400,
+        "height": 551
+      }
+    },
+    {
+      "word": "追い風",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-10.webp",
+        "width": 1400,
+        "height": 551
+      }
+    },
+    {
+      "word": "気の毒",
+      "font": "Zen Maru Gothic",
+      "image": {
+        "src": "generated/work-11.webp",
+        "width": 1400,
+        "height": 551
+      }
+    }
+  ],
+  "pipeline": [
+    {
+      "word": "長寿",
+      "steps": [
+        {
+          "src": "generated/steps-00-1.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-2.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-3.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-4.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-5.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-6.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-00-7.webp",
+          "width": 1176,
+          "height": 664
+        }
+      ]
+    },
+    {
+      "word": "日曜日",
+      "steps": [
+        {
+          "src": "generated/steps-01-1.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-2.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-3.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-4.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-5.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-6.webp",
+          "width": 1400,
+          "height": 551
+        },
+        {
+          "src": "generated/steps-01-7.webp",
+          "width": 1400,
+          "height": 551
+        }
+      ]
+    },
+    {
+      "word": "蜘蛛",
+      "steps": [
+        {
+          "src": "generated/steps-02-1.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-2.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-3.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-4.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-5.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-6.webp",
+          "width": 1176,
+          "height": 664
+        },
+        {
+          "src": "generated/steps-02-7.webp",
+          "width": 1176,
+          "height": 664
+        }
+      ]
+    }
+  ],
+  "snap": {
+    "word": "長寿",
+    "levels": [
+      {
+        "value": 0.0,
+        "result": {
+          "src": "generated/snap-0-result.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "overlay": {
+          "src": "generated/snap-0-overlay.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.25,
+        "result": {
+          "src": "generated/snap-1-result.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "overlay": {
+          "src": "generated/snap-1-overlay.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.5,
+        "result": {
+          "src": "generated/snap-2-result.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "overlay": {
+          "src": "generated/snap-2-overlay.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.75,
+        "result": {
+          "src": "generated/snap-3-result.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "overlay": {
+          "src": "generated/snap-3-overlay.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 1.0,
+        "result": {
+          "src": "generated/snap-4-result.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "overlay": {
+          "src": "generated/snap-4-overlay.webp",
+          "width": 1176,
+          "height": 664
+        }
+      }
+    ]
+  }
+}
