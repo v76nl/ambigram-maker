@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-11-04T08:05:37.904Z",
+  "reproducibility": {
+    "target": {
+      "word": "悪竜",
+      "reading": "悪竜",
+      "length": 2,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "kaisei_tokumin",
+      "name": "Kaisei Tokumin",
+      "style": "幾何学モダン明朝"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          -1,
+          -3
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 2,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.4216,
+      "min_pair_score": 0.4216,
+      "overall_readability": 0.0001,
+      "readability_slots": [
+        {
+          "char1": "悪",
+          "char2": "竜",
+          "prob1": 0.0003,
+          "prob2": 0.0001,
+          "rank1": 497,
+          "rank2": 1602,
+          "is_supported1": true,
+          "is_supported2": true,
+          "harmonic_readability": 0.0001,
+          "status": "poor",
+          "top1_pred": "浴",
+          "top2_pred": "派",
+          "predictions_normal": [
+            {
+              "char": "浴",
+              "probability": 0.1247,
+              "rank": 1
+            },
+            {
+              "char": "泌",
+              "probability": 0.0334,
+              "rank": 2
+            },
+            {
+              "char": "沿",
+              "probability": 0.0323,
+              "rank": 3
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "派",
+              "probability": 0.0873,
+              "rank": 1
+            },
+            {
+              "char": "滋",
+              "probability": 0.0565,
+              "rank": 2
+            },
+            {
+              "char": "溶",
+              "probability": 0.0365,
+              "rank": 3
+            }
+          ],
+          "model_type": "onnx_cnn",
+          "slot_index": 0
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "悪竜",
+      "engine": "skeleton",
+      "font": "kaisei_tokumin",
+      "customOffsets": [
+        [
+          -1,
+          -3
+        ]
+      ],
+      "stroke_thickness": 15,
+      "diff_blend": 0.8,
+      "pre_bold": 2,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"悪竜\",\"engine\":\"skeleton\",\"font\":\"kaisei_tokumin\",\"customOffsets\":[[-1,-3]],\"stroke_thickness\":15,\"diff_blend\":0.8,\"pre_bold\":2,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true,\"snap_strength\":0.75}'"
+  }
+}

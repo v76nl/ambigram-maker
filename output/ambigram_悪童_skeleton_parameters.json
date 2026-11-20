@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "generator": "Japanese Rotational Ambigram Generator",
+  "version": "1.0.0",
+  "exported_at": "2026-11-04T08:07:27.352Z",
+  "reproducibility": {
+    "target": {
+      "word": "悪童",
+      "reading": "悪童",
+      "length": 2,
+      "is_pure_hiragana": true,
+      "has_kanji": false,
+      "has_katakana": false
+    },
+    "engine": {
+      "id": "skeleton",
+      "name": "手法B: 骨格中心線平均化 (Skeleton Thinning & Calligraphy)",
+      "academic_reference": "魏・山口 (2023) §2.2 / 井上・高橋 (2020) §5"
+    },
+    "font": {
+      "id": "yuji_mai",
+      "name": "Yuji Mai",
+      "style": "毛筆・行書"
+    },
+    "alignment": {
+      "offsets": [
+        [
+          5,
+          4
+        ]
+      ],
+      "description": "各文字スロットの相対シフト [dx, dy] (中心原点を基準に対称配分)"
+    },
+    "parameters": {
+      "stroke_thickness": 15,
+      "diff_blend": 0.5,
+      "pre_bold": 4,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "evaluation": {
+      "geometric_mean_score": 0.4703,
+      "min_pair_score": 0.4703,
+      "overall_readability": 0,
+      "readability_slots": [
+        {
+          "char1": "悪",
+          "char2": "童",
+          "prob1": 0.0002,
+          "prob2": 0,
+          "rank1": 1400,
+          "rank2": 2508,
+          "is_supported1": true,
+          "is_supported2": true,
+          "harmonic_readability": 0,
+          "status": "poor",
+          "top1_pred": "政",
+          "top2_pred": "ア",
+          "predictions_normal": [
+            {
+              "char": "政",
+              "probability": 0.0148,
+              "rank": 1
+            },
+            {
+              "char": "幽",
+              "probability": 0.014,
+              "rank": 2
+            },
+            {
+              "char": "画",
+              "probability": 0.0091,
+              "rank": 3
+            }
+          ],
+          "predictions_inverted": [
+            {
+              "char": "ア",
+              "probability": 0.1008,
+              "rank": 1
+            },
+            {
+              "char": "沢",
+              "probability": 0.0498,
+              "rank": 2
+            },
+            {
+              "char": "零",
+              "probability": 0.0363,
+              "rank": 3
+            }
+          ],
+          "model_type": "onnx_cnn",
+          "slot_index": 0
+        }
+      ]
+    },
+    "reproduction_api_payload": {
+      "word": "悪童",
+      "engine": "skeleton",
+      "font": "yuji_mai",
+      "customOffsets": [
+        [
+          5,
+          4
+        ]
+      ],
+      "stroke_thickness": 15,
+      "diff_blend": 0.5,
+      "pre_bold": 4,
+      "brush_style": "calligraphic",
+      "stroke_modulation": true,
+      "enable_snap": true,
+      "snap_strength": 0.75
+    },
+    "reproduction_curl_command": "curl -X POST http://127.0.0.1:8000/api/generate -H 'Content-Type: application/json' -d '{\"word\":\"悪童\",\"engine\":\"skeleton\",\"font\":\"yuji_mai\",\"customOffsets\":[[5,4]],\"stroke_thickness\":15,\"diff_blend\":0.5,\"pre_bold\":4,\"brush_style\":\"calligraphic\",\"stroke_modulation\":true,\"enable_snap\":true,\"snap_strength\":0.75}'"
+  }
+}
