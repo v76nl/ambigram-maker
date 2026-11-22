@@ -186,6 +186,30 @@ def qr(x, y, size, url, name):
                 col += 1
 
 
+def email_width(s: str, size: float) -> float:
+    """BIZ UDPGothic で組んだ文字列の幅 (mm)。右寄せした連絡先の左にアイコンを置くために使う。"""
+    from PIL import ImageFont
+
+    font = ImageFont.truetype("BIZ-UDGothicR.ttc", 1000, index=1)
+    return font.getlength(s) / 1000 * size * 0.3528
+
+
+def mail_icon(x, y, w, h, color=HEAD_FG, flap=RED, name="MailIcon"):
+    """封筒の形のメールアイコン。塗りの長方形に、背景色の V 字の帯を重ねてふたを表す。"""
+    rect(x, y, w, h, color, name=name)
+    t = h * 0.13
+    pts = [(x, y), (x + w / 2, y + h * 0.55), (x + w, y), (x + w, y + t),
+           (x + w / 2, y + h * 0.55 + t * 1.4), (x, y + t)]
+    fb = shapes.build_freeform(Mm(pts[0][0]), Mm(pts[0][1]), scale=1.0)
+    fb.add_line_segments([(Mm(px), Mm(py)) for px, py in pts[1:]], close=True)
+    shp = fb.convert_to_shape()
+    shp.fill.solid()
+    shp.fill.fore_color.rgb = flap
+    shp.line.fill.background()
+    shp.shadow.inherit = False
+    shp.name = name + "Flap"
+
+
 # 文字の大きさ (pt)。A0 を少し離れて読む前提で、本文は BODY を基準にする
 BODY = 35
 SMALL = 30
@@ -222,6 +246,7 @@ for k, a in enumerate(AUTHOR["authors"]):
                     ("  " + a["note"], {"size": 28, "color": HEAD_SUB})]
 text(M, 96.4, W - 2 * M, 18, [author_runs], spacing=1.0)
 text(M, 98.4, W - 2 * M, 14, AUTHOR["email"], size=34, color=HEAD_FG, align=PP_ALIGN.RIGHT, spacing=1.0, name="Contact")
+mail_icon(W - M - email_width(AUTHOR["email"], 34) - 4 - 12, 102.3, 12, 8.4)  # 数字の上端と基準線の中央にそろえる
 
 # 主役の作例と要旨
 HERO_Y = 140
