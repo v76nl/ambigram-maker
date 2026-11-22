@@ -26,9 +26,11 @@ FONT = "BIZ UDPGothic"
 INK = RGBColor(0x23, 0x18, 0x15)
 SUB = RGBColor(0x5C, 0x55, 0x52)
 RED = RGBColor(0xE6, 0x2E, 0x1E)
-PANEL = RGBColor(0xF2, 0xEF, 0xEC)
-BAND = RGBColor(0xF7, 0xF4, 0xF1)  # 見出しと最下段の帯。カードの PANEL より淡くする
+PANEL = RGBColor(0xFB, 0xEF, 0xEC)  # カードと工程画像の下地。朱に寄せたごく淡い桃色
+BAND = RGBColor(0xFD, 0xF5, 0xF2)  # 最下段の帯。PANEL より淡くする
 LINE = RGBColor(0xD6, 0xD1, 0xCD)  # セクションのあいだに引く薄いグレーの線
+HEAD_FG = RGBColor(0xFF, 0xFF, 0xFF)  # 朱のヘッダーに白抜きで載せる文字
+HEAD_SUB = RGBColor(0xFA, 0xD9, 0xD3)  # ヘッダーの補足 (会名、英題、所属)
 PAD = 6  # 枠と中身のあいだ (mm)
 SEC_GAP = 7  # 枠どうしのあいだ (mm)
 HEAD_INK = 3.6  # 見出し (50pt) の字面の上端は、文字枠の上端からこれだけ下にある (PDF で実測)
@@ -197,18 +199,18 @@ def block(x, y, w, lines, size=BODY, spacing=SP, **kw) -> float:
     return y + len(lines) * lh(size, spacing)
 
 
-# 見出し。上端から連絡先の下までを淡い帯にする
+# 見出し。上端から連絡先の下までを朱の帯にし、文字は白抜きにする
 HEAD_BAND_H = 133
-rect(0, 0, W, HEAD_BAND_H, BAND, name="HeaderBand")
-text(M, 16.5, 600, 12, "2026年度 冬季HCD研究発表会  ポスター発表 C04", size=34, color=SUB, spacing=1.0)
-text(M - 1.5, 30.8, W - 2 * M, 42, "180度回転型アンビグラム制作支援システム", size=104, bold=True, spacing=1.0, name="Title")
-text(M, 76.3, W - 2 * M, 14, "Point Symmetry (180-Degree Rotational) Ambigram Design Support System", size=34, color=SUB)
+rect(0, 0, W, HEAD_BAND_H, RED, name="HeaderBand")
+text(M, 16.5, 600, 12, "2026年度 冬季HCD研究発表会  ポスター発表 C04", size=34, color=HEAD_SUB, spacing=1.0)
+text(M - 1.5, 30.8, W - 2 * M, 42, "180度回転型アンビグラム制作支援システム", size=104, bold=True, color=HEAD_FG, spacing=1.0, name="Title")
+text(M, 76.3, W - 2 * M, 14, "Point Symmetry (180-Degree Rotational) Ambigram Design Support System", size=34, color=HEAD_SUB)
 author_runs = []
 for k, a in enumerate(AUTHOR["authors"]):
-    author_runs += [(("      " if k else "") + a["name"], {"size": 44, "bold": True}),
-                    ("  " + a["note"], {"size": 28, "color": SUB})]
+    author_runs += [(("      " if k else "") + a["name"], {"size": 44, "bold": True, "color": HEAD_FG}),
+                    ("  " + a["note"], {"size": 28, "color": HEAD_SUB})]
 text(M, 96.4, W - 2 * M, 18, [author_runs], spacing=1.0)
-text(M, 98.4, W - 2 * M, 14, AUTHOR["email"], size=34, align=PP_ALIGN.RIGHT, spacing=1.0, name="Contact")
+text(M, 98.4, W - 2 * M, 14, AUTHOR["email"], size=34, color=HEAD_FG, align=PP_ALIGN.RIGHT, spacing=1.0, name="Contact")
 
 # 主役の作例と要旨
 HERO_Y = 140
@@ -244,7 +246,7 @@ for i, (title, body) in enumerate(cards):
     cx = M + i * (CARD_W + GAP)
     cy = Y1 + 28
     rect(cx, cy, CARD_W, CARD_H, PANEL, name=f"BackgroundCard{i}")
-    rect(cx, cy, CARD_W, CARD_TOP, INK, name=f"BackgroundCardHead{i}")
+    rect(cx, cy, CARD_W, CARD_TOP, RED, name=f"BackgroundCardHead{i}")
     text(cx + 12, cy - 1.1, CARD_W - 24, CARD_TOP, title, size=40, bold=True, color=WHITE, spacing=1.0,
          anchor=MSO_ANCHOR.MIDDLE)
     tw = CARD_W - 24 - (54 if i == 0 else 0)
