@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import qrcode
@@ -174,33 +173,6 @@ def qr(x, y, size, url, name):
                 col += 1
 
 
-def rotate_icon(cx, cy, radius, band, color=RED, name="RotateIcon"):
-    """180度回転を表す、円を2つに分けた時計回りの矢印。輪郭は多角形で近似したベクター図形。"""
-    head_len, head_half = band * 1.6, band * 1.25
-    for k, (a0, a1) in enumerate(((168.0, 38.0), (348.0, 218.0))):
-        steps = 40
-        angles = [math.radians(a0 + (a1 - a0) * t / steps) for t in range(steps + 1)]
-        ro, ri, rm = radius + band / 2, radius - band / 2, radius
-        outer = [(cx + ro * math.cos(a), cy - ro * math.sin(a)) for a in angles]
-        inner = [(cx + ri * math.cos(a), cy - ri * math.sin(a)) for a in reversed(angles)]
-        end = angles[-1]
-        tx, ty = math.sin(end), math.cos(end)  # 時計回りの接線 (画面座標)
-        bx, by = cx + rm * math.cos(end), cy - rm * math.sin(end)
-        nx, ny = math.cos(end), -math.sin(end)
-        head = [(bx + nx * head_half, by + ny * head_half),
-                (bx + tx * head_len, by + ty * head_len),
-                (bx - nx * head_half, by - ny * head_half)]
-        pts = outer + head + inner
-        fb = shapes.build_freeform(Mm(pts[0][0]), Mm(pts[0][1]), scale=1.0)
-        fb.add_line_segments([(Mm(x), Mm(y)) for x, y in pts[1:]], close=True)
-        shp = fb.convert_to_shape()
-        shp.fill.solid()
-        shp.fill.fore_color.rgb = color
-        shp.line.fill.background()
-        shp.shadow.inherit = False
-        shp.name = f"{name}{k}"
-
-
 # 文字の大きさ (pt)。A0 を少し離れて読む前提で、本文は BODY を基準にする
 BODY = 35
 SMALL = 30
@@ -254,13 +226,9 @@ lead_end = block(RX, HERO_Y + 38, RW, [
     "フォント骨格の変形、毛筆調の再描画を組み合わせ、",
     "人が見ながら微調整できる。",
 ], size=38)
-NOTE_Y = lead_end + 4
-rotate_icon(RX + 10, NOTE_Y + 9, 7.2, 2.6)
-text(RX + 26, NOTE_Y, RW - 26, 18, "ポスターを逆さにしても「長寿」と読めます", size=36, bold=True, color=RED,
-     anchor=MSO_ANCHOR.MIDDLE, spacing=1.0)
 
 # 1 背景
-Y1 = max(HERO_Y + hero_h + 2 + lh(CAPTION, 1.0), NOTE_Y + 18) + 6 + PAD
+Y1 = HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) + 6 + PAD
 heading(M, Y1, "1", "背景", w=W - 2 * M)
 CARD_W = (W - 2 * M - 2 * GAP) / 3
 cards = [
@@ -405,7 +373,7 @@ frame(RX2, Y3 + HEAD_INK, W - M, sec4_end, "Section4Frame")
 frame(RX2, Y6 + HEAD_INK, W - M, right_ink_end, "Section6Frame")
 
 # 区切り線: 隣り合うセクションの字面のあいだの中央に、1本ずつ引く
-HERO_INK_END = max(HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) - 2.5, NOTE_Y + 15.5)
+HERO_INK_END = HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) - 2.5
 s1, s2, s3, s4, s5, s6 = (SECTIONS[f"Section{i}Frame"] for i in range(1, 7))
 rule(M, (HERO_INK_END + s1[1]) / 2, W - M, (HERO_INK_END + s1[1]) / 2, "RuleHero1")
 rule(M, (s1[3] + s2[1]) / 2, W - M, (s1[3] + s2[1]) / 2, "Rule12")
