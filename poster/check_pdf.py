@@ -1,6 +1,6 @@
 """書き出したPDFの検査: 画像ごとの実効解像度、フォントの埋め込み、紙面サイズを確かめ、確認用の画像を出す。
 
-実行: uv run --with pymupdf python poster/check_pdf.py poster/build/poster.pdf [プレビュー出力先]
+実行: uv run --with pymupdf python poster/check_pdf.py poster/build/HCD2026winter_C04_ambigram_poster.pdf [プレビュー出力先]
 """
 
 from __future__ import annotations

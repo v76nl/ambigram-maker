@@ -28,7 +28,8 @@ def pictures(shapes):
 
 def main() -> None:
     pptx_path, pdf_path, out_path = sys.argv[1:4]
-    slide = Presentation(pptx_path).slides[0]
+    prs = Presentation(pptx_path)
+    slide = prs.slides[0]
     sources = [
         (
             pymupdf.Rect(
@@ -64,6 +65,14 @@ def main() -> None:
 
     if replaced != len(sources):
         raise SystemExit(f"差し替え数が合わない: {replaced} / {len(sources)}")
+    core = prs.core_properties
+    doc.set_metadata({
+        **doc.metadata,
+        "title": core.title,
+        "author": core.author,
+        "subject": core.subject,
+        "keywords": core.keywords,
+    })
     doc.save(out_path, garbage=3, deflate=True)
     print(f"saved {out_path} ({replaced} images)")
 

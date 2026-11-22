@@ -4,10 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-preview="${1:-poster/build/poster.preview.png}"
+name="poster/build/HCD2026winter_C04_ambigram_poster"
+preview="${1:-$name.preview.png}"
 
 uv run --project backend --with python-pptx --with qrcode --with svg.path python poster/build_poster.py
-uv run --with pywin32 python -I poster/export_pdf.py poster/build/poster.pptx poster/build/poster.powerpoint.pdf
+uv run --with pywin32 python -I poster/export_pdf.py "$name.pptx" "$name.powerpoint.pdf"
 uv run --with pymupdf --with python-pptx python -I poster/finalize_pdf.py \
-    poster/build/poster.pptx poster/build/poster.powerpoint.pdf poster/build/poster.pdf
-uv run --with pymupdf python -I poster/check_pdf.py poster/build/poster.pdf "$preview"
+    "$name.pptx" "$name.powerpoint.pdf" "$name.pdf"
+uv run --with pymupdf python -I poster/check_pdf.py "$name.pdf" "$preview"

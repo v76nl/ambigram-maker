@@ -20,7 +20,7 @@ from pptx.util import Emu, Mm, Pt
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "build" / "assets"
-OUT = ROOT / "build" / "poster.pptx"
+OUT = ROOT / "build" / "HCD2026winter_C04_ambigram_poster.pptx"
 
 FONT = "BIZ UDPGothic"
 INK = RGBColor(0x23, 0x18, 0x15)
@@ -498,5 +498,11 @@ print(f"left column ends {left_end:.0f} mm, right column ends {right_end:.0f} mm
       f"footer text starts {YF:.0f} mm, QR starts {H - M - 60:.0f} mm")
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
+# PDF の閲覧ソフトのタブやファイル一覧に出る情報。finalize_pdf.py が PDF にも写す
+props = prs.core_properties
+props.title = "180度回転型アンビグラム制作支援システム"
+props.subject = "2026年度 冬季HCD研究発表会 ポスター発表 C04"
+props.author = ", ".join(a["name"].lstrip("〇") for a in AUTHOR["authors"])
+props.keywords = "アンビグラム, 点対称, 文字デザイン, HCD"
 prs.save(OUT)
 print("saved", OUT)
