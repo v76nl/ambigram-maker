@@ -82,3 +82,22 @@ research/reader/papers_content.js
 research/reader/images/paper*/
 
 scratch/
+
+# ポスターの生成物
+poster/build/
+
+# 紹介動画 (HyperFrames のプロジェクトと書き出した MP4)
+video/
+
+# 著者の本名と連絡先 (ポスター用)。git に入れない
+poster/author.local.json
+
+# 作業中の一時ファイル (本名を含むものがある)
+scratch_*
+
+# 内部メモと他人の予稿の抜粋 (公開リポジトリに置かない)
+docs/poster_proceedings_samples.md
+docs/hcd_proceedings_guide.md
+
+# Claude Code のローカル設定
+.claude/
