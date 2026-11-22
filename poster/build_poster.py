@@ -235,7 +235,7 @@ def block(x, y, w, lines, size=BODY, spacing=SP, **kw) -> float:
 
 
 # 見出し。上端から連絡先の下までを朱の帯にし、文字は白抜きにする
-HEAD_BAND_H = 133
+HEAD_BAND_H = 129  # 名前の下の余白が、会名の上の余白より広く見えない高さ
 rect(0, 0, W, HEAD_BAND_H, RED, name="HeaderBand")
 text(M, 16.5, 600, 12, "2026年度 冬季HCD研究発表会  ポスター発表 C04", size=34, color=HEAD_SUB, spacing=1.0)
 text(M - 1.5, 30.8, W - 2 * M, 42, "180度回転型アンビグラム制作支援システム", size=104, bold=True, color=HEAD_FG, spacing=1.0, name="Title")
@@ -249,24 +249,32 @@ text(M, 98.4, W - 2 * M, 14, AUTHOR["email"], size=34, color=HEAD_FG, align=PP_A
 mail_icon(W - M - email_width(AUTHOR["email"], 34) - 4 - 12, 102.3, 12, 8.4)  # 数字の上端と基準線の中央にそろえる
 
 # 主役の作例と要旨
-HERO_Y = 140
+HERO_Y = 135  # ヘッダーの帯から主役の作例までと、本文の下端から最下段の帯までをそろえる
 HERO_W = 300
-_, hero_w, hero_h = picture("hero", M, HERO_Y, w=HERO_W, name="Hero")
-text(M, HERO_Y + hero_h + 2, HERO_W + 30, 12, "システムで生成した「長寿」",
+# 作例と右の見出し・要旨をひとまとまりとして、紙面の左右中央に置く (字面の幅は実測値)
+HERO_INK_L, HERO_INK_R, LEAD_INK_W, HERO_LEAD_GAP = 0.5, 284.7, 298.5, 51.3
+HERO_X = (W - (HERO_INK_R - HERO_INK_L + HERO_LEAD_GAP + LEAD_INK_W)) / 2 - HERO_INK_L
+_, hero_w, hero_h = picture("hero", HERO_X, HERO_Y, w=HERO_W, name="Hero")
+text(HERO_X, HERO_Y + hero_h + 2, HERO_W + 30, 12, "システムで生成した「長寿」",
      size=CAPTION, color=SUB, spacing=1.0)
-RX = M + HERO_W + 36
+RX = HERO_X + HERO_INK_R + HERO_LEAD_GAP
 RW = W - M - RX
-text(RX, HERO_Y + 2, RW, 32, "点対称な文字デザイン", size=80, bold=True, spacing=1.0)
-lead_end = block(RX, HERO_Y + 38, RW, [
+# 右の見出しと要旨は、上端を作例の字面の上端に、下端をキャプションの下端にそろえる
+LEAD_DY, LEAD_GAP, LEAD_SP = 7.5, 5.7, 1.247
+text(RX, HERO_Y + 2 + LEAD_DY, RW, 32, "点対称な文字デザイン", size=80, bold=True, spacing=1.0)
+lead_end = block(RX, HERO_Y + 38 + LEAD_DY + LEAD_GAP, RW, [
     "漢字を含む日本語の単語を、180度回転しても",
     "同じ単語として読めるデザインに仕上げる",
     "制作支援システムを開発した。 辞書探索、",
     "フォント骨格の変形、毛筆調の再描画を組み合わせ、",
     "人が見ながら微調整できる。",
-], size=38)
+], size=38, spacing=LEAD_SP)
 
 # 1 背景
-Y1 = HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) + 6 + PAD
+# 主役の作例の字面の下端 (キャプションの下端。要旨の下端もここにそろえてある)。ほかのセクションと同じ間隔で 1 を始める
+HERO_INK_END = HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) - 0.6
+print(f"hero ink end (estimated) {HERO_INK_END:.2f} mm")
+Y1 = HERO_INK_END + 2 * PAD + SEC_GAP - HEAD_INK
 heading(M, Y1, "1", "背景", w=W - 2 * M)
 CARD_W = (W - 2 * M - 2 * GAP) / 3
 cards = [
@@ -410,7 +418,6 @@ frame(RX2, Y3 + HEAD_INK, W - M, sec4_end, "Section4Frame")
 frame(RX2, Y6 + HEAD_INK, W - M, right_ink_end, "Section6Frame")
 
 # 区切り線: 隣り合うセクションの字面のあいだの中央に、1本ずつ引く
-HERO_INK_END = HERO_Y + hero_h + 2 + lh(CAPTION, 1.0) - 2.5
 s1, s2, s3, s4, s5, s6 = (SECTIONS[f"Section{i}Frame"] for i in range(1, 7))
 rule(M, (HERO_INK_END + s1[1]) / 2, W - M, (HERO_INK_END + s1[1]) / 2, "RuleHero1")
 rule(M, (s1[3] + s2[1]) / 2, W - M, (s1[3] + s2[1]) / 2, "Rule12")
