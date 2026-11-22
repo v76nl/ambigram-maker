@@ -1,0 +1,13 @@
+{
+  "authors": [
+    {
+      "name": "〇著者 一郎",
+      "note": "〇〇大学 〇〇学部 2年"
+    },
+    {
+      "name": "著者 二郎",
+      "note": "〇〇大学 〇〇学部 教授"
+    }
+  ],
+  "email": "author@example.ac.jp"
+}
