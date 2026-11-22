@@ -350,12 +350,20 @@ left_end = block(M, y + 3, COL, [
     "情報を記録した JSON ファイル付きで書き出せる。",
 ])
 
-# 下の2列: 左列に 3 と 5、右列に 4 と 6 を積み、行ごとに左から右へ 3→4、5→6 と読めるようにする
+# 下の2列: 上段に 3 と 4、下段に 5 と 6 を並べる。上段と下段の境目は1本の水平線で全幅を区切る
 RX2 = M + COL + GAP
 sec3_end = left_end - TEXT_SLACK
 
-# 5 有用性と価値 (左列、システム画面の下)
-Y5 = sec3_end + 2 * PAD + SEC_GAP - HEAD_INK
+# 作例の画像の高さは、4 の下端が 3 の下端にそろうように決める
+LABEL_ROW = 3 + lh(30, 1.0) + 5
+IMG_H = min((sec3_end + 5.6 - Y3 - 28) / 3 - LABEL_ROW, 72)
+ROW = IMG_H + LABEL_ROW
+print(f"gallery image height {IMG_H:.1f} mm")
+sec4_end = Y3 + 28 + 3 * ROW - 5 - 0.6
+Y56 = max(sec3_end, sec4_end) + 2 * PAD + SEC_GAP - HEAD_INK
+
+# 5 有用性と価値 (下段の左)
+Y5 = Y56
 heading(M, Y5, "5", "有用性と価値")
 values = [
     ("制作支援", ["単語探しと初期形状の提示をコンピューターが担い、", "試行錯誤の時間を短くする"]),
@@ -369,22 +377,14 @@ for label, body in values:
     y = block(M + LABEL_W, y, COL - LABEL_W, body) + VAL_GAP
 left_ink_end = y - VAL_GAP - TEXT_SLACK
 
-# 6 評価と限界 (右列、作例の下)。先に高さだけ求め、作例の画像の高さで左列と下端をそろえる
 s6_lines = (["3,082 字種の文字認識モデルで可読性を測る仕組みを用意した。",
              "試作例の目視では、中心線の抽出と毛筆調の処理により",
              "可読性が高まる傾向が見られた。"],
             ["一方で、細かいドット模様や不自然な歪みが残り、",
              "デザイン的に美しくない。",
              "被験者実験も未実施であり、品質向上と検証が今後の課題である。"])
-S6_H = 28 + lh(BODY) * (len(s6_lines[0]) + len(s6_lines[1])) + 3 - TEXT_SLACK
-LABEL_ROW = 3 + lh(30, 1.0) + 5
-# 右列の下端 = Y3 + 28 + 3 * ROW - 5 - 0.6 + (2 * PAD + SEC_GAP - HEAD_INK) + S6_H (ROW = IMG_H + LABEL_ROW)
-IMG_H = (left_ink_end - S6_H - (2 * PAD + SEC_GAP - HEAD_INK) + 5.6 - Y3 - 28) / 3 - LABEL_ROW
-IMG_H = min(IMG_H, 72)
-ROW = IMG_H + LABEL_ROW
-print(f"gallery image height {IMG_H:.1f} mm")
 
-# 4 作例 (右列)
+# 4 作例 (上段の右)
 heading(RX2, Y3, "4", "作例")
 cell_w = (COL - 16) / 2
 GALLERY_ORDER = ["日曜日", "奥歯", "垂直", "気の毒", "留置場", "蜘蛛"]
@@ -394,10 +394,9 @@ for i, item in enumerate(by_word[w] for w in GALLERY_ORDER):
     gy = Y3 + 28 + (i // 2) * ROW
     picture(item, gx, gy, w=cell_w, h=IMG_H, name=f"Work{i}")
     text(gx, gy + IMG_H + 3, cell_w, 12, item["word"], size=30, bold=True, align=PP_ALIGN.CENTER, spacing=1.0)
-sec4_end = Y3 + 28 + 3 * ROW - 5 - 0.6
 
-# 6 評価と限界 (右列)
-Y6 = sec4_end + 2 * PAD + SEC_GAP - HEAD_INK
+# 6 評価と限界 (下段の右)
+Y6 = Y56
 heading(RX2, Y6, "6", "評価と限界")
 # 予稿に合わせ、傾向は認識器の計測ではなく目視での観察として書く
 y = block(RX2, Y6 + 28, COL, s6_lines[0])
@@ -416,9 +415,12 @@ s1, s2, s3, s4, s5, s6 = (SECTIONS[f"Section{i}Frame"] for i in range(1, 7))
 rule(M, (HERO_INK_END + s1[1]) / 2, W - M, (HERO_INK_END + s1[1]) / 2, "RuleHero1")
 rule(M, (s1[3] + s2[1]) / 2, W - M, (s1[3] + s2[1]) / 2, "Rule12")
 rule(M, (s2[3] + s3[1]) / 2, W - M, (s2[3] + s3[1]) / 2, "Rule2Cols")
-rule(M, (s3[3] + s5[1]) / 2, M + COL, (s3[3] + s5[1]) / 2, "Rule35")
-rule(RX2, (s4[3] + s6[1]) / 2, W - M, (s4[3] + s6[1]) / 2, "Rule46")
-rule(M + COL + GAP / 2, s3[1], M + COL + GAP / 2, bottom, "RuleColumns")
+# 上段と下段の境目は全幅の水平線にし、列の境目の垂直線はそこで上下に分ける
+ROW_Y = (max(s3[3], s4[3]) + s5[1]) / 2
+VX = M + COL + GAP / 2
+rule(M, ROW_Y, W - M, ROW_Y, "Rule34to56")
+rule(VX, s3[1], VX, ROW_Y - GAP / 2, "RuleColumnsUpper")
+rule(VX, ROW_Y + GAP / 2, VX, bottom, "RuleColumnsLower")
 
 # 最下段: 参考文献、QRコード、ロゴ、イラスト
 refs = [
