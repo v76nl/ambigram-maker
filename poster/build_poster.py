@@ -146,8 +146,19 @@ def rule(x0, y0, x1, y1, name):
         rect(x0 - t / 2, y0, t, y1 - y0, LINE, name=name)
 
 
+NUM_BOX = 16.8  # 見出しの番号を白抜きにする朱の正方形の一辺 (mm)。見出しの字面の高さに合わせる
+NUM_BOX_Y = HEAD_INK  # 正方形の上端を見出しの字面の上端にそろえる
+
+
 def heading(x, y, number, title, w=COL):
-    text(x, y, w, 24, [[(number, {"color": RED}), ("  " + title, {})]], size=50, bold=True, spacing=1.0)
+    """番号を朱の正方形に白抜きで入れ、その右に見出しを置く。"""
+    rect(x, y + NUM_BOX_Y, NUM_BOX, NUM_BOX, RED, name=f"HeadingNumber{number}")
+    # 数字の字面は文字枠の中央より下に出るので、上へずらして正方形の上下の中央にそろえる (PDF で実測)
+    # 「1」は字面が左に寄るので、右へずらして左右の中央にそろえる
+    dx = 1.1 if number == "1" else 0
+    text(x + dx, y + NUM_BOX_Y - 1.1, NUM_BOX, NUM_BOX, number, size=44, bold=True, color=WHITE,
+         align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0)
+    text(x + NUM_BOX + 5, y, w - NUM_BOX - 5, 24, title, size=50, bold=True, spacing=1.0)
 
 
 def qr(x, y, size, url, name):
