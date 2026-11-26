@@ -30,7 +30,6 @@ const structuredData = JSON.stringify({
   ],
 }).replace(/</g, "\\u003c");
 
-
 const hero = data.gallery[0];
 const snapDefault = data.snap.levels.findIndex((level) => level.value === 0.75);
 const thresholdDefault = data.threshold.levels.findIndex((level) => level.value === data.threshold.default);
@@ -51,6 +50,28 @@ const steps = [
   { title: "骨格を取り出す", text: "残した領域を細線化して、線の中心を通る骨格を取り出します。" },
   { title: "線を描き直す", text: "骨格に沿って、重なる部分は太く、片方だけの線は細く描き直します。" },
 ];
+
+const faq = [
+  {
+    q: "アンビグラムとは何ですか？",
+    a: "向きを変えても文字として読めるように作った文字のデザインです。上下を逆さにしても読める回転型や、鏡に映すと読める鏡像型などがあります。このシステムが扱うのは、180度回転しても同じ単語に読める回転型 (点対称) です。",
+  },
+  {
+    q: "漢字を含む言葉でも作れますか？",
+    a: "作れます。単語の前半の文字と、後半の文字を180度回転した形がどれだけ重なるかを測り、20万語以上の辞書から組み合わせのよい単語を探します。画数の多い漢字どうしでも、9種類の書体から重なりのよい書体と位置を選び、線を引き寄せてから中心線を描き直します。",
+  },
+  {
+    q: "どうやって作りますか？",
+    a: "制作画面で単語を選ぶと、書体と位置の選定、線の引き寄せ、中心線の取り出し、毛筆調の描き直しまでを自動で行います。仕上げに、文字ペアごとの位置や線の太さ、引き寄せる強さをスライダーで調整し、画像と設定の JSON ファイルを書き出します。",
+  },
+  {
+    q: "ブラウザだけで使えますか？",
+    a: "このサイトは仕組みの解説で、作品の生成はできません。単語の探索と生成は Python のサーバーで動くため、制作画面は手元のパソコンで起動します。",
+  },
+];
+
+const englishSummary =
+  "Ambigram Maker is a design support system for Japanese rotational ambigrams: words, including kanji, that read the same after a 180-degree turn. It searches a dictionary of over 200,000 words for promising character pairs, picks the font and offsets that overlap best, pulls nearby strokes together with thin-plate splines, and redraws the shared center line with a brush. This page explains each step with interactive examples. The generator itself runs on your own computer.";
 
 const fonts = [
   { name: "Noto Sans JP (本文)", owner: "The Noto Project Authors" },
@@ -133,11 +154,13 @@ const payload = JSON.stringify({
           </span>
         </button>
         <h1><span class="phrase">逆さにしても、</span><span class="phrase">同じ言葉。</span></h1>
+        <p class="hero-lead">{systemName}</p>
       </header>
 
       <section class="section" id="how" aria-labelledby="how-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">生成の仕組み</p>
             <h2 id="how-title"><span class="phrase">2つの文字を、</span><span class="phrase">1つの形にする</span></h2>
             <p>単語の前半の文字と、後半の文字を180度回転した形を融合します。後半は前半を回転して作るため、完成した図形は必ず点対称になります。</p>
           </div>
@@ -186,6 +209,7 @@ const payload = JSON.stringify({
       <section class="section" id="snap" aria-labelledby="snap-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">近い線の引き寄せ</p>
             <h2 id="snap-title"><span class="phrase">線を、</span><span class="phrase">どこまで引き寄せるか</span></h2>
             <p>引き寄せる力を強めると、ずれていた線が重なり、1本の線にまとまっていきます。強さは制作画面のスライダーで調整できます。</p>
           </div>
@@ -211,6 +235,7 @@ const payload = JSON.stringify({
       <section class="section" id="threshold" aria-labelledby="threshold-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">中心線の取り出し</p>
             <h2 id="threshold-title"><span class="phrase">線の芯を、</span><span class="phrase">どこまで残すか</span></h2>
             <p>2つの文字の距離場のうち、最大値の何割を超える部分から中心線を取り出すかを決めます。低くすると片方の文字だけにある線も残り、高くすると両方に共通する線だけが残ります。違う文字の組では {percent(data.threshold.default)} を使っています。</p>
           </div>
@@ -236,6 +261,7 @@ const payload = JSON.stringify({
       <section class="section" id="weights" aria-labelledby="weights-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">文字ペアの相性の評価</p>
             <h2 id="weights-title"><span class="phrase">形の近さを、</span><span class="phrase">何で測るか</span></h2>
             <p>単語を探すときは、文字と、対になる文字を180度回転した形がどれだけ近いかを3つの観点で測り、重みを付けて足し合わせます。重みを動かすと、作例の単語の点数と順位がその場で変わります。</p>
           </div>
@@ -259,6 +285,7 @@ const payload = JSON.stringify({
       <section class="section" id="works" aria-labelledby="works-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">漢字を含むアンビグラムの作例</p>
             <h2 id="works-title">回して読む</h2>
             <p>システムで生成し、書体や線の太さ、位置を人が調整した作例です。</p>
           </div>
@@ -276,9 +303,28 @@ const payload = JSON.stringify({
         </div>
       </section>
 
+      <section class="section" id="faq" aria-labelledby="faq-title">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">よくある質問</p>
+            <h2 id="faq-title">アンビグラムについて</h2>
+          </div>
+
+          <dl class="faq">
+            {faq.map((item) => (
+              <div>
+                <dt>{item.q}</dt>
+                <dd>{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       <section class="section" id="run" aria-labelledby="run-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">インストールと起動</p>
             <h2 id="run-title">手元で動かす</h2>
             <p>単語の探索と生成は Python のサーバーで動くため、制作画面はローカルで起動します。起動後に、ブラウザで 127.0.0.1:5173 を開いてください。</p>
           </div>
@@ -303,6 +349,10 @@ const payload = JSON.stringify({
     </main>
 
     <footer class="footer">
+      <div class="wrap summary-en" lang="en">
+        <h2>In English</h2>
+        <p>{englishSummary}</p>
+      </div>
       <div class="wrap credits">
         <div>
           <h2>辞書</h2>
