@@ -314,6 +314,9 @@ flowchart LR
   制作画面で作品と設定JSONを `output/` に書き出し、`scripts/export_site_data.py` の `GALLERY_WORDS` に単語を追加して、書き出しを実行します。
 - **工程画像を差し替える**  
   `PIPELINE_WORDS` と `SNAP_WORD` を変えて、書き出しを実行します。
+- **中心線の閾値の比較を差し替える**  
+  `THRESHOLD_WORD` と `THRESHOLD_LEVELS` を変えて、書き出しを実行します。  
+  相性の重みの節は、`GALLERY_WORDS` の単語の文字ペアごとに3つの要素の値を書き出し、ブラウザで重みを掛けて点数を計算し直します。
 - **載せないもの**  
   未発表の評価スコアと、第三者論文の本文・図版は載せません。
 

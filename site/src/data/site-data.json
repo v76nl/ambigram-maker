@@ -301,5 +301,351 @@
         }
       }
     ]
+  },
+  "threshold": {
+    "word": "長寿",
+    "default": 0.15,
+    "levels": [
+      {
+        "value": 0.05,
+        "region": {
+          "src": "generated/threshold-0-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-0-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.1,
+        "region": {
+          "src": "generated/threshold-1-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-1-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.15,
+        "region": {
+          "src": "generated/threshold-2-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-2-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.2,
+        "region": {
+          "src": "generated/threshold-3-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-3-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.25,
+        "region": {
+          "src": "generated/threshold-4-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-4-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.3,
+        "region": {
+          "src": "generated/threshold-5-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-5-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      },
+      {
+        "value": 0.35,
+        "region": {
+          "src": "generated/threshold-6-region.webp",
+          "width": 1176,
+          "height": 664
+        },
+        "result": {
+          "src": "generated/threshold-6-result.webp",
+          "width": 1176,
+          "height": 664
+        }
+      }
+    ]
+  },
+  "similarity": {
+    "weights": {
+      "area": 0.45,
+      "skeleton": 0.35,
+      "neg_space": 0.2
+    },
+    "words": [
+      {
+        "word": "長寿",
+        "pairs": [
+          {
+            "chars": [
+              "長",
+              "寿"
+            ],
+            "valid": true,
+            "area": 0.4841,
+            "skeleton": 0.5739,
+            "neg_space": 0.5249
+          }
+        ]
+      },
+      {
+        "word": "日曜日",
+        "pairs": [
+          {
+            "chars": [
+              "日",
+              "日"
+            ],
+            "valid": true,
+            "area": 0.8789,
+            "skeleton": 0.9245,
+            "neg_space": 0.8974
+          },
+          {
+            "chars": [
+              "曜",
+              "曜"
+            ],
+            "valid": true,
+            "area": 0.5572,
+            "skeleton": 0.6022,
+            "neg_space": 0.4881
+          }
+        ]
+      },
+      {
+        "word": "奥歯",
+        "pairs": [
+          {
+            "chars": [
+              "奥",
+              "歯"
+            ],
+            "valid": true,
+            "area": 0.5563,
+            "skeleton": 0.6473,
+            "neg_space": 0.4302
+          }
+        ]
+      },
+      {
+        "word": "垂直",
+        "pairs": [
+          {
+            "chars": [
+              "垂",
+              "直"
+            ],
+            "valid": true,
+            "area": 0.4767,
+            "skeleton": 0.4198,
+            "neg_space": 0.4897
+          }
+        ]
+      },
+      {
+        "word": "聖職者",
+        "pairs": [
+          {
+            "chars": [
+              "聖",
+              "者"
+            ],
+            "valid": true,
+            "area": 0.4635,
+            "skeleton": 0.4868,
+            "neg_space": 0.5085
+          },
+          {
+            "chars": [
+              "職",
+              "職"
+            ],
+            "valid": true,
+            "area": 0.4728,
+            "skeleton": 0.4757,
+            "neg_space": 0.4134
+          }
+        ]
+      },
+      {
+        "word": "蜘蛛",
+        "pairs": [
+          {
+            "chars": [
+              "蜘",
+              "蛛"
+            ],
+            "valid": true,
+            "area": 0.4872,
+            "skeleton": 0.4208,
+            "neg_space": 0.5163
+          }
+        ]
+      },
+      {
+        "word": "概論",
+        "pairs": [
+          {
+            "chars": [
+              "概",
+              "論"
+            ],
+            "valid": true,
+            "area": 0.3766,
+            "skeleton": 0.475,
+            "neg_space": 0.4877
+          }
+        ]
+      },
+      {
+        "word": "留置場",
+        "pairs": [
+          {
+            "chars": [
+              "留",
+              "場"
+            ],
+            "valid": true,
+            "area": 0.4428,
+            "skeleton": 0.3988,
+            "neg_space": 0.4453
+          },
+          {
+            "chars": [
+              "置",
+              "置"
+            ],
+            "valid": true,
+            "area": 0.4461,
+            "skeleton": 0.5066,
+            "neg_space": 0.3454
+          }
+        ]
+      },
+      {
+        "word": "秋桜",
+        "pairs": [
+          {
+            "chars": [
+              "秋",
+              "桜"
+            ],
+            "valid": true,
+            "area": 0.3559,
+            "skeleton": 0.3606,
+            "neg_space": 0.466
+          }
+        ]
+      },
+      {
+        "word": "折り紙",
+        "pairs": [
+          {
+            "chars": [
+              "折",
+              "紙"
+            ],
+            "valid": true,
+            "area": 0.4354,
+            "skeleton": 0.4295,
+            "neg_space": 0.5393
+          },
+          {
+            "chars": [
+              "り",
+              "り"
+            ],
+            "valid": true,
+            "area": 0.3771,
+            "skeleton": 0.5222,
+            "neg_space": 0.5351
+          }
+        ]
+      },
+      {
+        "word": "追い風",
+        "pairs": [
+          {
+            "chars": [
+              "追",
+              "風"
+            ],
+            "valid": true,
+            "area": 0.4137,
+            "skeleton": 0.4467,
+            "neg_space": 0.4703
+          },
+          {
+            "chars": [
+              "い",
+              "い"
+            ],
+            "valid": true,
+            "area": 0.3419,
+            "skeleton": 0.3565,
+            "neg_space": 0.6733
+          }
+        ]
+      },
+      {
+        "word": "気の毒",
+        "pairs": [
+          {
+            "chars": [
+              "気",
+              "毒"
+            ],
+            "valid": true,
+            "area": 0.4456,
+            "skeleton": 0.5202,
+            "neg_space": 0.5191
+          },
+          {
+            "chars": [
+              "の",
+              "の"
+            ],
+            "valid": true,
+            "area": 0.441,
+            "skeleton": 0.4854,
+            "neg_space": 0.5535
+          }
+        ]
+      }
+    ]
   }
 }

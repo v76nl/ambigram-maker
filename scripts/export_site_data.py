@@ -20,8 +20,11 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from generators.font_manager import font_manager  # noqa: E402
-from generators.skeleton_engine import SkeletonAmbigramEngine  # noqa: E402
+from generators.font_manager import SIMILARITY_WEIGHTS, font_manager  # noqa: E402
+from generators.skeleton_engine import (  # noqa: E402
+    CENTERLINE_THRESHOLD_DIFF,
+    SkeletonAmbigramEngine,
+)
 
 OUTPUT_DIR = ROOT / "output"
 PUBLIC_DIR = ROOT / "site" / "public" / "generated"
@@ -31,6 +34,9 @@ GALLERY_WORDS = ["長寿", "日曜日", "奥歯", "垂直", "聖職者", "蜘蛛
 PIPELINE_WORDS = ["長寿", "日曜日", "蜘蛛"]
 SNAP_WORD = "長寿"
 SNAP_LEVELS = [0.0, 0.25, 0.5, 0.75, 1.0]
+# 中心線の閾値の比較。長寿は違う文字の組なので、既定値は CENTERLINE_THRESHOLD_DIFF
+THRESHOLD_WORD = "長寿"
+THRESHOLD_LEVELS = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35]
 
 # 工程画像と吸引の比較画像に使う変形方式 (作例ギャラリーは保存済みの作品をそのまま使う)
 WARP_METHOD = "tps"
@@ -60,6 +66,7 @@ def load_parameters(word: str) -> dict[str, Any]:
         "stroke_modulation": params["stroke_modulation"],
         "snap_strength": params.get("snap_strength", 0.75) if params.get("enable_snap", True) else 0.0,
         "warp_method": WARP_METHOD,
+        "centerline_threshold": None,
     }
 
 
@@ -128,6 +135,7 @@ def generate_final(engine: SkeletonAmbigramEngine, word: str, params: dict[str, 
         stroke_modulation=params["stroke_modulation"],
         snap_strength=params["snap_strength"],
         warp_method=params["warp_method"],
+        centerline_threshold=params["centerline_threshold"],
     )
     encoded = result["data"].split(",", 1)[1]
     image = Image.open(io.BytesIO(base64.b64decode(encoded))).convert("RGB")
@@ -155,6 +163,7 @@ def generate_steps(engine: SkeletonAmbigramEngine, word: str, params: dict[str, 
             snap_strength=params["snap_strength"],
             return_intermediates=True,
             warp_method=params["warp_method"],
+            centerline_threshold=params["centerline_threshold"],
         )
         slots[i] = intermediates
         if i != n - 1 - i:
@@ -172,6 +181,66 @@ def generate_steps(engine: SkeletonAmbigramEngine, word: str, params: dict[str, 
         add_padding(ink_on_paper(joined("step6"), dilate=5)),
         add_padding(ink_on_paper(joined("step7"))),
     ]
+
+
+def kept_region(field_rgb: np.ndarray, field: np.ndarray, threshold: float) -> np.ndarray:
+    """距離場の階調のうち、閾値を超えて中心線のもとになる部分だけを残し、ほかは薄く描く。"""
+    keep = field > int(255 * threshold)
+    out = (field_rgb.astype(np.float32) * 0.18 + np.array(PAPER, dtype=np.float32) * 0.82).astype(np.uint8)
+    out[keep] = field_rgb[keep]
+    return out
+
+
+def threshold_level(engine: SkeletonAmbigramEngine, word: str, base: dict[str, Any], index: int, threshold: float) -> dict[str, Any]:
+    params = {**base, "centerline_threshold": threshold}
+    final, _ = generate_final(engine, word, params)
+    raw = generate_raw_field(engine, word, params)
+    region = add_padding(kept_region(recolor_field(raw), raw, threshold))
+    return {
+        "value": threshold,
+        "region": save_webp(region, f"threshold-{index}-region.webp"),
+        "result": save_webp(final, f"threshold-{index}-result.webp"),
+    }
+
+
+def generate_raw_field(engine: SkeletonAmbigramEngine, word: str, params: dict[str, Any]) -> np.ndarray:
+    """単語全体の正規化した距離場 (0〜255) を、余白なしで連結して返す。"""
+    n = len(word)
+    font_path = font_manager.get_font_path(params["font_id"])
+    fields: list[np.ndarray | None] = [None] * n
+    for i in range((n + 1) // 2):
+        _, intermediates = engine.generate_slot(
+            word[i], word[n - 1 - i], size=SLOT_SIZE,
+            stroke_thickness=params["stroke_thickness"], diff_blend=params["diff_blend"],
+            pre_bold=params["pre_bold"], font_path=font_path, shift=params["offsets"][i],
+            brush_style=params["brush_style"], stroke_modulation=params["stroke_modulation"],
+            enable_snap=params["snap_strength"] > 0.0, snap_strength=params["snap_strength"],
+            return_intermediates=True, warp_method=params["warp_method"],
+            centerline_threshold=params["centerline_threshold"],
+        )
+        fields[i] = intermediates["step5"]
+        if i != n - 1 - i:
+            fields[n - 1 - i] = cv2.rotate(intermediates["step5"], cv2.ROTATE_180)
+    return np.hstack([f for f in fields if f is not None])
+
+
+def similarity_components(word: str) -> dict[str, Any]:
+    """作例の単語の文字の組ごとに、相性の3つの要素を、制作時の書体と位置で求める。"""
+    params = load_parameters(word)
+    fid = params["font_id"]
+    n = len(word)
+    pairs = []
+    for i in range((n + 1) // 2):
+        c1, c2 = word[i], word[n - 1 - i]
+        dx, dy = params["offsets"][i]
+        components = font_manager.pair_similarity_components(
+            font_manager.render_char_matrix(c1, fid), font_manager.render_char_matrix(c2, fid), dx, dy,
+            skel_a=font_manager.render_char_skeleton(c1, fid), skel_b=font_manager.render_char_skeleton(c2, fid),
+        )
+        values = components or {key: 0.0 for key in SIMILARITY_WEIGHTS}
+        pairs.append({"chars": [c1, c2], "valid": components is not None,
+                      **{key: round(value, 4) for key, value in values.items()}})
+    return {"word": word, "pairs": pairs}
 
 
 def main() -> None:
@@ -205,11 +274,26 @@ def main() -> None:
             }
         )
 
+    threshold_base = load_parameters(THRESHOLD_WORD)
+    threshold_levels = [
+        threshold_level(engine, THRESHOLD_WORD, threshold_base, index, value)
+        for index, value in enumerate(THRESHOLD_LEVELS)
+    ]
+
     data = {
         "warpMethod": WARP_METHOD,
         "gallery": gallery,
         "pipeline": pipeline,
         "snap": {"word": SNAP_WORD, "levels": snap_levels},
+        "threshold": {
+            "word": THRESHOLD_WORD,
+            "default": CENTERLINE_THRESHOLD_DIFF,
+            "levels": threshold_levels,
+        },
+        "similarity": {
+            "weights": SIMILARITY_WEIGHTS,
+            "words": [similarity_components(word) for word in GALLERY_WORDS],
+        },
     }
     DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"images: {len(list(PUBLIC_DIR.glob('*.webp')))}")
