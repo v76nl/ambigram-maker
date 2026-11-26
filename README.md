@@ -324,8 +324,8 @@ flowchart LR
 - **文章を書き換える**  
   本文の書体はサイトで使う文字だけを収録しているため、文章を変えたら `scripts/subset_site_font.py` で書体を作り直します。  
   Noto Sans JP の可変フォント (`NotoSansJP-VF.ttf`) を引数に渡します。収録していない文字は、閲覧環境の書体で表示されます。
-- **検索エンジンへの登録**  
-  サイトマップは `https://v76nl.github.io/ambigram-maker/sitemap.xml` に出力されます。Google Search Console に URL プレフィックスで登録し、サイトマップを送信します。
+- **サイトマップ**  
+  `https://v76nl.github.io/ambigram-maker/sitemap.xml` に出力されます。
 - **載せないもの**  
   未発表の評価スコアと、第三者論文の本文・図版は載せません。
 
