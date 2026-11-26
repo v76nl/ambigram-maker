@@ -378,10 +378,22 @@ const payload = JSON.stringify({
 
       slider.addEventListener("input", renderSnap);
       renderSnap();
-      data.snap.forEach((level: { overlay: string; result: string }) => {
-        new Image().src = level.overlay;
-        new Image().src = level.result;
-      });
+
+      // スライダーで切り替える画像は、その節に近づいてから先読みする
+      function preloadNear(sectionId: string, sources: string[]) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            observer.disconnect();
+            sources.forEach((src) => {
+              new Image().src = src;
+            });
+          },
+          { rootMargin: "600px 0px" },
+        );
+        observer.observe(document.getElementById(sectionId)!);
+      }
+      preloadNear("snap", data.snap.flatMap((level: { overlay: string; result: string }) => [level.overlay, level.result]));
 
       const thresholdSlider = document.getElementById("threshold-slider") as HTMLInputElement;
       const thresholdValue = document.getElementById("threshold-value")!;
@@ -401,10 +413,7 @@ const payload = JSON.stringify({
 
       thresholdSlider.addEventListener("input", renderThreshold);
       renderThreshold();
-      data.threshold.forEach((level: { region: string; result: string }) => {
-        new Image().src = level.region;
-        new Image().src = level.result;
-      });
+      preloadNear("threshold", data.threshold.flatMap((level: { region: string; result: string }) => [level.region, level.result]));
 
       type Pair = { valid: boolean; area: number; skeleton: number; neg_space: number };
       type Weights = { area: number; skeleton: number; neg_space: number };
