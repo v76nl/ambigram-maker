@@ -77,6 +77,24 @@ FONT_PRESETS = {
 WEIGHT_AREA: float = 0.45       # 黒画素交差・Chance-Adjusted IoU & 調和被覆率
 WEIGHT_SKELETON: float = 0.35   # 中心線骨格トポロジー整合度
 WEIGHT_NEG_SPACE: float = 0.20  # 開口部・ふところ (負の空間) 整合度
+SIMILARITY_WEIGHTS: dict[str, float] = {
+    "area": WEIGHT_AREA,
+    "skeleton": WEIGHT_SKELETON,
+    "neg_space": WEIGHT_NEG_SPACE,
+}
+
+
+def blend_similarity(components: Optional[dict[str, float]], weights: Optional[dict[str, float]] = None) -> float:
+    """3つの要素の値を重み付きで足し合わせ、文字の組の幾何類似度にする。
+
+    components が None (黒画素が重ならない等) のときは 0.0。weights は合計 1.0 を想定し、省略時は既定の重み。
+    """
+    if components is None:
+        return 0.0
+    w = weights or SIMILARITY_WEIGHTS
+    total = sum(w[key] * components[key] for key in SIMILARITY_WEIGHTS)
+    return float(np.clip(total, 0.0, 1.0))
+
 
 def compute_word_cognitive_score(
     scores: list[float],
@@ -275,13 +293,32 @@ class FontManager:
         指定された特定の座標オフセット (dx, dy) での総合幾何類似度を計算。
         4つの柱（適応太らせ、偶然重なり補正、骨格スケルトン、負の空間/ふところ一致）を統合。
         """
+        return blend_similarity(self.pair_similarity_components(
+            img_a, img_b, dx, dy, skel_a=skel_a, skel_b=skel_b, dil_skel_a=dil_skel_a, dil_skel_b_rot=dil_skel_b_rot
+        ))
+
+    def pair_similarity_components(
+        self,
+        img_a: np.ndarray,
+        img_b: np.ndarray,
+        dx: int,
+        dy: int,
+        skel_a: Optional[np.ndarray] = None,
+        skel_b: Optional[np.ndarray] = None,
+        dil_skel_a: Optional[np.ndarray] = None,
+        dil_skel_b_rot: Optional[np.ndarray] = None,
+    ) -> Optional[dict[str, float]]:
+        """
+        幾何類似度を構成する3つの要素 (黒画素の重なり、骨格の一致、負の空間の一致) を、それぞれ 0〜1 で返す。
+        文字が空のときや黒画素が重ならないときは None。
+        """
         img_b_rot = np.rot90(img_b, 2)
         h, w = img_a.shape
 
         area_a = np.sum(img_a)
         area_b = np.sum(img_b_rot)
         if area_a == 0 or area_b == 0:
-            return 0.0
+            return None
 
         shifted_b = np.zeros_like(img_b_rot)
         src_y_start = max(0, -dy)
@@ -295,7 +332,7 @@ class FontManager:
         dst_x_end = min(w, w + dx)
 
         if not (src_y_start < src_y_end and src_x_start < src_x_end and dst_y_start < dst_y_end and dst_x_start < dst_x_end):
-            return 0.0
+            return None
 
         shifted_b[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = \
             img_b_rot[src_y_start:src_y_end, src_x_start:src_x_end]
@@ -303,7 +340,7 @@ class FontManager:
         # 1. 黒画素の交差 & 偶然重なり期待値補正 (Chance-Adjusted IoU)
         intersection = np.sum(img_a * shifted_b)
         if intersection == 0:
-            return 0.0
+            return None
 
         union_mask = np.clip(img_a + shifted_b, 0, 1)
         union_black = np.sum(union_mask)
@@ -316,7 +353,7 @@ class FontManager:
         # 文字ROI内での偶然重なり確率
         pts = np.argwhere(union_mask > 0)
         if pts.size == 0:
-            return 0.0
+            return None
         ymin = int(pts[:, 0].min())
         xmin = int(pts[:, 1].min())
         ymax = int(pts[:, 0].max())
@@ -366,13 +403,7 @@ class FontManager:
         union_white = np.sum(np.clip(roi_a_white + roi_b_white, 0, 1))
         neg_space_score = float(inter_white / union_white) if union_white > 0 else 1.0
 
-        # 総合ブレンド（面積: WEIGHT_AREA, 骨格: WEIGHT_SKELETON, 負の空間: WEIGHT_NEG_SPACE）
-        total_score = float(
-            WEIGHT_AREA * area_score +
-            WEIGHT_SKELETON * skel_score +
-            WEIGHT_NEG_SPACE * neg_space_score
-        )
-        return float(np.clip(total_score, 0.0, 1.0))
+        return {"area": area_score, "skeleton": skel_score, "neg_space": neg_space_score}
 
     def calculate_pair_similarity_with_shift(
         self,

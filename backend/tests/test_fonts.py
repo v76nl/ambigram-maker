@@ -46,3 +46,19 @@ def test_marumonica_complex_kanji_support():
     for c in complex_chars:
         matrix = font_manager.render_char_matrix(c, "marumonica", size=128)
         assert matrix.sum() > 0, f"MaruMonica failed to render complex kanji '{c}'"
+
+
+def test_similarity_components_blend_to_score():
+    """3つの要素を既定の重みで足すと、従来の幾何類似度と一致する"""
+    from generators.font_manager import SIMILARITY_WEIGHTS, blend_similarity
+
+    img_a = font_manager.render_char_matrix("長", "zen_maru")
+    img_b = font_manager.render_char_matrix("寿", "zen_maru")
+    components = font_manager.pair_similarity_components(img_a, img_b, 0, 0)
+    score = font_manager.calculate_pair_similarity_for_offset(img_a, img_b, 0, 0)
+
+    assert components is not None
+    assert set(components) == set(SIMILARITY_WEIGHTS)
+    assert all(0.0 <= v <= 1.0 for v in components.values())
+    assert abs(blend_similarity(components) - score) < 1e-9
+    assert abs(sum(SIMILARITY_WEIGHTS.values()) - 1.0) < 1e-9

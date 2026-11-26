@@ -10,6 +10,11 @@ from .base import BaseAmbigramGenerator, array_to_png_data_uri, make_bicolor_ove
 from .font_manager import font_manager
 from .snap_warper import DEFAULT_WARP_METHOD, WARP_STEP_TEXT, normalize_warp_method, snap_warper
 
+# 中心線を取り出す領域の閾値 (正規化した距離場の最大値に対する比率)。
+# 違う文字の組は固有の線を残すため距離場に差分を足しているので、同じ文字の組より低くする
+CENTERLINE_THRESHOLD_SAME: float = 0.20
+CENTERLINE_THRESHOLD_DIFF: float = 0.15
+
 class SkeletonAmbigramEngine(BaseAmbigramGenerator):
     """
     手法B: 骨格中心線 (スケルトン) 平均化 Engine
@@ -87,6 +92,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         snap_strength: float = 0.75,
         return_intermediates: bool = False,
         warp_method: str = DEFAULT_WARP_METHOD,
+        centerline_threshold: Optional[float] = None,
     ) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
         """
         1文字スロットにおける平均骨格線の抽出と単一ストローク再描画
@@ -100,12 +106,14 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         - stroke_modulation: 井上・高橋(2020)§5に基づくストローク太さ変調 (共通部強調・固有部細線化)
         - enable_snap: 近接ストローク吸引・局所非剛体変形 (gaussian: 従来の平滑化方式 / tps: 薄板スプライン)
         - return_intermediates: 中間ステップ画像（バイカラー、距離場、骨格線等）を辞書で返すか
+        - centerline_threshold: 中心線を取り出す領域の閾値 (距離場の最大値に対する比率)。
+          None なら同じ文字の組は CENTERLINE_THRESHOLD_SAME、違う文字の組は CENTERLINE_THRESHOLD_DIFF
         """
         cache_key = (
             c1, c2, size, stroke_thickness, diff_blend, pre_bold,
             str(font_path) if font_path else "", shift,
             brush_style, stroke_modulation, enable_snap, snap_strength, return_intermediates,
-            normalize_warp_method(warp_method),
+            normalize_warp_method(warp_method), centerline_threshold,
         )
         if cache_key in self._slot_cache:
             cached_val = self._slot_cache[cache_key]
@@ -177,11 +185,13 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
 
         if c1 == c2:
             combined_field = harmonic_field
-            threshold_ratio = 0.20
+            threshold_ratio = CENTERLINE_THRESHOLD_SAME
         else:
             diff_field = np.maximum(d1, d2)
             combined_field = harmonic_field + float(diff_blend) * diff_field
-            threshold_ratio = 0.15
+            threshold_ratio = CENTERLINE_THRESHOLD_DIFF
+        if centerline_threshold is not None:
+            threshold_ratio = float(centerline_threshold)
 
         # 3. エネルギー場の正規化と二値化
         max_val = combined_field.max()
@@ -293,6 +303,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         enable_snap: bool = True,
         snap_strength: float = 0.75,
         warp_method: str = DEFAULT_WARP_METHOD,
+        centerline_threshold: Optional[float] = None,
         cancel_event: Any = None,
         **params,
     ) -> dict[str, Any]:
@@ -312,6 +323,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
         if not enable_snap:
             snap_strength = 0.0
         warp_method = normalize_warp_method(params.get("warp_method", warp_method))
+        centerline_threshold = params.get("centerline_threshold", centerline_threshold)
 
         # 適用フォントの決定および幾何評価 (font_id指定時は単一フォントのみ高速評価)
         if font_id and font_id != "auto":
@@ -371,6 +383,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 snap_strength=snap_strength,
                 return_intermediates=True,
                 warp_method=warp_method,
+                centerline_threshold=centerline_threshold,
             )
             slots[i] = slot_img
             slot_intermediates[i] = inter
@@ -482,6 +495,7 @@ class SkeletonAmbigramEngine(BaseAmbigramGenerator):
                 "enable_snap": (snap_strength > 0.0),
                 "snap_strength": snap_strength,
                 "warp_method": warp_method,
+                "centerline_threshold": centerline_threshold,
                 "selected_font_id": selected_fid,
                 "selected_font_name": selected_name,
                 "selected_style": selected_meta.get("style", "") if selected_meta else "",
