@@ -17,15 +17,20 @@ import pymupdf
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from prepare_assets import INK, paint, saved_work_mask, smooth_upscale, trim_mask  # noqa: E402
+import numpy as np  # noqa: E402
+from prepare_assets import INK, OUTPUT_DIR, paint, smooth_upscale, trim_mask  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "build" / "HCD2026winter_C04_ambigram_flip_A4.pdf"
 FONT = Path("C:/Windows/Fonts/BIZ-UDGothicR.ttc")
 
+# (ラベルの語, output/ の作品画像)。字形の処理の違いで複数の版がある語は、使う版のファイルを指す
 PAGES = [
-    ["長寿", "日曜日", "留置場", "気の毒"],
-    ["奥歯", "垂直", "蜘蛛", "聖職者"],
-    ["悪竜", "悪童", "追い風", "最古の文書"],
+    [("長寿", "ambigram_長寿_skeleton.png"), ("日曜日", "ambigram_日曜日_skeleton.png"),
+     ("留置場", "ambigram_留置場_skeleton.png"), ("気の毒", "ambigram_気の毒_skeleton.png")],
+    [("奥歯", "ambigram_奥歯_skeleton.png"), ("垂直", "ambigram_垂直_skeleton.png"),
+     ("蜘蛛", "ambigram_蜘蛛_skeleton.png"), ("秋桜", "ambigram_秋桜_skeleton.png")],
+    [("最悪", "ambigram_最悪_skeleton.png"), ("追い風", "ambigram_追い風_skeleton.png"),
+     ("そなえ", "ambigram_そなえ_morphology.png"), ("最古の文書", "ambigram_最古の文書_skeleton.png")],
 ]
 
 MM = 72 / 25.4
@@ -39,8 +44,14 @@ SUB = (0x5C / 255, 0x55 / 255, 0x52 / 255)
 LINE = (0xD6 / 255, 0xD1 / 255, 0xCD / 255)
 
 
-def work_png(word: str, width_mm: float) -> bytes:
-    alpha = smooth_upscale(trim_mask(saved_work_mask(word)), round(width_mm * PX_PER_MM))
+def work_mask(file: str) -> np.ndarray:
+    """作品画像の文字の部分。背景が透過でも白でも、不透明で暗い画素を文字とみなす。"""
+    rgba = np.array(Image.open(OUTPUT_DIR / file).convert("RGBA"))
+    return trim_mask((rgba[..., 3] > 127) & (rgba[..., :3].mean(axis=2) < 128))
+
+
+def work_png(mask: np.ndarray, width_mm: float) -> bytes:
+    alpha = smooth_upscale(mask, round(width_mm * PX_PER_MM))
     buf = io.BytesIO()
     Image.fromarray(paint([(alpha, INK)], alpha.shape)).save(buf, format="PNG", optimize=True)
     return buf.getvalue()
@@ -51,16 +62,16 @@ cell_h = (PAGE_H - 2 * MARGIN_Y) / 4
 for words in PAGES:
     page = doc.new_page(width=PAGE_W * MM, height=PAGE_H * MM)
     page.insert_font(fontname="biz", fontfile=str(FONT))
-    for k, word in enumerate(words):
+    for k, (word, file) in enumerate(words):
         top = MARGIN_Y + k * cell_h
         if k:
             page.draw_line((MARGIN_X * MM, top * MM), ((PAGE_W - MARGIN_X) * MM, top * MM), color=LINE, width=0.5)
-        mask = trim_mask(saved_work_mask(word))
+        mask = work_mask(file)
         aspect = mask.shape[0] / mask.shape[1]
         w = min(IMG_MAX_W, (cell_h - 2 * IMG_PAD_Y) / aspect)
         h = w * aspect
         x, y = (PAGE_W - w) / 2, top + (cell_h - h) / 2
-        page.insert_image(pymupdf.Rect(x * MM, y * MM, (x + w) * MM, (y + h) * MM), stream=work_png(word, w))
+        page.insert_image(pymupdf.Rect(x * MM, y * MM, (x + w) * MM, (y + h) * MM), stream=work_png(mask, w))
         page.insert_text(((MARGIN_X + LABEL_IN) * MM, (top + cell_h - LABEL_IN) * MM), word,
                          fontname="biz", fontsize=LABEL, color=SUB)
         page.insert_text(((PAGE_W - MARGIN_X - LABEL_IN) * MM, (top + LABEL_IN) * MM), word,
