@@ -8,7 +8,6 @@
     "preview": "astro preview --host 127.0.0.1 --port 4321"
   },
   "dependencies": {
-    "@fontsource-variable/noto-sans-jp": "^5.3.1",
     "astro": "^7.4.12"
   }
 }

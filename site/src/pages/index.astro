@@ -1,5 +1,4 @@
 ---
-import "@fontsource-variable/noto-sans-jp/wght.css";
 import "../styles/global.css";
 import data from "../data/site-data.json";
 
@@ -7,8 +6,29 @@ const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL :
 const asset = (src: string) => `${base}${src}`;
 
 const repository = "https://github.com/v76nl/ambigram-maker";
-const title = "逆さにしても、同じ言葉。";
-const description = "180度回転しても同じ単語として読める日本語アンビグラムの制作を、辞書探索とフォント骨格の変形で支援するシステムの解説です。";
+const siteName = "逆さにしても、同じ言葉。";
+const systemName = "日本語アンビグラム制作支援システム";
+const title = `${systemName}｜${siteName}`;
+const description = "180度回転しても同じ単語として読める日本語のアンビグラム (点対称の文字デザイン) を、辞書探索、フォント骨格の変形、毛筆調の描き直しで作るシステムの解説です。漢字を含む作例と生成の仕組みを、回しながら確かめられます。";
+const pageUrl = new URL(base, Astro.site).href;
+const ogImage = { url: new URL("og.png", pageUrl).href, width: 1200, height: 630, alt: "「長寿」の回転アンビグラム" };
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", name: siteName, url: pageUrl, inLanguage: "ja" },
+    {
+      "@type": "SoftwareSourceCode",
+      name: systemName,
+      description,
+      url: pageUrl,
+      image: ogImage.url,
+      codeRepository: repository,
+      programmingLanguage: ["Python", "TypeScript"],
+      keywords: "アンビグラム, 回転アンビグラム, 点対称, 文字デザイン, タイポグラフィ, 漢字",
+      author: { "@type": "Person", name: "v76nl", url: "https://github.com/v76nl" },
+    },
+  ],
+}).replace(/</g, "\\u003c");
 
 const hero = data.gallery[0];
 const snapDefault = data.snap.levels.findIndex((level) => level.value === 0.75);
@@ -31,7 +51,30 @@ const steps = [
   { title: "線を描き直す", text: "骨格に沿って、重なる部分は太く、片方だけの線は細く描き直します。" },
 ];
 
+const faq = [
+  {
+    q: "アンビグラムとは何ですか？",
+    a: "向きを変えても文字として読めるように作った文字のデザインです。上下を逆さにしても読める回転型や、鏡に映すと読める鏡像型などがあります。このシステムが扱うのは、180度回転しても同じ単語に読める回転型 (点対称) です。",
+  },
+  {
+    q: "漢字を含む言葉でも作れますか？",
+    a: "作れます。単語の前半の文字と、後半の文字を180度回転した形がどれだけ重なるかを測り、20万語以上の辞書から組み合わせのよい単語を探します。画数の多い漢字どうしでも、9種類の書体から重なりのよい書体と位置を選び、線を引き寄せてから中心線を描き直します。",
+  },
+  {
+    q: "どうやって作りますか？",
+    a: "制作画面で単語を選ぶと、書体と位置の選定、線の引き寄せ、中心線の取り出し、毛筆調の描き直しまでを自動で行います。仕上げに、文字ペアごとの位置や線の太さ、引き寄せる強さをスライダーで調整し、画像と設定の JSON ファイルを書き出します。",
+  },
+  {
+    q: "ブラウザだけで使えますか？",
+    a: "このサイトは仕組みの解説で、作品の生成はできません。単語の探索と生成は Python のサーバーで動くため、制作画面は手元のパソコンで起動します。",
+  },
+];
+
+const englishSummary =
+  "Ambigram Maker is a design support system for Japanese rotational ambigrams: words, including kanji, that read the same after a 180-degree turn. It searches a dictionary of over 200,000 words for promising character pairs, picks the font and offsets that overlap best, pulls nearby strokes together with thin-plate splines, and redraws the shared center line with a brush. This page explains each step with interactive examples. The generator itself runs on your own computer.";
+
 const fonts = [
+  { name: "Noto Sans JP (本文)", owner: "The Noto Project Authors" },
   { name: "Zen Maru Gothic", owner: "The Zen Maru Gothic Project Authors" },
   { name: "Shippori Mincho", owner: "The Shippori Mincho Project Authors" },
   { name: "M PLUS 1p", owner: "The M+ FONT PROJECT Authors" },
@@ -67,10 +110,22 @@ const payload = JSON.stringify({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={pageUrl} />
+    <link rel="sitemap" href={asset("sitemap.xml")} />
+    <link rel="preload" href={asset("fonts/noto-sans-jp-subset.woff2")} as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:url" content={pageUrl} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImage.url} />
+    <meta property="og:image:width" content={String(ogImage.width)} />
+    <meta property="og:image:height" content={String(ogImage.height)} />
+    <meta property="og:image:alt" content={ogImage.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href={asset("favicon.svg")} type="image/svg+xml" />
+    <script type="application/ld+json" set:html={structuredData}></script>
   </head>
   <body>
     <a class="skip" href="#main">本文へ移動</a>
@@ -99,11 +154,13 @@ const payload = JSON.stringify({
           </span>
         </button>
         <h1><span class="phrase">逆さにしても、</span><span class="phrase">同じ言葉。</span></h1>
+        <p class="hero-lead">{systemName}</p>
       </header>
 
       <section class="section" id="how" aria-labelledby="how-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">生成の仕組み</p>
             <h2 id="how-title"><span class="phrase">2つの文字を、</span><span class="phrase">1つの形にする</span></h2>
             <p>単語の前半の文字と、後半の文字を180度回転した形を融合します。後半は前半を回転して作るため、完成した図形は必ず点対称になります。</p>
           </div>
@@ -152,6 +209,7 @@ const payload = JSON.stringify({
       <section class="section" id="snap" aria-labelledby="snap-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">近い線の引き寄せ</p>
             <h2 id="snap-title"><span class="phrase">線を、</span><span class="phrase">どこまで引き寄せるか</span></h2>
             <p>引き寄せる力を強めると、ずれていた線が重なり、1本の線にまとまっていきます。強さは制作画面のスライダーで調整できます。</p>
           </div>
@@ -177,6 +235,7 @@ const payload = JSON.stringify({
       <section class="section" id="threshold" aria-labelledby="threshold-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">中心線の取り出し</p>
             <h2 id="threshold-title"><span class="phrase">線の芯を、</span><span class="phrase">どこまで残すか</span></h2>
             <p>2つの文字の距離場のうち、最大値の何割を超える部分から中心線を取り出すかを決めます。低くすると片方の文字だけにある線も残り、高くすると両方に共通する線だけが残ります。違う文字の組では {percent(data.threshold.default)} を使っています。</p>
           </div>
@@ -202,6 +261,7 @@ const payload = JSON.stringify({
       <section class="section" id="weights" aria-labelledby="weights-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">文字ペアの相性の評価</p>
             <h2 id="weights-title"><span class="phrase">形の近さを、</span><span class="phrase">何で測るか</span></h2>
             <p>単語を探すときは、文字と、対になる文字を180度回転した形がどれだけ近いかを3つの観点で測り、重みを付けて足し合わせます。重みを動かすと、作例の単語の点数と順位がその場で変わります。</p>
           </div>
@@ -225,6 +285,7 @@ const payload = JSON.stringify({
       <section class="section" id="works" aria-labelledby="works-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">漢字を含むアンビグラムの作例</p>
             <h2 id="works-title">回して読む</h2>
             <p>システムで生成し、書体や線の太さ、位置を人が調整した作例です。</p>
           </div>
@@ -242,9 +303,28 @@ const payload = JSON.stringify({
         </div>
       </section>
 
+      <section class="section" id="faq" aria-labelledby="faq-title">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">よくある質問</p>
+            <h2 id="faq-title">アンビグラムについて</h2>
+          </div>
+
+          <dl class="faq">
+            {faq.map((item) => (
+              <div>
+                <dt>{item.q}</dt>
+                <dd>{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       <section class="section" id="run" aria-labelledby="run-title">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">インストールと起動</p>
             <h2 id="run-title">手元で動かす</h2>
             <p>単語の探索と生成は Python のサーバーで動くため、制作画面はローカルで起動します。起動後に、ブラウザで 127.0.0.1:5173 を開いてください。</p>
           </div>
@@ -269,13 +349,17 @@ const payload = JSON.stringify({
     </main>
 
     <footer class="footer">
+      <div class="wrap summary-en" lang="en">
+        <h2>In English</h2>
+        <p>{englishSummary}</p>
+      </div>
       <div class="wrap credits">
         <div>
           <h2>辞書</h2>
           <p><a href="https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project">JMdict</a> © Electronic Dictionary Research and Development Group. <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 4.0</a></p>
         </div>
         <div>
-          <h2>作例の書体</h2>
+          <h2>書体</h2>
           <ul>
             {fonts.map((font) => <li>{font.name} © {font.owner}. <a href="https://openfontlicense.org/">SIL OFL 1.1</a></li>)}
           </ul>
@@ -377,10 +461,22 @@ const payload = JSON.stringify({
 
       slider.addEventListener("input", renderSnap);
       renderSnap();
-      data.snap.forEach((level: { overlay: string; result: string }) => {
-        new Image().src = level.overlay;
-        new Image().src = level.result;
-      });
+
+      // スライダーで切り替える画像は、その節に近づいてから先読みする
+      function preloadNear(sectionId: string, sources: string[]) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            observer.disconnect();
+            sources.forEach((src) => {
+              new Image().src = src;
+            });
+          },
+          { rootMargin: "600px 0px" },
+        );
+        observer.observe(document.getElementById(sectionId)!);
+      }
+      preloadNear("snap", data.snap.flatMap((level: { overlay: string; result: string }) => [level.overlay, level.result]));
 
       const thresholdSlider = document.getElementById("threshold-slider") as HTMLInputElement;
       const thresholdValue = document.getElementById("threshold-value")!;
@@ -400,10 +496,7 @@ const payload = JSON.stringify({
 
       thresholdSlider.addEventListener("input", renderThreshold);
       renderThreshold();
-      data.threshold.forEach((level: { region: string; result: string }) => {
-        new Image().src = level.region;
-        new Image().src = level.result;
-      });
+      preloadNear("threshold", data.threshold.flatMap((level: { region: string; result: string }) => [level.region, level.result]));
 
       type Pair = { valid: boolean; area: number; skeleton: number; neg_space: number };
       type Weights = { area: number; skeleton: number; neg_space: number };

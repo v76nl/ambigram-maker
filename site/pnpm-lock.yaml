@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@fontsource-variable/noto-sans-jp':
-        specifier: ^5.3.1
-        version: 5.3.1
       astro:
         specifier: ^7.4.12
         version: 7.4.12(yaml@2.9.1)
@@ -224,9 +221,6 @@ packages:
 
   '@emnapi/wasi-threads@2.2.0':
     resolution: {integrity: sha512-JP7OYH38Q7+pyTAe14raZHLQIK7BDKbdwji+Xi3pcd/6QkJYQH3SX4wu6EplGrGJWRepoNzedfm0G3B9Z4e9Rw==}
-
-  '@fontsource-variable/noto-sans-jp@5.3.1':
-    resolution: {integrity: sha512-/anGvJFc5y36f8DJ+3TSh2+KAvaRLA9PaLUMvneeY5s4j8m+8X4F3lE/sjTuG9YI5BX4sykvCk4TuJMG7ecMRQ==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1482,8 +1476,6 @@ snapshots:
     dependencies:
       tslib: 2.9.1
     optional: true
-
-  '@fontsource-variable/noto-sans-jp@5.3.1': {}
 
   '@img/colour@1.1.0':
     optional: true

@@ -212,10 +212,13 @@ ambigram-maker/
 │
 ├── site/                           - 解説サイト (Astro)
 │   ├── src/pages/index.astro
+│   ├── src/pages/sitemap.xml.ts    - サイトマップ
 │   ├── src/data/site-data.json     - 書き出した画像の一覧
-│   └── public/generated/           - 書き出した作例と工程画像
+│   ├── public/generated/           - 書き出した作例と工程画像
+│   └── public/fonts/               - サイトで使う文字だけに絞った本文の書体
 ├── scripts/
-│   └── export_site_data.py         - 解説サイト用の画像を書き出す
+│   ├── export_site_data.py         - 解説サイト用の画像と OGP 画像を書き出す
+│   └── subset_site_font.py         - 本文の書体を、サイトで使う文字だけに絞る
 │
 ├── research/
 │   ├── reader/                     - 先行研究読解リーダー
@@ -258,6 +261,7 @@ Python の依存パッケージは、初回起動時に uv が自動で入れま
 | `pnpm test` | `frontend/` | フロントエンドのテスト |
 | `pnpm --dir site dev` | ルート | 解説サイトを確認 (`http://127.0.0.1:4321/ambigram-maker/`) |
 | `uv run --project backend python scripts/export_site_data.py` | ルート | 解説サイトの画像を書き出す |
+| `uv run --with fonttools --with brotli python scripts/subset_site_font.py <NotoSansJP-VF.ttf>` | ルート | 解説サイトの本文の書体を、使う文字だけに絞り直す (`--check` で足りない文字を確認) |
 | `python research/reader/serve.py` | ルート | 先行研究読解リーダーを起動 (8089) |
 | `pnpm slides:serve` | ルート | 研究発表スライドを確認 (8080) |
 | `pnpm slides:build` | ルート | スライドを HTML・PDF・PPTX に書き出す |
@@ -317,6 +321,11 @@ flowchart LR
 - **中心線の閾値の比較を差し替える**  
   `THRESHOLD_WORD` と `THRESHOLD_LEVELS` を変えて、書き出しを実行します。  
   相性の重みの節は、`GALLERY_WORDS` の単語の文字ペアごとに3つの要素の値を書き出し、ブラウザで重みを掛けて点数を計算し直します。
+- **文章を書き換える**  
+  本文の書体はサイトで使う文字だけを収録しているため、文章を変えたら `scripts/subset_site_font.py` で書体を作り直します。  
+  Noto Sans JP の可変フォント (`NotoSansJP-VF.ttf`) を引数に渡します。収録していない文字は、閲覧環境の書体で表示されます。
+- **サイトマップ**  
+  `https://v76nl.github.io/ambigram-maker/sitemap.xml` に出力されます。
 - **載せないもの**  
   未発表の評価スコアと、第三者論文の本文・図版は載せません。
 

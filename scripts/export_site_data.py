@@ -29,6 +29,8 @@ from generators.skeleton_engine import (  # noqa: E402
 OUTPUT_DIR = ROOT / "output"
 PUBLIC_DIR = ROOT / "site" / "public" / "generated"
 DATA_FILE = ROOT / "site" / "src" / "data" / "site-data.json"
+OG_IMAGE = ROOT / "site" / "public" / "og.png"  # SNS で共有したときのカード画像 (1200×630)
+OG_SIZE, OG_MARGIN = (1200, 630), (120, 110)
 
 GALLERY_WORDS = ["長寿", "日曜日", "奥歯", "垂直", "聖職者", "蜘蛛", "概論", "留置場", "秋桜", "折り紙", "追い風", "気の毒"]
 PIPELINE_WORDS = ["長寿", "日曜日", "蜘蛛"]
@@ -243,11 +245,24 @@ def similarity_components(word: str) -> dict[str, Any]:
     return {"word": word, "pairs": pairs}
 
 
+def save_og_image(word: str) -> None:
+    """作例の字面を、SNS のカード画像の中央に余白を空けて置く。"""
+    work, _ = load_saved_work(word)
+    ys, xs = np.nonzero((work < 200).any(axis=2))
+    ink = Image.fromarray(work[ys.min():ys.max() + 1, xs.min():xs.max() + 1])
+    box = (OG_SIZE[0] - 2 * OG_MARGIN[0], OG_SIZE[1] - 2 * OG_MARGIN[1])
+    ink.thumbnail(box, Image.Resampling.LANCZOS)
+    card = Image.new("RGB", OG_SIZE, PAPER)
+    card.paste(ink, ((OG_SIZE[0] - ink.width) // 2, (OG_SIZE[1] - ink.height) // 2))
+    card.save(OG_IMAGE, optimize=True)
+
+
 def main() -> None:
     if PUBLIC_DIR.exists():
         shutil.rmtree(PUBLIC_DIR)
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+    save_og_image(GALLERY_WORDS[0])
     engine = SkeletonAmbigramEngine()
     gallery = []
     for index, word in enumerate(GALLERY_WORDS):
