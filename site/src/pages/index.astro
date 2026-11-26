@@ -6,8 +6,30 @@ const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL :
 const asset = (src: string) => `${base}${src}`;
 
 const repository = "https://github.com/v76nl/ambigram-maker";
-const title = "逆さにしても、同じ言葉。";
-const description = "180度回転しても同じ単語として読める日本語アンビグラムの制作を、辞書探索とフォント骨格の変形で支援するシステムの解説です。";
+const siteName = "逆さにしても、同じ言葉。";
+const systemName = "日本語アンビグラム制作支援システム";
+const title = `${systemName}｜${siteName}`;
+const description = "180度回転しても同じ単語として読める日本語のアンビグラム (点対称の文字デザイン) を、辞書探索、フォント骨格の変形、毛筆調の描き直しで作るシステムの解説です。漢字を含む作例と生成の仕組みを、回しながら確かめられます。";
+const pageUrl = new URL(base, Astro.site).href;
+const ogImage = { url: new URL("og.png", pageUrl).href, width: 1200, height: 630, alt: "「長寿」の回転アンビグラム" };
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", name: siteName, url: pageUrl, inLanguage: "ja" },
+    {
+      "@type": "SoftwareSourceCode",
+      name: systemName,
+      description,
+      url: pageUrl,
+      image: ogImage.url,
+      codeRepository: repository,
+      programmingLanguage: ["Python", "TypeScript"],
+      keywords: "アンビグラム, 回転アンビグラム, 点対称, 文字デザイン, タイポグラフィ, 漢字",
+      author: { "@type": "Person", name: "v76nl", url: "https://github.com/v76nl" },
+    },
+  ],
+}).replace(/</g, "\\u003c");
+
 
 const hero = data.gallery[0];
 const snapDefault = data.snap.levels.findIndex((level) => level.value === 0.75);
@@ -67,11 +89,22 @@ const payload = JSON.stringify({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={pageUrl} />
+    <link rel="sitemap" href={asset("sitemap.xml")} />
     <link rel="preload" href={asset("fonts/noto-sans-jp-subset.woff2")} as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:url" content={pageUrl} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImage.url} />
+    <meta property="og:image:width" content={String(ogImage.width)} />
+    <meta property="og:image:height" content={String(ogImage.height)} />
+    <meta property="og:image:alt" content={ogImage.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href={asset("favicon.svg")} type="image/svg+xml" />
+    <script type="application/ld+json" set:html={structuredData}></script>
   </head>
   <body>
     <a class="skip" href="#main">本文へ移動</a>

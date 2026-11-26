@@ -212,11 +212,12 @@ ambigram-maker/
 │
 ├── site/                           - 解説サイト (Astro)
 │   ├── src/pages/index.astro
+│   ├── src/pages/sitemap.xml.ts    - サイトマップ
 │   ├── src/data/site-data.json     - 書き出した画像の一覧
 │   ├── public/generated/           - 書き出した作例と工程画像
 │   └── public/fonts/               - サイトで使う文字だけに絞った本文の書体
 ├── scripts/
-│   ├── export_site_data.py         - 解説サイト用の画像を書き出す
+│   ├── export_site_data.py         - 解説サイト用の画像と OGP 画像を書き出す
 │   └── subset_site_font.py         - 本文の書体を、サイトで使う文字だけに絞る
 │
 ├── research/
@@ -323,6 +324,8 @@ flowchart LR
 - **文章を書き換える**  
   本文の書体はサイトで使う文字だけを収録しているため、文章を変えたら `scripts/subset_site_font.py` で書体を作り直します。  
   Noto Sans JP の可変フォント (`NotoSansJP-VF.ttf`) を引数に渡します。収録していない文字は、閲覧環境の書体で表示されます。
+- **検索エンジンへの登録**  
+  サイトマップは `https://v76nl.github.io/ambigram-maker/sitemap.xml` に出力されます。Google Search Console に URL プレフィックスで登録し、サイトマップを送信します。
 - **載せないもの**  
   未発表の評価スコアと、第三者論文の本文・図版は載せません。
 
