@@ -41,3 +41,18 @@ def test_bitmap_engine_generation():
 
     assert result["engine"] == "bitmap"
     assert result["data"].startswith("data:image/png;base64,")
+
+
+def test_skeleton_centerline_threshold():
+    """中心線の閾値を省略すると既定値と同じ結果になり、上げると残る線が減る"""
+    import numpy as np
+    from generators.skeleton_engine import CENTERLINE_THRESHOLD_DIFF
+
+    engine = SkeletonAmbigramEngine()
+    default = engine.generate_slot("長", "寿", size=256, enable_snap=False)
+    explicit = engine.generate_slot("長", "寿", size=256, enable_snap=False,
+                                    centerline_threshold=CENTERLINE_THRESHOLD_DIFF)
+    high = engine.generate_slot("長", "寿", size=256, enable_snap=False, centerline_threshold=0.45)
+
+    assert np.array_equal(default, explicit)
+    assert np.count_nonzero(high) < np.count_nonzero(default)
