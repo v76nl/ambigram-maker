@@ -12,6 +12,14 @@ const description = "180度回転しても同じ単語として読める日本�
 
 const hero = data.gallery[0];
 const snapDefault = data.snap.levels.findIndex((level) => level.value === 0.75);
+const thresholdDefault = data.threshold.levels.findIndex((level) => level.value === data.threshold.default);
+
+const weightLabels = [
+  { key: "area", label: "黒い部分の重なり" },
+  { key: "skeleton", label: "線の骨格の一致" },
+  { key: "neg_space", label: "すき間の一致" },
+] as const;
+const percent = (value: number) => `${Math.round(value * 100)}%`;
 
 const steps = [
   { title: "正反を重ねる", text: "文字と、対になる文字を180度回転した形を、同じ位置に重ねます。" },
@@ -43,6 +51,12 @@ const payload = JSON.stringify({
     result: asset(level.result.src),
     overlay: asset(level.overlay.src),
   })),
+  threshold: data.threshold.levels.map((level) => ({
+    value: level.value,
+    region: asset(level.region.src),
+    result: asset(level.result.src),
+  })),
+  similarity: data.similarity,
 }).replace(/</g, "\\u003c");
 ---
 
@@ -65,6 +79,7 @@ const payload = JSON.stringify({
       <div class="wrap nav-inner">
         <a href="#how">仕組み</a>
         <a href="#snap">変形</a>
+        <a href="#weights">相性</a>
         <a href="#works">作例</a>
         <a href="#run">動かす</a>
         <a class="icon-link" href={repository} aria-label="GitHub リポジトリ">
@@ -155,6 +170,54 @@ const payload = JSON.stringify({
           <div class="slider-row">
             <input class="slider" id="snap-slider" type="range" min="0" max={data.snap.levels.length - 1} step="1" value={snapDefault} aria-label="引き寄せる強さ" />
             <output class="slider-value" id="snap-value" for="snap-slider">{data.snap.levels[snapDefault].value * 100}%</output>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="threshold" aria-labelledby="threshold-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="threshold-title"><span class="phrase">線の芯を、</span><span class="phrase">どこまで残すか</span></h2>
+            <p>2つの文字の距離場のうち、最大値の何割を超える部分から中心線を取り出すかを決めます。低くすると片方の文字だけにある線も残り、高くすると両方に共通する線だけが残ります。違う文字の組では {percent(data.threshold.default)} を使っています。</p>
+          </div>
+
+          <div class="compare">
+            <figure>
+              <div class="frame"><img id="threshold-region" src={asset(data.threshold.levels[thresholdDefault].region.src)} width={data.threshold.levels[thresholdDefault].region.width} height={data.threshold.levels[thresholdDefault].region.height} alt="中心線のもとになる領域" /></div>
+              <figcaption>中心線のもとになる領域 (濃い部分)</figcaption>
+            </figure>
+            <figure>
+              <div class="frame"><img id="threshold-result" src={asset(data.threshold.levels[thresholdDefault].result.src)} width={data.threshold.levels[thresholdDefault].result.width} height={data.threshold.levels[thresholdDefault].result.height} alt={`「${data.threshold.word}」の生成結果`} /></div>
+              <figcaption>生成結果</figcaption>
+            </figure>
+          </div>
+
+          <div class="slider-row">
+            <input class="slider" id="threshold-slider" type="range" min="0" max={data.threshold.levels.length - 1} step="1" value={thresholdDefault} aria-label="中心線を取り出す閾値" />
+            <output class="slider-value" id="threshold-value" for="threshold-slider">{percent(data.threshold.default)}</output>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="weights" aria-labelledby="weights-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="weights-title"><span class="phrase">形の近さを、</span><span class="phrase">何で測るか</span></h2>
+            <p>単語を探すときは、文字と、対になる文字を180度回転した形がどれだけ近いかを3つの観点で測り、重みを付けて足し合わせます。重みを動かすと、作例の単語の点数と順位がその場で変わります。</p>
+          </div>
+
+          <div class="weights">
+            <div class="weight-controls">
+              {weightLabels.map(({ key, label }) => (
+                <div class="weight-row">
+                  <label for={`weight-${key}`}>{label}</label>
+                  <input class="slider" id={`weight-${key}`} data-weight={key} type="range" min="0" max="100" step="1" value={Math.round(data.similarity.weights[key] * 100)} />
+                  <output class="weight-value" id={`weight-${key}-value`} for={`weight-${key}`}>{percent(data.similarity.weights[key])}</output>
+                </div>
+              ))}
+              <button class="reset" type="button" id="weight-reset">既定の重みに戻す</button>
+            </div>
+            <ol class="ranking" id="ranking" aria-label="作例の単語の点数"></ol>
           </div>
         </div>
       </section>
@@ -318,6 +381,109 @@ const payload = JSON.stringify({
         new Image().src = level.overlay;
         new Image().src = level.result;
       });
+
+      const thresholdSlider = document.getElementById("threshold-slider") as HTMLInputElement;
+      const thresholdValue = document.getElementById("threshold-value")!;
+      const thresholdRegion = document.getElementById("threshold-region") as HTMLImageElement;
+      const thresholdResult = document.getElementById("threshold-result") as HTMLImageElement;
+
+      function renderThreshold() {
+        const index = Number(thresholdSlider.value);
+        const level = data.threshold[index];
+        const percent = `${Math.round(level.value * 100)}%`;
+        thresholdRegion.src = level.region;
+        thresholdResult.src = level.result;
+        thresholdValue.textContent = percent;
+        thresholdSlider.setAttribute("aria-valuetext", percent);
+        thresholdSlider.style.setProperty("--p", `${(index / (data.threshold.length - 1)) * 100}%`);
+      }
+
+      thresholdSlider.addEventListener("input", renderThreshold);
+      renderThreshold();
+      data.threshold.forEach((level: { region: string; result: string }) => {
+        new Image().src = level.region;
+        new Image().src = level.result;
+      });
+
+      type Pair = { valid: boolean; area: number; skeleton: number; neg_space: number };
+      type Weights = { area: number; skeleton: number; neg_space: number };
+      const weightKeys = ["area", "skeleton", "neg_space"] as const;
+      const weightSliders = weightKeys.map((key) => document.getElementById(`weight-${key}`) as HTMLInputElement);
+      const ranking = document.getElementById("ranking")!;
+
+      // backend/generators/font_manager.py の compute_word_cognitive_score と同じ式 (日常語の補正なし)
+      function wordScore(scores: number[], length: number) {
+        const geom = Math.pow(scores.reduce((p, s) => p * Math.max(0.01, s), 1), 1 / scores.length);
+        const min = Math.min(...scores);
+        const context = length > 1 ? (length - 1) / length : 0;
+        const reduction = Math.min(1, geom * geom * context);
+        const wMin = 0.25 * (1 - 0.8 * reduction);
+        return (1 - wMin) * geom + wMin * min;
+      }
+
+      function currentWeights(): Weights {
+        const [area, skeleton, negSpace] = weightSliders.map((slider) => Number(slider.value) / 100);
+        return { area, skeleton, neg_space: negSpace };
+      }
+
+      // 3つの重みの合計を常に 100% に保つ。動かした重みの残りを、ほかの2つに今の比率で配り直す
+      function balanceWeights(moved: number) {
+        const value = Number(weightSliders[moved].value);
+        const others = weightSliders.filter((_, i) => i !== moved);
+        const rest = 100 - value;
+        const current = others.map((slider) => Number(slider.value));
+        const total = current.reduce((a, b) => a + b, 0);
+        const first = Math.round(total > 0 ? (rest * current[0]) / total : rest / 2);
+        others[0].value = String(first);
+        others[1].value = String(rest - first);
+      }
+
+      function renderWeights() {
+        const weights = currentWeights();
+        weightKeys.forEach((key, i) => {
+          const text = `${Math.round(weights[key] * 100)}%`;
+          document.getElementById(`weight-${key}-value`)!.textContent = text;
+          weightSliders[i].setAttribute("aria-valuetext", text);
+          weightSliders[i].style.setProperty("--p", `${weightSliders[i].value}%`);
+        });
+        const rows = data.similarity.words.map((item: { word: string; pairs: Pair[] }) => {
+          const scores = item.pairs.map((pair) =>
+            pair.valid ? Math.min(1, Math.max(0, weightKeys.reduce((sum, key) => sum + weights[key] * pair[key], 0))) : 0,
+          );
+          return { word: item.word, score: wordScore(scores, item.word.length) };
+        });
+        rows.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+        ranking.replaceChildren(
+          ...rows.map((row: { word: string; score: number }) => {
+            const li = document.createElement("li");
+            const word = document.createElement("span");
+            word.className = "ranking-word";
+            word.textContent = row.word;
+            const bar = document.createElement("span");
+            bar.className = "ranking-bar";
+            bar.style.setProperty("--w", `${row.score * 100}%`);
+            const value = document.createElement("span");
+            value.className = "ranking-value";
+            value.textContent = `${(row.score * 100).toFixed(1)}`;
+            li.append(word, bar, value);
+            return li;
+          }),
+        );
+      }
+
+      weightSliders.forEach((slider, i) =>
+        slider.addEventListener("input", () => {
+          balanceWeights(i);
+          renderWeights();
+        }),
+      );
+      document.getElementById("weight-reset")!.addEventListener("click", () => {
+        weightKeys.forEach((key, i) => {
+          weightSliders[i].value = String(Math.round(data.similarity.weights[key] * 100));
+        });
+        renderWeights();
+      });
+      renderWeights();
 
       const copyButton = document.getElementById("copy-command")!;
       copyButton.addEventListener("click", async () => {
