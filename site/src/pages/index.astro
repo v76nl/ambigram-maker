@@ -1,5 +1,4 @@
 ---
-import "@fontsource-variable/noto-sans-jp/wght.css";
 import "../styles/global.css";
 import data from "../data/site-data.json";
 
@@ -32,6 +31,7 @@ const steps = [
 ];
 
 const fonts = [
+  { name: "Noto Sans JP (本文)", owner: "The Noto Project Authors" },
   { name: "Zen Maru Gothic", owner: "The Zen Maru Gothic Project Authors" },
   { name: "Shippori Mincho", owner: "The Shippori Mincho Project Authors" },
   { name: "M PLUS 1p", owner: "The M+ FONT PROJECT Authors" },
@@ -67,6 +67,7 @@ const payload = JSON.stringify({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="preload" href={asset("fonts/noto-sans-jp-subset.woff2")} as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
@@ -275,7 +276,7 @@ const payload = JSON.stringify({
           <p><a href="https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project">JMdict</a> © Electronic Dictionary Research and Development Group. <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 4.0</a></p>
         </div>
         <div>
-          <h2>作例の書体</h2>
+          <h2>書体</h2>
           <ul>
             {fonts.map((font) => <li>{font.name} © {font.owner}. <a href="https://openfontlicense.org/">SIL OFL 1.1</a></li>)}
           </ul>

@@ -25,11 +25,20 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* サイトで使う文字だけに絞った Noto Sans JP (scripts/subset_site_font.py で書き出す) */
+@font-face {
+  font-family: "Noto Sans JP Subset";
+  src: url("/fonts/noto-sans-jp-subset.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: "Noto Sans JP Variable", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  font-family: "Noto Sans JP Subset", "Hiragino Sans", "Yu Gothic UI", sans-serif;
   font-size: 16px;
   line-height: 1.9;
   font-feature-settings: "palt";
